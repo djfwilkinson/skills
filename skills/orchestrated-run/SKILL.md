@@ -22,7 +22,7 @@ It:
 - creates and assigns tickets;
 - handles user interaction;
 - reconciles returned ticket results;
-- updates goals, non-goals, working hints, pillars, modules and the log;
+- updates goals, non-goals, unknowns, working hints, pillars, modules and the log;
 - decides what work should happen next;
 - decides when goals have been verified.
 
@@ -52,6 +52,7 @@ Create these as empty placeholders. Markdown files get a title heading only. `ti
 ```text
 GOALS.md
 NONGOALS.md
+UNKNOWNS.md
 WORKINGHINTS.md
 LOG.md
 PILLARS.md
@@ -61,7 +62,7 @@ tickets/
 
 Do not fill them during setup. Resume a run when the user or invocation identifies it. Otherwise create a new run.
 
-Use stable IDs: goals `G-001`, non-goals `NG-001`, pillars `P-001`, modules `M-001`, tickets `T-001`. IDs remain stable for the lifetime of the run and are not reused.
+Use stable IDs: goals `G-001`, non-goals `NG-001`, unknowns `U-001`, pillars `P-001`, modules `M-001`, tickets `T-001`. IDs remain stable for the lifetime of the run and are not reused.
 
 The orchestrator owns and writes all run files except active ticket files.
 
@@ -84,13 +85,44 @@ Do not treat proposed goals, non-goals, or other product decisions that require 
 
 ## Unknowns and decisions
 
+`UNKNOWNS.md` is the run-level log of unknowns. Tickets keep the discovery record. This file is what later tickets reference when their job is to close an unknown.
+
 Subagents should identify unknowns and record them on the ticket, with a suggested classification:
 
 - `Research` if a subagent can close it from the project, environment, or existing evidence;
 - `Discuss/Gather Inputs` if the user must supply a fact, preference, or decision;
 - `Human Task` if the user must perform an external action.
 
-The orchestrator decides which unknowns become tickets, and of which type. A gap or an unclassified unknown is an input to that decision, not an automatic Research ticket.
+The orchestrator decides which of those become entries in `UNKNOWNS.md`, and which become tickets. A gap or an unclassified unknown is an input to that decision, not an automatic Research ticket.
+
+Copy new unknowns into `UNKNOWNS.md` during reconciliation. Give each a stable `U-001` ID. Do not rewrite the ticket's Unknowns section into this file as a second investigation. One entry per unknown.
+
+```md
+## U-001 - <name>
+
+### Unknown
+<what is not known>
+
+### Suggested close
+Research | Discuss/Gather Inputs | Human Task
+
+### Status
+open | assigned | resolved | abandoned
+
+### Related
+- goals: []
+- tickets: []
+
+### Resolution tickets
+- T-...
+
+### Evidence
+- <result when resolved, with ticket ID>
+```
+
+When creating a ticket whose objective is to fill an unknown, point `## Reads` at `UNKNOWNS.md` and the `U-...` entry, and list those IDs in the ticket frontmatter `unknowns` field. Closing that unknown is part of Completion.
+
+Update the entry when a ticket returns: set `assigned` while a resolution ticket is active, `resolved` when the unknown is closed, with evidence pointing at the ticket. `abandoned` only when the orchestrator decides it no longer matters, and after user involvement if that is a product decision.
 
 ### Product vs process
 
@@ -234,6 +266,7 @@ type: Research
 status: ready
 execution_result: null
 goals: []
+unknowns: []
 pillars: []
 modules: []
 depends_on: []
@@ -246,9 +279,10 @@ owner: null
 <the bounded result this ticket should produce>
 
 ## Reads
-- <run file, goal, ticket, project file, directory, or doc path>
+- <run file, goal, unknown, ticket, project file, directory, or doc path>
 - WORKINGHINTS.md
 - GOALS.md
+- UNKNOWNS.md
 
 ## Completion
 <what must be true for the worker to report completed>
@@ -293,7 +327,7 @@ Do not give the subagent this skill. Give it:
 2. the assignment prompt for that ticket type, copied from this skill;
 3. the `## Reads` list of paths.
 
-Do not build a large custom context summary. Point at files. A `## Reads` list may include `WORKINGHINTS.md`, relevant goals, pillar or module entries, earlier tickets, project files, directories, and documentation. You may name project paths and directories so the worker can read them. Do not dump a repo survey into the ticket.
+Do not build a large custom context summary. Point at files. A `## Reads` list may include `WORKINGHINTS.md`, `UNKNOWNS.md`, relevant goals, unknown IDs, pillar or module entries, earlier tickets, project files, directories, and documentation. You may name project paths and directories so the worker can read them. Do not dump a repo survey into the ticket.
 
 When assigning a ticket:
 
@@ -319,7 +353,7 @@ Update the ticket before you return. You may change only execution_result, Unkno
 
 Set execution_result to completed, blocked, or failed. That is your result, not the persistent ticket status. The orchestrator owns status and owner.
 
-Do not edit run-level files (GOALS.md, NONGOALS.md, WORKINGHINTS.md, LOG.md, PILLARS.md, MODULES.md). Do not create tickets or run-level plans. Record follow-ups on this ticket. The orchestrator decides what happens next.
+Do not edit run-level files (GOALS.md, NONGOALS.md, UNKNOWNS.md, WORKINGHINTS.md, LOG.md, PILLARS.md, MODULES.md). Do not create tickets or run-level plans. Record follow-ups on this ticket. The orchestrator decides what happens next.
 
 If multiple reasonable choices would produce meaningfully different product, architectural, operational, compatibility, or scope outcomes, stop short of committing the choice. Record the options and a recommendation on the ticket.
 
@@ -440,7 +474,7 @@ When the ticket returns:
 1. Read the ticket file and `execution_result`. Leave worker-maintained sections as the worker wrote them.
 2. Clear `owner`.
 3. Decide the persistent ticket `status`. `completed` is not automatically `resolved`. You may set `blocked`, `resolved`, or `cancelled`, keep it for further work, or send further tickets.
-4. Reconcile the result into the run: add a concise `LOG.md` entry for what affects the wider run; update goals, non-goals, working hints, pillars or modules only where the result changes wider run state; decide what work happens next, using follow-ups as proposals; decide whether any goal is now verified, or what verification or review work is still required.
+4. Reconcile the result into the run: add a concise `LOG.md` entry for what affects the wider run; update goals, non-goals, unknowns, working hints, pillars or modules only where the result changes wider run state; decide what work happens next, using follow-ups as proposals; decide whether any goal is now verified, or what verification or review work is still required.
 
 Do not copy the investigation into the log. Do not re-do the ticket in the orchestrator thread. If evidence is missing or the result is not acceptable, create or reassign tickets.
 
@@ -448,7 +482,7 @@ Do not copy the investigation into the log. Do not re-do the ticket in the orche
 
 `LOG.md` records the important history of the run.
 
-For each reconciled ticket, record what was attempted, the execution result, the status you set, important decisions, evidence pointers, open unknowns, blockers, and the ticket ID.
+For each reconciled ticket, record what was attempted, the execution result, the status you set, important decisions, evidence pointers, unknown IDs opened or closed, blockers, and the ticket ID.
 
 Keep detailed investigation and implementation notes in the ticket. Keep `LOG.md` concise.
 
@@ -470,11 +504,12 @@ After compaction, rebuild context from:
 1. this skill;
 2. `GOALS.md`
 3. `NONGOALS.md`
-4. `WORKINGHINTS.md`
-5. `PILLARS.md`
-6. `MODULES.md`
-7. relevant entries from `LOG.md`
-8. tickets needed for current work
+4. `UNKNOWNS.md`
+5. `WORKINGHINTS.md`
+6. `PILLARS.md`
+7. `MODULES.md`
+8. relevant entries from `LOG.md`
+9. tickets needed for current work
 
 Reload completed tickets only when their detailed results become relevant.
 
@@ -506,7 +541,7 @@ The run is complete when:
 - no unresolved ticket is required for an achieved goal;
 - required human tasks and acceptance are complete;
 - significant adversarial findings are resolved or explicitly accepted by the user;
-- open unknowns required for achieved goals are closed;
+- open entries in `UNKNOWNS.md` required for achieved goals are closed;
 - the run files reflect the final state.
 
 An empty ticket queue does not mean the run is complete.
