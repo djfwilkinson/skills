@@ -30,3 +30,8 @@ mkdir -p ~/.cursor/skills
 ln -s "$(pwd)/skills/orchestrated-run" ~/.cursor/skills/orchestrated-run
 ln -s "$(pwd)/skills/project-alignment" ~/.cursor/skills/project-alignment
 ```
+
+## Credits
+
+- [Matt Pocock's skills library](https://github.com/mattpocock/skills): agent skills as a published library of procedures you actually run
+- [pstack](https://github.com/cursor/plugins/tree/main/pstack): unslop, the writing pass on public copy
