@@ -1,6 +1,6 @@
 ---
 name: orchestrated-run
-description: Coordinate a substantial project run through one user-facing orchestrator, shared run files, and subagent tickets. The orchestrator owns the process: run state, ticket creation and assignment, user interaction, reconciliation, next work, and goal verification. Subagents execute individual tickets from a type prompt and file references. Use only when explicitly invoked by the user.
+description: Coordinate a substantial project run through one user-facing orchestrator, shared run files, and subagent tickets. The orchestrator owns the process: run state, ticket creation and assignment, user interaction, steering, reconciliation, next work, and goal verification. Subagents execute individual tickets from a type prompt and file references. Use only when explicitly invoked by the user.
 disable-model-invocation: true
 metadata:
   invocation: user-only
@@ -21,6 +21,7 @@ It:
 - maintains run state;
 - creates and assigns tickets;
 - handles user interaction;
+- acts on steering immediately;
 - reconciles returned ticket results;
 - updates goals, non-goals, unknowns, working hints, pillars, modules and the log;
 - decides what work should happen next;
@@ -447,13 +448,13 @@ Do not fix findings unless this ticket's Objective explicitly includes remediati
 
 The orchestrator handles this ticket because it owns the user conversation.
 
-Ask only for the information, decision, review or acceptance required by the ticket. Record the user's response and any resulting decision on the ticket. Then reconcile it like any other returned ticket.
+Stop and return to the user. Ask only for the information, decision, review or acceptance required by the ticket. When the user responds, record the response and any resulting decision on the ticket. Then reconcile it like any other returned ticket and continue the run.
 
 ### Human Task (orchestrator)
 
 The user performs the actual task.
 
-State on the ticket: what the user needs to do, why it is needed, and what result or evidence should be returned. Record the returned result on the ticket. Then reconcile.
+State on the ticket: what the user needs to do, why it is needed, and what result or evidence should be returned. Stop and return that list to the user. When they respond, record the result on the ticket, reconcile, and continue the run.
 
 ## Human involvement
 
@@ -465,7 +466,19 @@ Use `Human Task` when the user needs to perform an external action.
 
 Human acceptance used for goal verification must have its own `Discuss/Gather Inputs` ticket.
 
-If a human ticket blocks only part of the run, continue tickets that are `ready` and that do not `depends_on` it. Pause tickets whose `depends_on` names that answer. The orchestrator may also pause others when it decides the missing answer would invalidate them. Record that decision in `LOG.md`.
+If a human ticket blocks only part of the run, dispatch `ready` agent tickets that do not `depends_on` it, then stop and return to the user. Pause tickets whose `depends_on` names that answer. The orchestrator may also pause others when it decides the missing answer would invalidate them. Record that decision in `LOG.md`.
+
+Do not keep planning in place of that return, and do not invent the answer. Return with a list of what the user needs to do or say. A question is a good form when there are multiple options and those options are easy to understand. It is not the only form. Use a list of needed decisions, a statement of what is missing, a draft to accept or change, or a Human Task description when that is clearer.
+
+When the user responds, record the response on the relevant ticket, reconcile it, and continue the run.
+
+## Steering
+
+When the user sends a new prompt while other work is still going, act on it immediately. Do not wait for active tickets to return.
+
+Change requests and feedback become tickets. Create them now. Assign them when they are `ready`. Do not edit an active worker's ticket file. If the new work conflicts with an active ticket, block or delay assignment until that ticket returns. Record the steering and the tickets created in `LOG.md`.
+
+If the prompt is a response to an open Discuss or Human Task ticket, treat it as that ticket's return, then continue the run.
 
 ## Reconciliation
 
