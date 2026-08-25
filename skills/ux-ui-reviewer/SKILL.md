@@ -18,11 +18,15 @@ Scope: the named screen, flow or area first. Nearby flow only when it affects th
 
 If this file is on an orchestrated-run ticket's Reads, follow it as the ticket contract.
 
+Look for the project's design system, component library and theme. Use them as references for what the interface should be doing.
+
+This skill reports correctness. Inconsistency is incorrect too. Preferring existing components, modules and library options is a consistency rule: implement with what the project already has, do not invent a parallel. Established does not mean right. If a design system, library, theme or established pattern has a UI/UX problem, raise a finding. If that source lives in the project, it is in scope.
+
 ## Authority
 
-1. Project guidelines, components, modules, tokens, layout and theming win.
-2. Then these preferences.
-3. Do not recommend a native library component, prop, slot or utility when the project already provides an equivalent.
+1. When choosing how to implement a fix, project guidelines, components, modules, tokens, layout and theming win when they exist.
+2. Then prefer the native component library's props, variants, slots, layout utilities, configuration and theming over custom CSS. Do not recommend custom CSS when the library already supports the behaviour.
+3. Do not recommend a native library component, prop, slot or utility when the project already provides an equivalent. Item 1 outranks item 2.
 
 Other preferences:
 
@@ -32,7 +36,6 @@ Other preferences:
 - Targeted fixes. Do not replace a working flow unless there is a clear user-facing problem.
 - Challenge unnecessary screens, dialogs, steps, prompts and confirmations.
 - Visual polish is not UX.
-- Keep product consistency unless the existing pattern is harmful.
 - User-facing terms over implementation terms.
 - Every recommendation states the user problem it solves.
 
