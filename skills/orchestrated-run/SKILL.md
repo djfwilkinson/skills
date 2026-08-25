@@ -345,6 +345,10 @@ When assigning a ticket:
 
 Independent tickets may run in parallel. Dispatch `ready` agent tickets. Do not dispatch `proposed` or `blocked` tickets. Handle Discuss and Human Task in the orchestrator thread.
 
+After dispatching agent tickets, wait for those tickets to return. That wait is not a user prompt. Reconcile as soon as a ticket returns. Do not wait for the user to continue the run.
+
+Return to the user only when a human ticket needs a response, or when the run is complete. If agent tickets are also active, still reconcile them when they return.
+
 ### Shared agent rules
 
 Include this block in every agent assignment prompt, then the type contract.
@@ -471,9 +475,11 @@ Use `Human Task` when the user needs to perform an external action.
 
 Human acceptance used for goal verification must have its own `Discuss/Gather Inputs` ticket.
 
-If a human ticket blocks only part of the run, dispatch `ready` agent tickets that do not `depends_on` it, then stop and return to the user. Tickets whose `depends_on` names that answer are `blocked`. The orchestrator may also set others `blocked` when it decides the missing answer would invalidate them. Record that decision in `LOG.md`.
+If a human ticket blocks only part of the run, dispatch `ready` agent tickets that do not `depends_on` it, then return to the user for that ticket. Tickets whose `depends_on` names that answer are `blocked`. The orchestrator may also set others `blocked` when it decides the missing answer would invalidate them. Record that decision in `LOG.md`.
 
 Do not keep planning in place of that return, and do not invent the answer. Return with a list of what the user needs to do or say. A question is a good form when there are multiple options and those options are easy to understand. It is not the only form. Use a list of needed decisions, a statement of what is missing, a draft to accept or change, or a Human Task description when that is clearer.
+
+That return does not pause the run. Reconcile any agent ticket that returns while you wait.
 
 When the user responds, record the response on the relevant ticket, reconcile it, and continue the run.
 
@@ -568,7 +574,7 @@ The run is complete when:
 
 An empty ticket queue does not mean the run is complete.
 
-Finish with a concise user-facing summary covering, using only what is already in the run files:
+When the run is complete, return to the user with a concise summary. Use only what is already in the run files:
 
 - goals achieved;
 - important decisions;
