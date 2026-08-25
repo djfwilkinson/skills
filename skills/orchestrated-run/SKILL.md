@@ -375,26 +375,35 @@ The prose here is for the orchestrator choosing a type. The prompt is what the s
 
 ### Research (subagent)
 
-Close a specific knowledge gap.
+Close a knowledge gap. Set depth in Objective and Completion. Depth is how much effort goes into surrounding context and hunting the answer, not which sources are allowed.
+
+- `triage`: fast. Decide whether any research is needed, and if so whether `surface` or `deep`. Do not hunt the answer. Returns `no-investigation-required`, `surface`, or `deep`.
+- `surface`: pull obvious context. If the answer is there, return it. If not, request `deep` on the same gap, or unknowns for newly uncovered gaps.
+- `deep`: get a full picture and hunt. Return the answer, unknowns, or a partial answer plus newly discovered unknowns.
+
+Bootstrap is `deep` unless set otherwise.
 
 Assignment prompt, after the shared agent rules:
 
 ```text
-This ticket is Research. Close the knowledge gap in the Objective.
+This ticket is Research. Do the depth named in the Objective. Depth is effort on context and hunting.
 
-Return on the ticket:
-- findings
-- evidence or sources
-- remaining uncertainty
-- implications for the run
-- follow-ups: Agent Tasks only when they already have Objective, Completion, and Reads another agent can execute without surveying the repo; otherwise unknowns, or more Research, Explore Options, or Discuss
+triage: quick decision only. Do not hunt the answer. Return one next step: no-investigation-required | surface | deep.
 
-Research may take time. That time is for producing those tickets or unknowns. Do not implement production changes unless the Objective explicitly says to.
+surface: pull obvious context. Return the answer if it is there. Otherwise request deep on this gap, or unknowns for newly uncovered gaps.
+
+deep: get full context. Hunt. Return the answer, unknowns, or a partial answer plus newly discovered unknowns.
+
+Return on the ticket: depth used; findings (the answer or partial answer); evidence; remaining uncertainty; implications; triage next step if triage; follow-ups.
+
+Follow-ups: Agent Tasks only when Objective, Completion, and Reads are already specified. Otherwise unknowns, more Research, Explore Options, or Discuss.
+
+Do not implement production changes unless the Objective says to.
 ```
 
 ### Agent Task (subagent)
 
-Perform the bounded implementation or production task.
+Perform the bounded implementation or production task. For a UX/UI review, put the `ux-ui-reviewer` skill file on Reads.
 
 Assignment prompt, after the shared agent rules:
 
