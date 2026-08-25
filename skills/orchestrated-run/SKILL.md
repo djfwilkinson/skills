@@ -76,13 +76,11 @@ A subagent owns its ticket file while the ticket is active. No other agent edits
 3. Dispatch those tickets with the Research assignment prompt and those references.
 4. Reconcile when they return. Copy proposals into run files as `proposed`. Open `Discuss/Gather Inputs` for proposed goals and non-goals. Decide which other follow-ups become tickets.
 
-Mark `Agent Task`, `Explore Options`, and any ticket that implements or depends on unconfirmed product decisions as `proposed` or `blocked` with `depends_on` the relevant Discuss tickets. They become `ready` only after those tickets resolve.
+Mark `Agent Task`, `Explore Options`, and any ticket that implements or depends on unconfirmed product decisions as `blocked` with `depends_on` the relevant Discuss tickets. They become `ready` only after those tickets resolve.
 
 **If the invocation contains a request.** Create one `Research` ticket: understand that request and inspect enough of the project to propose goals, non-goals, unknowns, useful user questions, and likely next tickets. Put the user prompt on the ticket. Point `## Reads` at the repo rather than pasting a survey.
 
-**If the invocation contains no useful request.** Research enough of the project to reach a useful question before asking the user. Do not ask for goals with no project context when the project itself can provide useful information first. Do not start implementation in bootstrap.
-
-Do not treat proposed goals, non-goals, or other product decisions that require user involvement as active until the user has confirmed them.
+**If the invocation contains no useful request.** Create a Research ticket whose objective is to inspect enough of the project to reach a useful question before asking the user. Do not ask for goals with no project context when the project itself can provide useful information first. Do not start implementation in bootstrap.
 
 ## Unknowns and decisions
 
@@ -141,7 +139,7 @@ Examples:
 
 Local implementation choices that follow established project patterns are process decisions. The orchestrator applies the rule above. It does not default uncertainty to a user interruption.
 
-If a ticket already lists alternatives with meaningfully different outcomes, treat that as the signal to ask. Open `Discuss/Gather Inputs` using those options and the recommendation on the ticket.
+If a ticket already lists alternatives with meaningfully different outcomes, that is enough evidence for the product-decision rule above. Open `Discuss/Gather Inputs` using those options and the recommendation on the ticket.
 
 A subagent that hits such a choice records it on the ticket and stops short of committing it. The orchestrator must not commit it either.
 
@@ -318,6 +316,12 @@ A ticket is `ready` when the orchestrator decides its dependencies and required 
 
 Keep each ticket bounded enough for one assignment. If it is too broad, the worker reports `blocked` or `failed` with a split proposal. The orchestrator decides how to split or replace it.
 
+An Agent Task is not `ready` until Objective, Completion, and Reads name what to change and what done looks like. Vague Research follow-ups stay Research or unknowns, not ready Agent Tasks. Agent Task `## Reads` are the files Research already found, not the repo.
+
+Explore Options is the type for deciding what to build. That reasoning does not land on an Agent Task.
+
+Repo-wide or cross-area validation is its own ticket. That ticket may be an Agent Task created for that purpose. Create it at a module or run boundary, or when several parallel Agent Tasks have touched different areas. Do not fold it into those implementation tickets.
+
 ## Assignment
 
 Every `ready` agent ticket is assigned to one subagent before any work on it starts. That is the only way agent tickets get done.
@@ -356,7 +360,7 @@ Set execution_result to completed, blocked, or failed. That is your result, not 
 
 Do not edit run-level files (GOALS.md, NONGOALS.md, UNKNOWNS.md, WORKINGHINTS.md, LOG.md, PILLARS.md, MODULES.md). Do not create tickets or run-level plans. Record follow-ups on this ticket. The orchestrator decides what happens next.
 
-If multiple reasonable choices would produce meaningfully different product, architectural, operational, compatibility, or scope outcomes, stop short of committing the choice. Record the options and a recommendation on the ticket.
+If multiple reasonable choices would produce meaningfully different product, architectural, operational, compatibility, or scope outcomes, stop short of committing the choice. Record the options and a recommendation on the ticket. Set execution_result to blocked.
 
 Return by finishing the ticket record and execution_result.
 ```
@@ -379,9 +383,9 @@ Return on the ticket:
 - evidence or sources
 - remaining uncertainty
 - implications for the run
-- possible follow-up work
+- follow-ups: Agent Tasks only when they already have Objective, Completion, and Reads another agent can execute without surveying the repo; otherwise unknowns, or more Research, Explore Options, or Discuss
 
-Do not implement production changes unless the Objective explicitly says to.
+Research may take time. That time is for producing those tickets or unknowns. Do not implement production changes unless the Objective explicitly says to.
 ```
 
 ### Agent Task (subagent)
@@ -391,13 +395,14 @@ Perform the bounded implementation or production task.
 Assignment prompt, after the shared agent rules:
 
 ```text
-This ticket is an Agent Task. Perform the bounded production work in the Objective.
+This ticket is an Agent Task. Perform the bounded production work in the Objective. Do not research what to build. Implement from Objective, Completion, and Reads. If that is not enough, set execution_result to blocked and record the gap.
+
+Meet this ticket's Completion. Check that, and nothing wider. Wider tests, lint, typecheck, or cross-area review are not this ticket's job unless Objective and Completion expressly make them so.
 
 Return on the ticket:
 - work performed
 - changed files or artifacts
-- validation performed
-- validation results
+- checks against this ticket's Completion
 - blockers
 - possible follow-up work
 ```
@@ -448,13 +453,13 @@ Do not fix findings unless this ticket's Objective explicitly includes remediati
 
 The orchestrator handles this ticket because it owns the user conversation.
 
-Stop and return to the user. Ask only for the information, decision, review or acceptance required by the ticket. When the user responds, record the response and any resulting decision on the ticket. Then reconcile it like any other returned ticket and continue the run.
+Ask only for the information, decision, review or acceptance required by the ticket. Return using Human involvement. On Discuss and Human Task, the orchestrator writes the user record and `execution_result` on the ticket, then reconciles.
 
 ### Human Task (orchestrator)
 
 The user performs the actual task.
 
-State on the ticket: what the user needs to do, why it is needed, and what result or evidence should be returned. Stop and return that list to the user. When they respond, record the result on the ticket, reconcile, and continue the run.
+State on the ticket: what the user needs to do, why it is needed, and what result or evidence should be returned. Return using Human involvement.
 
 ## Human involvement
 
@@ -466,7 +471,7 @@ Use `Human Task` when the user needs to perform an external action.
 
 Human acceptance used for goal verification must have its own `Discuss/Gather Inputs` ticket.
 
-If a human ticket blocks only part of the run, dispatch `ready` agent tickets that do not `depends_on` it, then stop and return to the user. Pause tickets whose `depends_on` names that answer. The orchestrator may also pause others when it decides the missing answer would invalidate them. Record that decision in `LOG.md`.
+If a human ticket blocks only part of the run, dispatch `ready` agent tickets that do not `depends_on` it, then stop and return to the user. Tickets whose `depends_on` names that answer are `blocked`. The orchestrator may also set others `blocked` when it decides the missing answer would invalidate them. Record that decision in `LOG.md`.
 
 Do not keep planning in place of that return, and do not invent the answer. Return with a list of what the user needs to do or say. A question is a good form when there are multiple options and those options are easy to understand. It is not the only form. Use a list of needed decisions, a statement of what is missing, a draft to accept or change, or a Human Task description when that is clearer.
 
@@ -478,7 +483,7 @@ When the user sends a new prompt while other work is still going, act on it imme
 
 Change requests and feedback become tickets. Create them now. Assign them when they are `ready`. Do not edit an active worker's ticket file. If the new work conflicts with an active ticket, block or delay assignment until that ticket returns. Record the steering and the tickets created in `LOG.md`.
 
-If the prompt is a response to an open Discuss or Human Task ticket, treat it as that ticket's return, then continue the run.
+If the prompt is a response to an open Discuss or Human Task ticket, treat it as that ticket's return. If it also contains change requests or feedback, create those tickets now. Then continue the run.
 
 ## Reconciliation
 
@@ -486,10 +491,14 @@ When the ticket returns:
 
 1. Read the ticket file and `execution_result`. Leave worker-maintained sections as the worker wrote them.
 2. Clear `owner`.
-3. Decide the persistent ticket `status`. `completed` is not automatically `resolved`. You may set `blocked`, `resolved`, or `cancelled`, keep it for further work, or send further tickets.
-4. Reconcile the result into the run: add a concise `LOG.md` entry for what affects the wider run; update goals, non-goals, unknowns, working hints, pillars or modules only where the result changes wider run state; decide what work happens next, using follow-ups as proposals; decide whether any goal is now verified, or what verification or review work is still required.
+3. Decide the persistent ticket `status`. `completed` is not automatically `resolved`. After return, set `ready` (reassign the same ticket), `blocked`, `resolved`, or `cancelled`. Keeping it for further work means `ready` and `owner` cleared.
+4. Reconcile the result into the run: add a concise `LOG.md` entry; update goals, non-goals, unknowns, working hints, pillars or modules only where the result changes wider run state; decide what work happens next, using follow-ups as proposals; decide whether any goal is now verified, or what verification or review work is still required.
 
 Do not copy the investigation into the log. Do not re-do the ticket in the orchestrator thread. If evidence is missing or the result is not acceptable, create or reassign tickets.
+
+After implementation returns, open the human inspection `Discuss/Gather Inputs` and the validation-suite ticket in parallel. Neither `depends_on` the other. Do not wait for the suite before asking the user, and do not wait for the user before starting the suite.
+
+If the validation ticket finds issues, record them. Do not patch, and do not create ready fix tickets that would change files or trigger reloads, until that Discuss has returned. Then the orchestrator decides which findings become tickets.
 
 ## Log
 
