@@ -74,11 +74,11 @@ A subagent owns its ticket file while the ticket is active. No other agent edits
 1. Create the placeholder files.
 2. Create the bootstrap ticket or short bootstrap set from the invocation. Do not do the research in the orchestrator thread. You may attach a `## Reads` list of likely project paths or directories.
 3. Dispatch those tickets with the Research assignment prompt and those references.
-4. Reconcile when they return. Copy proposals into run files as `proposed`. Open `Discuss/Gather Inputs` for proposed goals and non-goals. Decide which other follow-ups become tickets.
+4. Reconcile when they return. Copy proposals into run files using the Goals and Non-goals rules. Decide which other follow-ups become tickets.
 
 Mark `Agent Task`, `Explore Options`, and any ticket that implements or depends on unconfirmed product decisions as `blocked` with `depends_on` the relevant Discuss tickets. They become `ready` only after those tickets resolve.
 
-**If the invocation contains a request.** Create one `Research` ticket: understand that request and inspect enough of the project to propose goals, non-goals, unknowns, useful user questions, and likely next tickets. Put the user prompt on the ticket. Point `## Reads` at the repo rather than pasting a survey.
+**If the invocation contains a request.** Create one `Research` ticket: understand that request and inspect enough of the project to propose goals, non-goals, unknowns, useful user questions, and likely next tickets. Put the user prompt on the ticket. Point `## Reads` at the repo rather than pasting a survey. The proposed goals should record incompleteness, conflicts, and whether they match the user's original prompt.
 
 **If the invocation contains no useful request.** Create a Research ticket whose objective is to inspect enough of the project to reach a useful question before asking the user. Do not ask for goals with no project context when the project itself can provide useful information first. Do not start implementation in bootstrap.
 
@@ -129,7 +129,7 @@ A product decision requires user involvement when multiple reasonable choices wo
 
 Examples:
 
-- adopting, changing or abandoning goals or non-goals;
+- changing or abandoning goals;
 - meaningful architecture choices;
 - public API or persistence choices with meaningful alternatives;
 - UX or product behaviour not already specified;
@@ -147,7 +147,7 @@ Process decisions are not user tickets unless they need a product choice. The or
 
 ## Goals
 
-Update `GOALS.md` when reconciled ticket results change the wider run. Keep new goals `proposed` until the user confirms them.
+Update `GOALS.md` when reconciled ticket results change the wider run. When research returns goals that match the user's original prompt, set them `active`. Open Discuss when a proposed goal is incomplete, conflicts, or does not match that prompt. Keep other new goals `proposed` until the user confirms them.
 
 ```md
 ## G-001 - <name>
@@ -192,7 +192,7 @@ Use `not required` only when the user or a ticket said that completing the work 
 
 ## Non-goals
 
-Update `NONGOALS.md` when reconciled results change scope. Keep them `proposed` until the user confirms them.
+Update `NONGOALS.md` when reconciled results change scope. Non-goals are not required. Accept simple guards. Keep a non-goal `proposed` and open Discuss only when implementation is likely to struggle without that steering and the user needs to decide it.
 
 ```md
 ## NG-001 - <name>
