@@ -472,7 +472,7 @@ Ask only for the information, decision, review or acceptance required by the tic
 
 The user performs the actual task.
 
-State on the ticket: what the user needs to do, why it is needed, and what result or evidence should be returned. Return using Human involvement.
+State on the ticket: Objective is what the user needs to do. Completion is why it is needed and what result or evidence should be returned. Return using Human involvement.
 
 ## Human involvement
 
@@ -487,6 +487,10 @@ Human acceptance used for goal verification must have its own `Discuss/Gather In
 If a human ticket blocks only part of the run, dispatch `ready` agent tickets that do not `depends_on` it, then return to the user for that ticket. Tickets whose `depends_on` names that answer are `blocked`. The orchestrator may also set others `blocked` when it decides the missing answer would invalidate them. Record that decision in `LOG.md`.
 
 Do not keep planning in place of that return, and do not invent the answer. Return with a list of what the user needs to do or say. A question is a good form when there are multiple options and those options are easy to understand. It is not the only form. Use a list of needed decisions, a statement of what is missing, a draft to accept or change, or a Human Task description when that is clearer.
+
+When that return is for an open Human Task, end the message with what the user must do. Copy or summarise the ticket Objective. Do not paste ticket metadata, IDs, Reads, related run IDs, or the process reason. Include the expected result only when the user needs it to know they are done.
+
+If several Human Tasks are waiting, end with each Objective. If the message is already only that ask, do not repeat it.
 
 That return does not pause the run. Reconcile any agent ticket that returns while you wait.
 
