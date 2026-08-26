@@ -1,5 +1,9 @@
 # Agent directives
 
+## Language
+
+When naming, describing, or changing project concepts, read [LANGUAGE.md](LANGUAGE.md).
+
 ## Sync
 
 Library skill, repo copy: `skills/<name>/`
@@ -27,7 +31,7 @@ Don't:
 
 Do:
 - Put library skills (installed on other machines) in `skills/<name>/SKILL.md`; folder name is the skill id
-- Put this checkout's workflow skills in `.cursor/skills/<name>/SKILL.md`; folder name is the skill id
+- Put this checkout's project skills in `.cursor/skills/<name>/SKILL.md`; folder name is the skill id
 - User-invoked: `disable-model-invocation: true`
 - Auto-invoked: omit that field
 - Referenced-only: `disable-model-invocation: true`; description states it is not invoked; callers read the SKILL.md. The loader may still list it as a slash command; do not start it that way
@@ -35,7 +39,7 @@ Do:
 
 Don't:
 - Put library skills anywhere except `skills/`
-- Put this checkout's workflow skills anywhere except `.cursor/skills/`
+- Put this checkout's project skills anywhere except `.cursor/skills/`
 - Copy project skills to user-level skill directories
 
 ## Readme

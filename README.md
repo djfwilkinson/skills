@@ -15,8 +15,8 @@ project-alignment depends on orchestrated-run. A UX/UI review inside an orchestr
 
 [.cursor/skills](.cursor/skills/) is for this checkout only. Do not copy it to `~/.cursor/skills/`.
 
-- [publish-skill](.cursor/skills/publish-skill/SKILL.md): commit library skill changes, push to origin, and install local copies
-- [update-local-skills](.cursor/skills/update-local-skills/SKILL.md): pull the latest and install local copies
+- [publish-skill](.cursor/skills/publish-skill/SKILL.md): commit library skill changes, push to origin, and install user copies
+- [update-local-skills](.cursor/skills/update-local-skills/SKILL.md): pull the latest and install user copies
 - [local-skills-folder](.cursor/skills/local-skills-folder/SKILL.md): shared install steps, not invoked on its own
 
 ## Install
@@ -53,7 +53,7 @@ ln -s "$(pwd)/skills/git-stage-commit" ~/.cursor/skills/git-stage-commit
 
 ## Agent directives
 
-[AGENTS.md](AGENTS.md) is for agents working in this checkout. Keep `skills/` and the machine's user-level copies in sync. Write each frontmatter field for the job the loader gives it, not for what the name sounds like. [CHANGELOG.md](CHANGELOG.md) records added, removed, and renamed library skill ids so a local install can copy this library's skills and ask before deleting retired ones.
+[AGENTS.md](AGENTS.md) is for agents working in this checkout. Shared terms are in [LANGUAGE.md](LANGUAGE.md). Keep `skills/` and the machine's user copies in sync. Write each frontmatter field for the job the loader gives it, not for what the name sounds like. [CHANGELOG.md](CHANGELOG.md) records added, removed, and renamed library skill ids so install can copy this library's skills and ask before deleting retired user copies.
 
 ## Credits
 
