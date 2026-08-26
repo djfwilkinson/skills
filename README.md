@@ -11,9 +11,17 @@ Cursor agent skills I keep here so I can install them on another machine.
 
 project-alignment depends on orchestrated-run. A UX/UI review inside an orchestrated-run is an Agent Task that reads ux-ui-reviewer.
 
+## Repo management
+
+[.cursor/skills](.cursor/skills/) is for this checkout only. Do not copy it to `~/.cursor/skills/`.
+
+- [publish-skill](.cursor/skills/publish-skill/SKILL.md): commit library skill changes, push to origin, and install local copies
+- [update-local-skills](.cursor/skills/update-local-skills/SKILL.md): pull the latest and install local copies
+- [local-skills-folder](.cursor/skills/local-skills-folder/SKILL.md): shared install steps, not invoked on its own
+
 ## Install
 
-Clone this repo, then copy or symlink each folder into `~/.cursor/skills/`.
+Clone this repo, then copy or symlink each folder in `skills/` into `~/.cursor/skills/`.
 
 Copy:
 
@@ -45,7 +53,7 @@ ln -s "$(pwd)/skills/git-stage-commit" ~/.cursor/skills/git-stage-commit
 
 ## Agent directives
 
-[AGENTS.md](AGENTS.md) is for agents working in this checkout. Keep `skills/` and the machine's user-level copies in sync. Write each frontmatter field for the job the loader gives it, not for what the name sounds like.
+[AGENTS.md](AGENTS.md) is for agents working in this checkout. Keep `skills/` and the machine's user-level copies in sync. Write each frontmatter field for the job the loader gives it, not for what the name sounds like. [CHANGELOG.md](CHANGELOG.md) records added, removed, and renamed library skill ids so a local install can copy this library's skills and ask before deleting retired ones.
 
 ## Credits
 
