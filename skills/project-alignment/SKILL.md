@@ -1,6 +1,6 @@
 ---
 name: project-alignment
-description: Use orchestrated-run to establish a project's shared language, assess structural and agent-facing alignment, update the language and relevant guidance docs, and write a project alignment plan. Use only when explicitly invoked by the user.
+description: Use orchestrated-run to establish a project's shared language, assess structural and agent-facing alignment, update language and project guidance, and write an alignment plan or implement the alignment changes. Use only when explicitly invoked by the user.
 disable-model-invocation: true
 argument-hint: "[optional project area or concern]"
 metadata:
@@ -11,34 +11,60 @@ metadata:
 
 This skill is user-invoked. It requires `/orchestrated-run`.
 
-Use it to analyse an existing project, establish shared language with the user, identify changes that would make the project easier for humans and agents to understand and change, and write an implementation plan.
+Use it to analyse an existing project, establish shared language with the user, and identify changes that would make the project easier for humans and agents to understand and change. Write an alignment plan, or implement those changes without a plan, according to the user.
 
-The run may write shared-language documents and update project guidance that needs to point to or consume that language. It does not implement the planned code or structural refactors.
+The run may write shared-language documents and update project guidance that needs to point to or consume that language. It does not implement planned code or structural refactors unless the user chose to implement without a plan.
 
 ## Start
 
 Start a new `/orchestrated-run` for this work.
+
+After the run folder exists, open `Discuss/Gather Inputs` unless the user already chose how this run should finish.
+
+Ask whether an alignment plan file is required and whether to implement without a plan. Present them as one choice:
+
+- write an alignment plan; do not implement the planned changes;
+- implement the alignment changes in this run without a plan file;
+- do not write a plan file and do not implement the alignment changes.
+
+If a plan file is required, ask where to put it in a further `Discuss/Gather Inputs` ticket. Before asking, check the repository root and `docs/plans/` for an existing alignment plan. Default to a file in this run's folder:
+
+`.agent-runs/orchestrated-run/<timestamp>-<short-name>/project-alignment-plan.md`
+
+Also offer `docs/plans/project-alignment.md` and the repository root (`project-alignment-plan.md`). Include a found established path when it is not already in that list. Accept another path the user names.
+
+When asking, say that a run-folder plan stays with the run and is usually untracked when `.agent-runs/` is gitignored, while `docs/plans/` and the repository root stay in the project.
+
+Do not wait for language research for these questions. Do not write the alignment plan or start implementing planned changes until those tickets return. Shared-language research may proceed.
 
 Give that run these goals:
 
 1. Establish an agreed shared language for the project.
 2. Identify project changes that would improve consistency with that language, conceptual locality, navigability, testability, documentation, and agent/user understanding.
 3. Update the shared-language documents and any project guidance needed to make them discoverable and consistently used.
-4. Write an implementation plan at `docs/plans/project-alignment.md`, or the project's established equivalent.
+
+After those tickets return:
+
+- if they chose a plan file, add a goal to write the alignment plan at the agreed path;
+- if they chose to implement without a plan, add a goal to implement the recommended alignment changes in this run;
+- if they chose neither, do not add a fourth goal.
 
 Give it these non-goals:
 
-- implementing code refactors from the plan;
 - changing product behaviour;
 - broad terminology migrations through the codebase;
 - unrelated code-quality cleanup;
 - introducing new architecture only to make the project look more organised.
 
+If the user did not choose to implement without a plan, also treat implementing code or structural refactors from the analysis as a non-goal.
+
+When the user chose to implement without a plan, still finish shared language and alignment analysis first. Implement only recommended changes the user has accepted, using `Agent Task` tickets.
+
 If the user supplied an area or concern with this invocation, include it in the run goals or working hints without narrowing away relevant project-wide findings.
 
 ## Research
 
-Use `Research` tickets to establish the current state before asking the user to make decisions.
+Use `Research` tickets to establish the current state before asking the user to make language or project-model decisions.
 
 Inspect enough of the project to understand:
 
@@ -189,7 +215,7 @@ Examples:
 
 - High benefit, low change size: recommend early.
 - High benefit, high change size: recommend with sequencing and verification.
-- Low benefit, high change size: normally leave out of the implementation plan and record why it is not recommended.
+- Low benefit, high change size: normally do not recommend, and record why.
 - Low benefit, low change size: include only when it removes a recurring source of confusion.
 
 Use recent change frequency as supporting evidence when it helps estimate benefit. A confusing area that changes often usually has more value to improve than an isolated stable area.
@@ -213,17 +239,17 @@ Prefer a pointer such as:
 
 Use the project's existing entry-point file rather than creating a competing one.
 
-This run may make these documentation and guidance changes. Broader code, folder and architecture changes belong in the plan.
+This run may make these documentation and guidance changes. Broader code, folder and architecture changes belong in the alignment plan, or in this run when the user chose to implement without a plan.
 
 ## Plan
 
-Write the agreed plan to:
+Write the alignment plan only when the user required a plan file.
 
-`docs/plans/project-alignment.md`
+Write it to the agreed path. Default:
 
-Use another location when the project has an established plan convention.
+`.agent-runs/orchestrated-run/<timestamp>-<short-name>/project-alignment-plan.md`
 
-The plan is the input to a fresh `/orchestrated-run`, so it should be understandable without this conversation.
+The plan is the input to a later `/orchestrated-run`, so it should be understandable without this conversation.
 
 Start with:
 
@@ -278,7 +304,7 @@ Low | Medium | High
 
 Use paths where they identify stable project areas. Do not fill the plan with line-level edits that are likely to change before implementation.
 
-Flag wide terminology changes as migrations rather than pretending they are ordinary local refactors. The implementation plan should allow old and new forms to coexist temporarily when that is needed to keep the project working while callers are moved.
+Flag wide terminology changes as migrations rather than pretending they are ordinary local refactors. The alignment plan should allow old and new forms to coexist temporarily when that is needed to keep the project working while callers are moved.
 
 A plan can include language changes, structural refactors, module changes, documentation changes, testability improvements and agent-context changes when they serve the alignment goals.
 
@@ -309,9 +335,10 @@ Before completing the alignment run, use `Adversarial Review` tickets to check:
 
 1. the shared language for contradictions, duplicate concepts and unnecessary domain-specific synonyms;
 2. project guidance for stale or duplicated terminology;
-3. the plan for changes that do not serve the stated alignment goals;
-4. each planned change for a clear benefit, change-size assessment and verification method;
-5. whether a high-impact project area was missed because its terminology or structure made it hard to discover.
+3. when a plan was written, the plan for changes that do not serve the stated alignment goals;
+4. each recommended change for a clear benefit, change-size assessment and verification method;
+5. whether a high-impact project area was missed because its terminology or structure made it hard to discover;
+6. when this run implemented changes, the implemented work for mismatch with the agreed language and the user's decision.
 
 Resolve material findings through the normal orchestrated-run process.
 
@@ -322,18 +349,17 @@ The alignment run is complete when:
 - the user has confirmed the non-trivial shared-language decisions;
 - the canonical shared-language documents exist;
 - relevant project guidance points to and uses that language;
-- `docs/plans/project-alignment.md`, or the project equivalent, contains the agreed implementation plan;
-- the plan uses the agreed language consistently;
-- recommended changes state their benefit, change size, dependencies and verification;
-- adversarial review has no unresolved finding that materially changes the plan;
-- no planned code or structural refactor has been implemented.
+- if a plan file was required, the agreed path contains the alignment plan, it uses the agreed language consistently, and recommended changes state their benefit, change size, dependencies and verification;
+- adversarial review has no unresolved finding that materially changes the plan or the implemented work;
+- if the user did not choose to implement without a plan, no planned code or structural refactor has been implemented;
+- if the user chose to implement without a plan, the recommended alignment changes that this run accepted have been implemented.
 
 Finish by summarising the documents written or changed and the highest-value recommendations.
 
-Then give the user one exact command for starting a new implementation run, using the actual plan path:
+If a plan was written, give the user one exact command for starting a new implementation run, using the actual plan path:
 
 ```text
 /orchestrated-run Implement the project alignment plan at <plan-path>. Treat the shared-language documents and project guidance referenced by the plan as required context.
 ```
 
-Do not continue into implementation in the current run.
+Do not continue into implementation in the current run unless the user chose to implement without a plan.

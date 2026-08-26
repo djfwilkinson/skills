@@ -5,7 +5,7 @@ Cursor agent skills I keep here so I can install them on another machine.
 - [public-docs](skills/public-docs/SKILL.md): Write public-facing docs and copy without AI tells.
 - [user-response](skills/user-response/SKILL.md): Shape chat replies and temporary response artifacts without a heavy rewrite pass.
 - [orchestrated-run](skills/orchestrated-run/SKILL.md): Run a project through one orchestrator, shared run files, and ticketed subagents.
-- [project-alignment](skills/project-alignment/SKILL.md): Establish a project's shared language and write an alignment plan.
+- [project-alignment](skills/project-alignment/SKILL.md): Establish a project's shared language and write an alignment plan or implement the alignment changes.
 - [ux-ui-reviewer](skills/ux-ui-reviewer/SKILL.md): Review an implemented interface for task completion and related UX problems.
 - [git-stage-commit](skills/git-stage-commit/SKILL.md): Analyze git changes, group them, and stage and commit.
 

@@ -588,7 +588,7 @@ Avoid:
 
 ### Alignment plan
 
-The agreed list of recommended project changes, written so a later orchestrated-run can implement it without this conversation. Each change has problem, target, affected areas, benefit, change size, dependencies, and verification. The alignment run does not implement those changes. **Implementation plan** describes the same document as input to a later run, not a second artifact.
+The agreed list of recommended project changes, written so a later orchestrated-run can implement it without this conversation. Each change has problem, target, affected areas, benefit, change size, dependencies, and verification. **Implementation plan** describes the same document as input to a later run, not a second artifact. The alignment run writes this document and does not implement the listed changes. The user may skip the document and implement in this run instead.
 
 Related:
 - benefit
