@@ -65,16 +65,6 @@ Do not fill them during setup. Resume a run when the user or invocation identifi
 
 When creating `<project>/.agent-runs/`, add `.agent-runs/` to the project `.gitignore` if that line is missing. Create `.gitignore` if the project has none. That is setup, not an Agent Task.
 
-`.agent-runs/config.yml` holds checkout-local preference, not run state. It is ignored with `.agent-runs/`. If it does not exist, create a `Discuss/Gather Inputs` ticket: whether this checkout should write a user-facing summary of each run into the repo, and if so the path. Suggest `docs/implementation-summaries/<run>.md`. `<run>` is this run's directory name (`<timestamp>-<short-name>`). Bootstrap Research does not `depends_on` that ticket. Do not block implementation tickets on it. When it returns, write `.agent-runs/config.yml` and do not ask again on later runs in this checkout:
-
-```yaml
-summaries:
-  enabled: true | false
-  path: docs/implementation-summaries/<run>.md
-```
-
-Include `path` only when `enabled` is true.
-
 Use stable IDs: goals `G-001`, non-goals `NG-001`, unknowns `U-001`, pillars `P-001`, modules `M-001`, tickets `T-001`. IDs remain stable for the lifetime of the run and are not reused.
 
 The orchestrator owns and writes all run files except active ticket files.
@@ -83,7 +73,7 @@ A subagent owns its ticket file while the ticket is active. No other agent edits
 
 ## Start the run
 
-1. Create the placeholder files. Apply the `.agent-runs/` gitignore and summaries Discuss rules above.
+1. Create the placeholder files. Apply the `.agent-runs/` gitignore rule above.
 2. Create the bootstrap ticket or short bootstrap set from the invocation. Do not do the research in the orchestrator thread. You may attach a `## Reads` list of likely project paths or directories.
 3. Dispatch those tickets with the Research assignment prompt and those references.
 4. Reconcile when they return. Copy proposals into run files using the Goals and Non-goals rules. Decide which other follow-ups become tickets.
@@ -595,12 +585,9 @@ The run is complete when:
 - required human tasks and acceptance are complete;
 - significant adversarial findings are resolved or explicitly accepted by the user;
 - open entries in `UNKNOWNS.md` required for achieved goals are closed;
-- the run files reflect the final state;
-- if `summaries.enabled` is true, the summary Agent Task is resolved.
+- the run files reflect the final state.
 
 An empty ticket queue does not mean the run is complete.
-
-If summaries are enabled and every completion criterion except the summary ticket is met, and that Agent Task does not exist yet, create it `ready`. Objective: write a user-facing report of what this run did and why, at the configured path with `<run>` replaced. Completion: the file exists and reports what was done and why. It is not a dump of tickets or run files. Put the `public-docs` skill file on Reads, plus `GOALS.md`, `NONGOALS.md`, and `LOG.md`. The orchestrator must not write the file.
 
 When the run is complete, return to the user with a concise summary. Use only what is already in the run files:
 
