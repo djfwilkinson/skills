@@ -1,9 +1,6 @@
 ---
 name: ux-ui-reviewer
-description: >-
-  Strict pragmatic review of an implemented interface for task completion,
-  hierarchy, consistency, forms, feedback, accessibility, responsive behaviour,
-  content and maintainability.
+description: Review an implemented interface for task completion, consistency, and related UX problems.
 disable-model-invocation: true
 argument-hint: "[optional screen, flow or area]"
 metadata:
@@ -14,13 +11,17 @@ metadata:
 
 Review an implemented interface as a user completing a task. Report concrete usability, consistency, accessibility and maintainability problems. Do not redesign the product, invent features, or propose large refactors.
 
-Scope: the named screen, flow or area first. Nearby flow only when it affects the same task.
+Review area: the named screen, flow or area first. Nearby flow only when it affects the same task. Default is the named ticket, diff or argument. A whole-product audit only when the caller, ticket or assignment asks for one.
 
-If this file is on an orchestrated-run ticket's Reads, follow it as the ticket contract.
+If this file is on an orchestrated-run ticket's Reads, follow it. The ticket type stays the one on the ticket.
 
 Look for the project's design system, component library and theme. Use them as references for what the interface should be doing.
 
 This skill reports correctness. Inconsistency is incorrect too. Preferring existing components, modules and library options is a consistency rule: implement with what the project already has, do not invent a parallel. Established does not mean right. If a design system, library, theme or established pattern has a UI/UX problem, raise a finding. If that source lives in the project, it is in scope.
+
+Obvious inconsistency with the project's system or siblings is in scope. That includes spacing, density, alignment, control type and placement, component or variant reuse, typography, colour, and other visual or interaction drift. Do not skip it as polish or taste.
+
+Taste, optical nits, and perfect fidelity for inconsequential differences are out of scope. Visual polish without a consistency or user-task problem is not UX.
 
 ## Authority
 
@@ -35,19 +36,30 @@ Other preferences:
 - Project semantic tokens over literal colours, spacing or one-off styling. Colour through the project theme, including light and dark.
 - Targeted fixes. Do not replace a working flow unless there is a clear user-facing problem.
 - Challenge unnecessary screens, dialogs, steps, prompts and confirmations.
-- Visual polish is not UX.
+- Do not skip obvious inconsistency as polish or taste.
+- Taste and inconsequential optical nits are not UX.
 - User-facing terms over implementation terms.
-- Every recommendation states the user problem it solves.
+- Every recommendation states the user problem it solves. Obvious inconsistency with the project's system or siblings is a user problem.
 
 ## Inspection
 
 Default: if a simple, fast, efficient visual path is already obvious (documented URL, running app, existing preview command, or a path given in the ticket or Reads), use it. Do not invent a visual path. Do not add preview infra to make one.
+
+Visual, layout, and interaction consistency findings need that visual path when one exists. Do not skip those sections because they look like polish. Without a visual path, review from code for structure, semantics, and component reuse. Do not report spacing, density, alignment, or other appearance-only drift from code alone.
 
 Default: throwaway scripts are allowed when the direction is clear and obvious and the required tools are already installed. You may write a short script on that path. Do not install new tools or frameworks. Delete any artefacts this task created before return.
 
 If the caller, ticket or assignment revokes browser or throwaway scripts, do not use them.
 
 Record in Evidence whether the finding came from code, visual inspection, a throwaway script, or more than one.
+
+## Comparison
+
+Before finishing, identify the nearest existing sibling screen or control in the review area. Compare spacing, density, alignment, control type, variant, placement and labels.
+
+Use the sibling as evidence of consistency, not as the definition of correct. Report drift that makes this screen inconsistent with the project's system. If the sibling or pattern is wrong, the finding is on that pattern. Do not tell the implementer to match a broken sibling. Do not invent a new pattern when a project one exists and is sound.
+
+If there is no sibling in the review area, say so. Do not hunt the whole product for one unless this is a whole-product audit.
 
 ## Section importance
 
@@ -77,7 +89,7 @@ No decorative hierarchy changes unless they improve comprehension or task comple
 
 `importance: high`
 
-Similar actions look and behave similarly. Buttons, links, menus, selectable rows used consistently. Row click predictable. Primary actions placed consistently. Save, cancel, close, back, delete consistent. Dialogs consistent. Equivalent forms structured the same. Same terms for the same concepts.
+Similar actions look and behave similarly. Buttons, links, menus, selectable rows used consistently. Row click predictable. Primary actions placed consistently. Save, cancel, close, back, delete consistent. Dialogs consistent. Equivalent forms structured the same. Same terms for the same concepts. Drift from how the same action works elsewhere in the flow flagged.
 
 ### Module consistency
 
@@ -143,9 +155,9 @@ No separate mobile and desktop implementations when the project's responsive com
 
 `importance: high`
 
-Spacing scale, typography roles, semantic colours, borders, elevation, radii, icon set, variants: the project's, not one-off values. Alignment communicates relationships. Density fits the task. Custom CSS not overriding project or library behaviour the project already uses. One-off pixels flagged when visible, repeated, or harmful to hierarchy.
+Spacing scale, typography roles, semantic colours, borders, elevation, radii, icon set, variants: the project's, not one-off values. Alignment communicates relationships. Density fits the task and matches siblings. Custom CSS not overriding project or library behaviour the project already uses. Missing, uneven or collapsed spacing against the product rhythm flagged. Wrong type, colour, elevation, radius, icon or variant against the system flagged. One-off pixels flagged when visible, repeated, or harmful to hierarchy.
 
-Do not report tiny cosmetic differences otherwise.
+Do not skip an obvious consistency miss because the task still works. Inconsequential optical nits stay out.
 
 ### Content and terminology
 
@@ -169,7 +181,7 @@ Smallest maintainable fix for the user-facing problem.
 - Invent product requirements, or add features because other products have them.
 - Animation as a default improvement.
 - Taste as a usability issue. Perfect visual fidelity for inconsequential differences.
-- Minor polish as a release blocker.
+- Treat obvious inconsistency with the project's system or siblings as out of scope.
 - Vague findings ("make this cleaner", "improve accessibility").
 - Refactor without showing how it fixes the reported UX problem.
 - Repeat the same root problem.
@@ -180,11 +192,11 @@ Smallest maintainable fix for the user-facing problem.
 Exactly one per finding. Independent of section importance.
 
 - `blocker`: primary task cannot be completed, data may be lost, or a serious accessibility barrier.
-- `high`: a common task is confusing, error-prone, or substantially harder than necessary.
-- `medium`: noticeable friction, inconsistency or misunderstanding that does not prevent completion.
-- `low`: polish or consistency with limited effect on task completion.
+- `high`: a common task is confusing, error-prone, or substantially harder than necessary; or obvious inconsistency that harms the primary layout, hierarchy, or trust in the screen (cramped or colliding content, missing rhythm that makes the view look broken, wrong control for the same action).
+- `medium`: noticeable friction, inconsistency or misunderstanding that does not prevent completion, including obvious inconsistency that makes the screen look unfinished or sloppy while the task still works.
+- `low`: tiny optical mismatch or consistency with limited effect on task completion.
 
-Cosmetic issues are not `high` or `blocker`.
+Inconsequential optical nits and taste are not `high` or `blocker`. Obvious consistency failures against the project's system or siblings are not `low` by default and must not be dropped as polish.
 
 ## Finding format
 

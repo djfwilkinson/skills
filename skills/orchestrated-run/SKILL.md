@@ -415,7 +415,7 @@ Do not implement production changes unless the Objective says to.
 
 ### Agent Task (subagent)
 
-Perform the bounded implementation or production task. For a UX/UI review, put the `ux-ui-reviewer` skill file on Reads.
+Perform the bounded implementation or production task. When the Objective is to produce a UX/UI review, put the `ux-ui-reviewer` skill file on Reads.
 
 Assignment prompt, after the shared agent rules:
 
@@ -453,7 +453,7 @@ Return on the ticket:
 
 ### Adversarial Review (subagent)
 
-Actively try to show that completed work is incorrect, incomplete, or inconsistent with the run.
+Actively try to show that completed work is incorrect, incomplete, or inconsistent with the run. When the completed work is UI, put the `ux-ui-reviewer` skill file on Reads so inspection follows that skill. The ticket type remains Adversarial Review. Do not create a UX/UI review Agent Task for the same completed work.
 
 The orchestrator must not be the reviewer. It decides whether review is due and assigns this type. Typical times: completing a module; after high-impact or cross-cutting changes; after unexpected test or debugging results; when evidence is uncertain; before completing the run. A later review may cover several small related modules. A worker may recommend review; that recommendation is a proposal.
 

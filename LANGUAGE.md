@@ -466,6 +466,8 @@ Bootstrap is deep unless set otherwise.
 
 Ticket type for bounded production work. Implement from Objective, Completion, and Reads. Not ready until those name what to change and what done looks like. Reads are files Research already found, not the repo.
 
+A UX/UI review whose result is the review is this type, with the ux-ui-reviewer skill file on Reads.
+
 ### Explore Options
 
 Ticket type for investigating alternatives without committing them to the production solution. Temporary artifacts (prototypes, experiments) are allowed if labelled temporary. Those are not response-only artifacts.
@@ -473,6 +475,8 @@ Ticket type for investigating alternatives without committing them to the produc
 ### Adversarial Review
 
 Ticket type that tries to show completed work is incorrect, incomplete, or inconsistent with the run. The orchestrator must not be the reviewer.
+
+When the completed work is UI, the ticket may put the ux-ui-reviewer skill file on Reads. That is follow, not a change of ticket type. Producing a UX/UI review as the ticket result is an Agent Task.
 
 ### Discuss/Gather Inputs
 
@@ -675,11 +679,12 @@ These terms describe a review of a **target project's** implemented interface. T
 A review of an implemented interface as a user completing a task. Reports concrete usability, consistency, accessibility, and maintainability problems. Does not redesign the product, invent features, or propose large refactors.
 
 Avoid:
-- treating visual polish, taste, or animation as the review's job
+- treating taste, animation, or inconsequential optical nits as the review's job
+- skipping obvious inconsistency with the project's system or siblings as polish
 
 ### Review area
 
-The named screen, flow, or area under review. Nearby flow only when it affects the same user task. Optional extra text on the skill. This sense of **scope** is **review scope**.
+The named screen, flow, or area under review. Nearby flow only when it affects the same user task. Default is the named ticket, diff, or argument, not a whole-product audit, unless the caller asks for one. Optional extra text on the skill. This sense of **scope** is **review scope**.
 
 Avoid:
 - inventing an unbounded product-wide redesign
@@ -687,7 +692,19 @@ Avoid:
 
 ### Ticket contract
 
-When the ux-ui-reviewer skill file is on an orchestrated-run ticket's Reads, following it is the Agent Task contract for that review. Still user-invoked; follow is not a fourth invocation kind.
+When the ux-ui-reviewer skill file is on an orchestrated-run ticket's Reads, following it is the inspection contract for that review. Still user-invoked; follow is not a fourth invocation kind. The ticket that produces a UX/UI review as its result is an Agent Task. Adversarial Review of completed UI work may also put this skill on Reads; the ticket type stays Adversarial Review.
+
+### Consistency (UX)
+
+The interface uses the project's system and siblings the same way for the same problem: spacing rhythm, density, alignment, control type and placement, component and variant reuse, typography, colour, and interaction. Obvious inconsistency is in scope. Taste and inconsequential optical nits are not.
+
+Related:
+- visual polish (out of scope when there is no consistency or user-task problem)
+- review sections: interaction consistency, module consistency, layout consistency, visual consistency
+
+Avoid:
+- treating missing padding as the only consistency failure
+- using a broken sibling as the definition of correct
 
 ### Component library
 
@@ -762,7 +779,7 @@ Closed list:
 - **Error prevention and recovery**: invalid actions prevented rather than rejected later; failed actions retryable.
 - **Accessibility**: keyboard, focus, semantics, names, contrast, colour not the only channel, and related barriers. Fix semantics through the project's components before custom accessibility code.
 - **Responsive behaviour**: core task remains completable at narrow, medium, and wide widths.
-- **Visual consistency**: the project's spacing, type, colour, and similar tokens, not one-off values.
+- **Visual consistency**: the project's spacing, type, colour, and similar tokens, not one-off values. Missing or uneven rhythm and other obvious visual drift against the system are in scope.
 - **Content and terminology**: labels are user concepts; terminology consistent in the workflow.
 - **Implementation maintainability**: in scope only when it affects UX consistency or future UI maintenance.
 
@@ -794,11 +811,11 @@ Avoid:
 Exactly one per UX finding. Independent of section importance.
 
 - `blocker`: primary task cannot be completed, data may be lost, or a serious accessibility barrier.
-- `high`: a common task is confusing, error-prone, or substantially harder than necessary.
-- `medium`: noticeable friction that does not prevent completion.
-- `low`: polish or consistency with limited effect on task completion.
+- `high`: a common task is confusing, error-prone, or substantially harder than necessary; or obvious inconsistency that harms the primary layout, hierarchy, or trust in the screen.
+- `medium`: noticeable friction that does not prevent completion, including obvious inconsistency that makes the screen look unfinished or sloppy while the task still works.
+- `low`: tiny optical mismatch or consistency with limited effect on task completion.
 
-Cosmetic issues are not `high` or `blocker`.
+Inconsequential optical nits and taste are not `high` or `blocker`. Obvious consistency failures against the project's system or siblings are not `low` by default and must not be dropped as polish.
 
 ### Preferred implementation
 
@@ -806,7 +823,7 @@ The UI module, component, token, or pattern to use for the fix; native library o
 
 ### Visual polish
 
-Appearance without a user-task problem. Not UX. Not a release blocker when minor.
+Appearance without a consistency or user-task problem. Taste and inconsequential optical nits are not UX. Not a release blocker when minor. Distinct from consistency (UX), which is in scope.
 
 ## Git stage and commit
 

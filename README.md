@@ -6,10 +6,10 @@ Cursor agent skills I keep here so I can install them on another machine.
 - [user-response](skills/user-response/SKILL.md): Shape chat replies and temporary response artifacts without a heavy rewrite pass.
 - [orchestrated-run](skills/orchestrated-run/SKILL.md): Run a project through one orchestrator, shared run files, and ticketed subagents.
 - [project-alignment](skills/project-alignment/SKILL.md): Establish a project's shared language and write an alignment plan or implement the alignment changes.
-- [ux-ui-reviewer](skills/ux-ui-reviewer/SKILL.md): Review an implemented interface for task completion and related UX problems.
+- [ux-ui-reviewer](skills/ux-ui-reviewer/SKILL.md): Review an implemented interface for task completion, consistency, and related UX problems.
 - [git-stage-commit](skills/git-stage-commit/SKILL.md): Analyze git changes, group them, and stage and commit.
 
-project-alignment depends on orchestrated-run. A UX/UI review inside an orchestrated-run is an Agent Task that reads ux-ui-reviewer.
+project-alignment depends on orchestrated-run. A UX/UI review inside an orchestrated-run is an Agent Task that reads ux-ui-reviewer. Adversarial Review of completed UI work may also read that skill.
 
 ## Repo management
 
