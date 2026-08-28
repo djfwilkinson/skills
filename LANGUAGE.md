@@ -369,7 +369,7 @@ User or project copy, tone, format, and terminology rules win where they conflic
 
 ### Orchestrator
 
-The one user-facing agent that owns the process of a run: run state, ticket creation and assignment, user interaction, steering, reconciliation, next work, and goal verification. It does not execute agent tickets or rewrite worker-maintained ticket sections.
+The one user-facing agent that owns the process of a run: run state, ticket creation and assignment, user interaction, steering, reconciliation, next work, and goal verification. It does not execute agent tickets or rewrite worker-maintained ticket sections. The narrow exception is Human and Agent Task, which it executes and records itself.
 
 Related:
 - subagent
@@ -378,6 +378,7 @@ Related:
 Avoid:
 - treating the orchestrator as the Adversarial Review reviewer
 - giving the orchestrated-run skill file to a subagent
+- using the Human and Agent Task exception for ordinary agent work
 
 ### Subagent
 
@@ -389,12 +390,12 @@ Related:
 - assignment
 
 Avoid:
-- using subagent for Discuss/Gather Inputs or Human Task (those stay in the orchestrator thread)
+- using subagent for Discuss/Gather Inputs, Human Task, or Human and Agent Task (those stay in the orchestrator thread)
 - treating **worker** as a synonym that replaces this role name
 
 ### Worker
 
-Adjective for ticket ownership of sections: `execution_result` is worker-owned; Unknowns, Findings, Work performed, Evidence, and Blockers / follow-ups are worker-maintained. Not a third role besides orchestrator and subagent.
+Adjective for ticket ownership of sections: `execution_result` is worker-owned; Unknowns, Findings, Work performed, Evidence, Interaction log, and Blockers / follow-ups are worker-maintained. A subagent is the worker for an agent ticket. The orchestrator is the worker for a Human and Agent Task. Worker is not a third role.
 
 ### Agent ticket
 
@@ -409,15 +410,16 @@ Avoid:
 
 ### Human ticket
 
-A ticket the orchestrator handles in its own thread because it needs the user: Discuss/Gather Inputs or Human Task. Every required human interaction must have one.
+A ticket the orchestrator handles in its own thread because it needs the user: Discuss/Gather Inputs, Human Task, or Human and Agent Task. Every required human interaction must have one.
 
 ### Ticket
 
 A bounded piece of work for a run, stored as Markdown with ticket YAML. It defines Objective, Reads, and Completion, and keeps the detailed result. Follow-ups on a ticket are proposals, not a whitelist.
 
 - **Objective**: the bounded result this ticket should produce.
-- **Reads**: the list of paths the subagent must read.
-- **Completion**: what must be true for the subagent to report completed.
+- **Reads**: the list of paths the ticket worker must read.
+- **Completion**: what must be true to report completed. For a Human Task, the observable result or evidence the user should return. For a Human and Agent Task, the overall end condition, not the result of one interaction.
+- **Interactive reason**: why repeated branching interaction in one Human and Agent Task is materially better than the existing ticket types.
 - **Ticket finding**: a result recorded in Findings (research, adversarial, or implementation notes). Distinct from a UX finding.
 
 Avoid:
@@ -443,14 +445,14 @@ Avoid:
 
 ### Run file
 
-A run-level state document the orchestrator writes, except that an active ticket file is owned by its subagent. Kinds: goals, non-goals, unknowns, working hints, log, pillars, modules, plus the tickets directory. Current filenames are the layout, not the concepts.
+A run-level state document the orchestrator writes, except that an active agent ticket file is owned by its subagent. Kinds: goals, non-goals, unknowns, working hints, log, pillars, modules, plus the tickets directory. Current filenames are the layout, not the concepts.
 
 Avoid:
 - treating a ticket's Unknowns or Findings as a second copy of the unknowns run file
 
 ### Ticket type
 
-The contract for how a ticket is executed and what it may do. The orchestrator picks the type when creating the ticket. The types are Research, Agent Task, Explore Options, Adversarial Review, Discuss/Gather Inputs, and Human Task.
+The contract for how a ticket is executed and what it may do. The orchestrator picks the type when creating the ticket. The types are Research, Agent Task, Explore Options, Adversarial Review, Discuss/Gather Inputs, Human Task, and Human and Agent Task.
 
 ### Research
 
@@ -491,7 +493,21 @@ Avoid:
 
 ### Human Task
 
-Ticket type whose Objective is an external action the user must perform. Orchestrator-handled.
+Ticket type whose Objective is an external action the user must perform. Orchestrator-handled. The Objective is a complete ask the user can follow, including commands and process when those are part of the work. Completion is the observable result or evidence to return. Do not record secret values on the ticket.
+
+### Human and Agent Task
+
+Orchestrator-handled ticket type for one bounded task that needs repeated, branching interaction between the user and orchestrator. The orchestrator may perform production or investigation work and write worker-maintained sections for this type only. Use it only when a single interactive ticket is materially better than separate existing ticket types, such as fast iterative debugging. Once selected as next work, stop new subagent dispatches, wait for active subagents to return, then start it; do not dispatch subagents while it is active. Each user turn is recorded before it is surfaced, and the overall Completion stays unchanged across turns.
+
+Related:
+- Human Task
+- orchestrator thread
+- Interaction log
+
+Avoid:
+- treating it as an agent ticket
+- using it for one human action, one decision, ordinary implementation, asynchronous work, or uncertainty alone
+- using its Evidence as a substitute for independently required goal verification or Adversarial Review
 
 ### Ticket status
 
@@ -503,7 +519,7 @@ Avoid:
 
 ### Execution result
 
-Worker-owned result of this assignment, unset until return: `completed | blocked | failed`. On Discuss/Gather Inputs and Human Task the orchestrator writes it. It is not the persistent ticket status.
+Worker-owned result of this assignment, unset until the execution ends: `completed | blocked | failed`. On Discuss/Gather Inputs, Human Task, and Human and Agent Task the orchestrator writes it. It is not the persistent ticket status.
 
 Ticket status `blocked` is waiting (often `depends_on`). Execution `blocked` is the subagent stopping (missing input or an uncommitted product choice).
 
@@ -565,11 +581,11 @@ Avoid:
 
 ### Assignment
 
-The act of giving one ready agent ticket to one subagent before work starts: confirm dependencies, check conflicts, fill Reads, set status `active` and owner, dispatch with the type prompt and paths.
+The act of giving one ready agent ticket to one subagent before work starts: confirm dependencies, check conflicts, fill Reads, set status `active` and owner, dispatch with the type prompt and paths. Selecting a ready Human and Agent Task creates a barrier before Assignment of further agent tickets.
 
 ### Reconciliation
 
-What the orchestrator does when a ticket returns: read execution result, leave worker sections as written, clear owner, set persistent status, update run files only where the wider run changed, decide next work from follow-ups as proposals, decide whether verification or review is still required. Must not re-do the ticket in the orchestrator thread.
+What the orchestrator does when a ticket returns or a Human and Agent Task ends: read execution result, leave worker sections as written, clear owner, set persistent status, update run files only where the wider run changed, decide next work from follow-ups as proposals, decide whether verification or review is still required. Must not re-do the ticket in the orchestrator thread.
 
 ### Verification
 
@@ -644,7 +660,7 @@ Start the subagent with ticket path, type prompt, and Reads.
 
 ### Return
 
-The subagent finishing the ticket record, or the user answering a human ticket. Distinct from returning to the user when a human ticket needs a response.
+The subagent finishing the ticket record, or the user answering Discuss or Human Task. A user turn in an active Human and Agent Task is an interaction, not a ticket return. Distinct from returning to the user when a human ticket needs a response.
 
 ### Owner
 
@@ -652,7 +668,7 @@ Ticket YAML field for who currently executes an active ticket. Orchestrator-owne
 
 ### Follow-up
 
-A proposal on a ticket for the orchestrator. Not a whitelist. Agent Tasks only when Objective, Completion, and Reads are already specified.
+A proposal on a ticket for the orchestrator. Not a whitelist. Agent Tasks only when Objective, Completion, and Reads are already specified. Human and Agent Task only when its bounded work and need for repeated branching interaction are already clear.
 
 ### Log
 
@@ -664,11 +680,23 @@ IDs such as `G-001`, `NG-001`, `U-001`, `P-001`, `M-001`, `T-001` remain for the
 
 ### Human involvement
 
-The orchestrator's user-facing handling of Discuss and Human Task. It does not pause reconciliation of other tickets.
+The orchestrator's user-facing handling of Discuss, Human Task, and Human and Agent Task. The ask must be filled out enough to act. A Human Task return always points at the ticket file that holds that ask. Ordinary human involvement does not pause reconciliation of other tickets; Human and Agent Task starts only after active subagents return and runs without subagent overlap.
+
+### Interaction log
+
+Worker-maintained ticket section that records each agent action, user result, branch taken, and next ask during a Human and Agent Task.
+
+### Interactive reason
+
+Orchestrator-owned ticket section required for Human and Agent Task. Explains why repeated branching interaction in one ticket is materially better than separate existing ticket types.
+
+### Closed ticket
+
+For chat progress updates, a ticket whose ticket status has just become `resolved` or `cancelled`. A resolved summary gives the ticket ID and user-visible result. A cancelled summary says it was cancelled and gives the concise user-relevant reason without implying an execution result. Detailed ticket sections stay off chat.
 
 ### Orchestrator thread
 
-The conversation where the orchestrator works. Must not execute agent-ticket work or invent verification evidence there.
+The conversation where the orchestrator works. Must not execute agent-ticket work or invent verification evidence there. Human and Agent Task is the narrow exception for bounded orchestrator work.
 
 ## UX/UI review
 
