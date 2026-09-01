@@ -484,7 +484,11 @@ Do not fix findings unless this ticket's Objective explicitly includes remediati
 
 The orchestrator handles this ticket because it owns the user conversation.
 
-Ask only for the information, decision, review or acceptance required by the ticket. Write that ask on the ticket from evidence already on tickets or run files: the question, and any options, recommendation, or draft that exist. Do not invent those. If a product decision needs prepared options and they are missing, the ticket is not `ready`: open Research or Explore Options first. Return using Human involvement. On Discuss and Human Task, the orchestrator writes the user record and `execution_result` on the ticket, then reconciles.
+Ask only for the information, decision, review or acceptance required by the ticket. Write that ask on the ticket from evidence already on tickets or run files: the question, and any options, recommendation, or draft that exist. Do not invent those. If a product decision needs prepared options and they are missing, the ticket is not `ready`: open Research or Explore Options first.
+
+For acceptance, return to the user in normal chat. Show or point to the exact result, state the acceptance basis, and ask the user to accept it or describe required changes. Do not use a structured questions form or multiple-choice prompt for acceptance.
+
+Return using Human involvement. On Discuss and Human Task, the orchestrator writes the user record and `execution_result` on the ticket, then reconciles.
 
 ### Human Task (orchestrator)
 
@@ -544,6 +548,8 @@ Human acceptance used for goal verification must have its own `Discuss/Gather In
 If Discuss or Human Task blocks only part of the run, dispatch `ready` agent tickets that do not `depends_on` it, then return to the user for that ticket. This parallel-dispatch rule does not apply after a Human and Agent Task is selected or while it is active. Tickets whose `depends_on` names that answer are `blocked`. The orchestrator may also set others `blocked` when it decides the missing answer would invalidate them. Record that decision in `LOG.md`.
 
 Do not keep planning in place of that return, and do not invent the answer. Return with a well-defined ask: what the user needs to do or say, filled out enough to act. A question is a good form when there are multiple options and those options are easy to understand. It is not the only form. Use a list of needed decisions, a statement of what is missing, a draft to accept or change, or a Human Task description when that is clearer.
+
+Acceptance is not an options question. Present it directly in chat under the Discuss contract, end the turn, and wait for the user's reply.
 
 Write the complete ask on the ticket. Copy it into the message when it is short enough to include in full. When the ask is a procedure or otherwise too long to copy, point to that ticket file instead of summarising it. Do not summarise a filled-out procedure into a vague instruction. Do not paste ticket metadata, Reads, related run IDs, or the process reason. Do not put secret values on the ticket or in the message.
 
