@@ -67,7 +67,7 @@ Do not fill them during setup. Resume a run when the user or invocation identifi
 
 When creating `<project>/.agent-runs/`, add `.agent-runs/` to the project `.gitignore` if that line is missing. Create `.gitignore` if the project has none. That is setup, not an Agent Task.
 
-Use stable IDs: goals `G-001`, non-goals `NG-001`, unknowns `U-001`, pillars `P-001`, modules `M-001`, tickets `T-001`. IDs remain stable for the lifetime of the run and are not reused.
+Use stable IDs: goals `G-001`, non-goals `NG-001`, unknowns `U-001`, pillars `P-001`, modules `M-001`, tickets such as `T-001-RES`. IDs remain stable for the lifetime of the run and are not reused.
 
 The orchestrator owns and writes all run files except active subagent-owned ticket files.
 
@@ -118,7 +118,7 @@ open | assigned | resolved | abandoned
 - tickets: []
 
 ### Resolution tickets
-- T-...
+- T-002-RES
 
 ### Evidence
 - <result when resolved, with ticket ID>
@@ -176,7 +176,7 @@ Deferred because:
 <reason, when deferred>
 
 Resolution tickets:
-- T-...
+- T-003-AGT
 
 ### Status
 proposed | active | achieved | blocked | abandoned
@@ -249,6 +249,24 @@ Modules may be added, split, merged or retired when reconciliation says the run 
 
 Store tickets in `tickets/` as Markdown with YAML frontmatter.
 
+Ticket IDs and filenames include the ticket type:
+
+| Type | Suffix | Example |
+| --- | --- | --- |
+| Research | `RES` | `T-001-RES` |
+| Agent Task | `AGT` | `T-002-AGT` |
+| Explore Options | `EXP` | `T-003-EXP` |
+| Adversarial Review | `ADV` | `T-004-ADV` |
+| Discuss/Gather Inputs | `DIS` | `T-005-DIS` |
+| Human Task | `HUM` | `T-006-HUM` |
+| Human and Agent Task | `HAT` | `T-007-HAT` |
+
+Use one number sequence across every type. Increment the number for each new ticket regardless of suffix; do not keep per-type counters. The full ID is the stable ID. The numeric prefix, such as `T-001`, is valid shorthand anywhere within the run because it remains unique.
+
+Name the file `<full-id>.md`, and use the full ID in ticket YAML and the H1. The suffix records the type at creation. Do not change the type after assigning the ID; cancel or replace the ticket with the next number when a different type is needed.
+
+Do not rename existing tickets when resuming an older run. Preserve their IDs and continue the global number sequence; new tickets use this convention.
+
 `status` and `owner` are orchestrator-owned. `execution_result` is worker-owned and unset until the worker's execution ends.
 
 While a ticket is active, the worker may update only:
@@ -265,7 +283,7 @@ The worker must not modify other ticket metadata. When the orchestrator is the w
 
 ```md
 ---
-id: T-001
+id: T-001-RES
 title: Understand the user prompt
 type: Research
 status: ready
@@ -278,7 +296,7 @@ depends_on: []
 owner: null
 ---
 
-# T-001 - Understand the user prompt
+# T-001-RES - Understand the user prompt
 
 ## Objective
 <the bounded result this ticket should produce>
