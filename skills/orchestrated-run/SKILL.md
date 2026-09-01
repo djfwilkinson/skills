@@ -32,7 +32,7 @@ Subagents own individual agent tickets while they are active and execute them. T
 The orchestrator must not:
 
 - perform the bounded work of an agent ticket;
-- write worker-maintained ticket sections, except while executing a `Human and Agent Task`;
+- write worker-maintained ticket sections, except to record `execution_result` and the user response in Evidence for Discuss or Human Task, or while executing a `Human and Agent Task`;
 - reconstruct or rewrite a returned ticket record;
 - give this skill file to a subagent.
 
@@ -267,7 +267,7 @@ Name the file `<full-id>.md`, and use the full ID in ticket YAML and the H1. The
 
 Do not rename existing tickets when resuming an older run. Preserve their IDs and continue the global number sequence; new tickets use this convention.
 
-`status` and `owner` are orchestrator-owned. `execution_result` is worker-owned and unset until the worker's execution ends.
+`status`, `owner`, and `presentation` are orchestrator-owned. `execution_result` is worker-owned and unset until the worker's execution ends.
 
 While a ticket is active, the worker may update only:
 
@@ -288,6 +288,7 @@ title: Understand the user prompt
 type: Research
 status: ready
 execution_result: null
+presentation: null
 goals: []
 unknowns: []
 pillars: []
@@ -313,6 +314,9 @@ owner: null
 ## Interactive reason
 <orchestrator-owned: required only for Human and Agent Task; why one interactive ticket is materially better>
 
+## Presentation
+<orchestrator-owned: human-ticket ask source, prepared environment and presentation or withdrawal record>
+
 ## Unknowns
 <worker-maintained>
 
@@ -336,6 +340,12 @@ Ticket statuses:
 
 `proposed | ready | active | blocked | resolved | cancelled`
 
+Human-ticket presentation:
+
+`null | upcoming | presented | withdrawn | answered`
+
+Use `null` for agent tickets. Use the other values only under Human involvement and the Human and Agent Task contract.
+
 Execution results:
 
 `completed | blocked | failed`
@@ -350,7 +360,9 @@ An Agent Task is not `ready` until Objective, Completion, and Reads name what to
 
 A Human Task is not `ready` until Objective is a complete ask the user can perform without inventing the procedure, and Completion names the observable result or evidence to return.
 
-A `Human and Agent Task` is not `ready` until Objective, Completion, and Reads bound the work, and Interactive reason explains why repeated branching interaction in one ticket is materially better than using the existing ticket types. Completion is the overall end condition for the ticket, not the expected result of one interaction.
+A human ticket that needs a prepared file, artifact, page, preview, service or other environment is not `ready` until its preparation dependencies have completed and their Evidence says how the prepared state remains available after those tickets return.
+
+A `Human and Agent Task` is not `ready` until Objective, Completion, and Reads bound the work, Interactive reason explains why repeated branching interaction in one ticket is materially better than using the existing ticket types, and its preparation dependencies are complete. Completion is the overall end condition for the ticket, not the expected result of one interaction.
 
 Explore Options is the type for deciding what to build. That reasoning does not land on an Agent Task.
 
@@ -381,7 +393,7 @@ Independent tickets may run in parallel. Dispatch `ready` agent tickets unless a
 
 After dispatching agent tickets, wait for those tickets to return. That wait is not a user prompt. Reconcile as soon as a ticket returns. Do not wait for the user to continue the run.
 
-Selecting a ready `Human and Agent Task` as the next work creates a barrier: stop new subagent dispatches, wait for every already-active subagent to return, and reconcile them first. Ready agent tickets may remain queued. Do not start or surface the interactive ticket until no subagent ticket is active. Do not dispatch subagents while it remains active.
+Selecting a ready `Human and Agent Task` as the next work creates a barrier: stop new subagent dispatches, wait for every already-active subagent to return, and reconcile them first. Ready agent tickets may remain queued. Do not select or start it while another human ticket has `presentation: presented`; get that response or explicitly withdraw its ask first. Do not start or surface the interactive ticket until no subagent ticket is active. Do not dispatch subagents while it remains active.
 
 Apart from closed-ticket progress updates, return to the user only when a human ticket needs a response, or when the run is complete. If agent tickets are also active, still reconcile them when they return.
 
@@ -504,15 +516,15 @@ The orchestrator handles this ticket because it owns the user conversation.
 
 Ask only for the information, decision, review or acceptance required by the ticket. Write that ask on the ticket from evidence already on tickets or run files: the question, and any options, recommendation, or draft that exist. Do not invent those. If a product decision needs prepared options and they are missing, the ticket is not `ready`: open Research or Explore Options first.
 
-For acceptance, return to the user in normal chat. Show or point to the exact result, state the acceptance basis, and ask the user to accept it or describe required changes. Do not use a structured questions form or multiple-choice prompt for acceptance.
+For acceptance, return to the user in normal chat. Show or point to the exact result, explain how to inspect it, state the acceptance basis, and ask the user to accept it or describe required changes. Do not use a structured questions form or multiple-choice prompt for acceptance.
 
-Return using Human involvement. On Discuss and Human Task, the orchestrator writes the user record and `execution_result` on the ticket, then reconciles.
+The current Discuss ask lives in Objective. Return using Human involvement. On Discuss and Human Task, the orchestrator records the user response in Evidence, writes `execution_result`, then reconciles.
 
 ### Human Task (orchestrator)
 
 The user performs the actual task.
 
-Objective is a complete ask: what to do, in order, with the commands, paths, URLs, and expected output the user needs. Name an account or secret-store location when required. Do not put secret values (passwords, tokens, keys, recovery codes) in the ask or on the ticket. Do not leave the procedure implied. Do not invent those details. If they are unknown, the ticket is not `ready`: open Research or Discuss first.
+Objective is a complete ask: what to do, how to do it, in order, with the commands, paths, URLs and expected output the user needs. Include hints and known recovery steps only when they apply and are supported by ticket or run-file evidence. Name an account or secret-store location when required. Do not put secret values (passwords, tokens, keys, recovery codes) in the ask, hints, recovery steps or ticket. Do not leave the procedure implied or invent details. If required procedure details are unknown, the ticket is not `ready`: open Research or Discuss first. Do not block readiness merely because no hint or recovery step applies.
 
 Completion is the observable result or evidence the user should return, not the process reason. The ticket is not `ready` until Objective is a complete ask and Completion names that result. Return using Human involvement.
 
@@ -532,22 +544,24 @@ Before starting:
 
 1. confirm no subagent ticket is active;
 2. check dependencies and file, state and decision conflicts as for Assignment;
-3. set ticket status to `active` and owner to `orchestrator`;
-4. set `execution_result: null`.
+3. confirm no other human ticket has `presentation: presented`;
+4. set ticket status to `active`, owner to `orchestrator`, and `presentation: upcoming`;
+5. set `execution_result: null`.
 
 While active:
 
 - do only the bounded Objective;
 - put each user ask in the latest `Interaction log` entry, not Objective;
-- make each ask complete enough for that turn: include commands and process when the user would otherwise have to invent a procedure, and always name the expected result and follow the secret-handling rules;
+- make each ask complete enough for that turn: include commands and process when the user would otherwise have to invent a procedure, name the expected result, include evidence-backed hints or known recovery steps when they apply, and follow the secret-handling rules;
 - before every user-facing interaction for this ticket, update `Interaction log` with the agent action and result, any user result received, the branch taken and the next ask; also update Work performed and Evidence, including changed paths;
-- copy a short ask into chat and include the ticket file path; for a long procedure, give a one-line description and point to its latest `Interaction log` entry in the ticket file;
+- set `presentation: presented` immediately before returning with the current ask; when the user replies, set it back to `upcoming` while the orchestrator works;
+- copy a short ask into chat and include the ticket file path; for a long procedure, repeat the actionable steps, applicable hints and expected result, then point to its latest `Interaction log` entry for full detail;
 - keep the ticket active across user turns rather than closing it and creating another ticket;
 - do not dispatch subagents.
 
-If the work reaches a product decision covered by the product-decision rule, stop short of that choice, record options and a recommendation, set `execution_result: blocked`, and reconcile. Open Discuss and make this ticket depend on it; it may return to `ready` after that decision resolves.
+If the work reaches a product decision covered by the product-decision rule, stop short of that choice, record options and a recommendation, set `presentation: withdrawn` and `execution_result: blocked`, and reconcile. Open Discuss and make this ticket depend on it; it may return to `ready` with `presentation: upcoming` after that decision resolves.
 
-When Completion is met or the work cannot continue, set `execution_result` to `completed`, `blocked`, or `failed`, then reconcile the ticket normally. If the user explicitly stops the task, record that result, set `execution_result: blocked`, and reconcile it to `cancelled`. This is the only case where the orchestrator is both ticket worker and reconciler.
+When Completion is met, set `presentation: answered` and `execution_result: completed`, then reconcile normally. If the work cannot continue, set `presentation: withdrawn` and `execution_result` to `blocked` or `failed`, then reconcile. If the user explicitly stops the task, record that result, set `presentation: withdrawn` and `execution_result: blocked`, and reconcile it to `cancelled`. This is the only case where the orchestrator is both ticket worker and reconciler.
 
 Commands, inspections and tests performed in this ticket are its Evidence. They may guide the interaction, but do not replace independently required goal verification or Adversarial Review.
 
@@ -563,21 +577,43 @@ Use `Human and Agent Task` only for the repeated, branching interaction defined 
 
 Human acceptance used for goal verification must have its own `Discuss/Gather Inputs` ticket.
 
+Environment preparation is readiness work:
+
+- when a human ask needs a file, artifact, page, preview, service or other prepared state, create the necessary agent tickets and put them in `depends_on` before setting the human ticket `ready`;
+- preparation-ticket Completion must require the resource to remain available after return and its Evidence to record the path or URL, persistent process or session where relevant, expected state, and any known expiry or restart procedure;
+- do not select a Human and Agent Task barrier until those preparation dependencies are complete; once that ticket is active, it may prepare and adjust its own environment within Objective;
+- record current preparation evidence and its ticket pointers in Presentation.
+
+At presentation time, the orchestrator may perform only non-mutating liveness checks on already-prepared resources and open the relevant file or page when the client supports it. Starting, restarting, repairing or changing the environment is agent-ticket work unless an active Human and Agent Task authorises it.
+
 If Discuss or Human Task blocks only part of the run, dispatch `ready` agent tickets that do not `depends_on` it, then return to the user for that ticket. This parallel-dispatch rule does not apply after a Human and Agent Task is selected or while it is active. Tickets whose `depends_on` names that answer are `blocked`. The orchestrator may also set others `blocked` when it decides the missing answer would invalidate them. Record that decision in `LOG.md`.
 
-Do not keep planning in place of that return, and do not invent the answer. Return with a well-defined ask: what the user needs to do or say, filled out enough to act. A question is a good form when there are multiple options and those options are easy to understand. It is not the only form. Use a list of needed decisions, a statement of what is missing, a draft to accept or change, or a Human Task description when that is clearer.
+Do not keep planning in place of that return, and do not invent the answer. Every first presentation and repeat must stand on its own, but its content depends on ticket type:
+
+- Human Task: repeat what to do, the applicable steps, commands, URLs and paths, expected result, evidence to return, ticket path, and any evidence-backed hints or known recovery steps that apply.
+- Discuss/Gather Inputs: repeat the question or decision, essential context, options and recommendation when present, the expected form of the reply, and ticket path.
+- Acceptance: repeat the exact result or path, how to inspect it, acceptance basis, the request to accept or describe changes, and ticket path.
+- Human and Agent Task: present only the current ask from its latest Interaction log entry under that type's contract.
+
+Do not add hints or recovery steps when none apply or the run has no evidence for them. The secret-values ban applies to every part of an ask.
+
+A question is a good form when there are multiple options and those options are easy to understand. It is not the only form. Use a list of needed decisions, a statement of what is missing, a draft to accept or change, or a Human Task description when that is clearer.
 
 Acceptance is not an options question. Present it directly in chat under the Discuss contract, end the turn, and wait for the user's reply.
 
-Write the complete ask on the ticket. Copy it into the message when it is short enough to include in full. When the ask is a procedure or otherwise too long to copy, point to that ticket file instead of summarising it. Do not summarise a filled-out procedure into a vague instruction. Do not paste ticket metadata, Reads, related run IDs, or the process reason. Do not put secret values on the ticket or in the message.
+Discuss and Human Task asks live in Objective. Human and Agent Task current asks live in the latest Interaction log entry. Build each return from that record, not from earlier chat. When a Human Task procedure is long, repeat an actionable version and point to the ticket for full detail. A ticket path or short status sentence is not a substitute for the applicable repeat above. Do not paste ticket metadata, Reads, related run IDs, or the process reason.
 
-When that return is for an open Human Task, end the message with the ask and the ticket file path: the full Objective if copied, otherwise a one-line description plus the path. Include the expected result only when the user needs it to know they are done.
+Create human tickets with `presentation: upcoming`. Immediately before first presentation, set ticket status to `active`, owner to `orchestrator`, and `presentation: presented`; record the ask source and liveness result in Presentation. Until the user responds, every later user-visible message must end with the type-appropriate repeat and ticket path. This includes progress updates and messages caused by a subagent return.
 
-If several Human Tasks are waiting, end with each of those asks and paths. If the message is already only that ask, do not repeat it.
+If a non-mutating liveness check shows that the prepared environment is unusable, set ticket status to `blocked`, clear owner, set `presentation: withdrawn`, add the preparation ticket to `depends_on`, record the withdrawal in Presentation and `LOG.md`, and tell the user that the previous ask is withdrawn. Do not treat a reply to a withdrawn ask as ticket completion. After preparation returns, set the human ticket to `ready` with `presentation: upcoming` and present it again as a new ask.
+
+Never use “still waiting,” “as above,” “previously requested,” or similar shorthand instead of repeating the ask. The user may not have seen the earlier message.
+
+Present several human tickets together only when the combined repeats remain usable. Otherwise present one and leave the others `upcoming`. If several are `presented`, end each later message with each type-appropriate repeat and path. If the message is already only that ask, do not repeat it twice.
 
 That return does not pause the run. Reconcile any agent ticket that returns while you wait. A return for an active `Human and Agent Task` is different: the run intentionally stays in that ticket's interaction loop.
 
-When the user responds to Discuss or Human Task, record the response on the relevant ticket, reconcile it, and continue the run. When the user responds to a `Human and Agent Task`, record the interaction and continue that ticket; reconcile only when its execution ends.
+When the user responds to a presented Discuss or Human Task, set `presentation: answered`, record the response on the relevant ticket, reconcile it, and continue the run. When the user responds to a `Human and Agent Task`, record the interaction and continue that ticket; reconcile only when its execution ends.
 
 ## Steering
 
@@ -585,7 +621,7 @@ When the user sends a new prompt while other work is still going, act on it imme
 
 Change requests and feedback become tickets. Create them now. Assign them when they are `ready`, except while a Human and Agent Task barrier is selected or active. Do not edit an active subagent's ticket file. If the new work conflicts with an active ticket, block or delay assignment until that ticket returns. Record the steering and the tickets created in `LOG.md`.
 
-If the prompt is a response to an open Discuss or Human Task ticket, treat it as that ticket's return. If it answers the current ask on an active `Human and Agent Task`, treat it as the next interaction, not a ticket return. Other prompts are steering: create any resulting tickets but leave subagent work unassigned until the interactive ticket ends. If the user explicitly stops or replaces the interactive task, end and reconcile it before proceeding. Then continue the run.
+If the prompt is a response to a Discuss or Human Task with `presentation: presented`, treat it as that ticket's return. A response to a withdrawn ask is steering or new evidence, not ticket completion. If it answers the current presented ask on an active `Human and Agent Task`, set `presentation: upcoming` and treat it as the next interaction, not a ticket return. Other prompts are steering: create any resulting tickets but leave subagent work unassigned until the interactive ticket ends. If the user explicitly stops or replaces the interactive task, end and reconcile it before proceeding. Then continue the run.
 
 ## Reconciliation
 
@@ -609,6 +645,8 @@ For chat progress, a ticket is closed when its status becomes `resolved` or `can
 After reconciling one or more tickets to a closed status, send a short progress update. Batch tickets closed in the same reconciliation pass. For `resolved`, give the ticket ID and one sentence with the user-visible result. For `cancelled`, give the ticket ID, say it was cancelled, and give the concise user-relevant reason already recorded in `LOG.md`; do not imply an execution result. Do not paste ticket YAML, Reads, Findings, Interaction log or detailed evidence. Continue the run without asking the user to reply to or approve routine progress.
 
 If known human tickets are coming but are not being presented yet, the update may briefly say what user involvement will be requested later. Do not include the full ask until that ticket is presented under Human involvement or the Human and Agent Task contract.
+
+If any human ticket has `presentation: presented`, append its type-appropriate current ask and ticket path after the short progress summary, including on an update triggered by a subagent return. Do not reduce it to a reminder or “still waiting” sentence. Describe an `upcoming` ticket as upcoming, never waiting; do not append a `withdrawn` ask.
 
 ## Log
 
@@ -646,6 +684,8 @@ After compaction, rebuild context from:
 
 Reload completed tickets only when their detailed results become relevant.
 
+Reload every human ticket with `presentation: presented` so later user-visible messages repeat its current ask from Objective or Interaction log and its environment state from Presentation.
+
 If a `Human and Agent Task` has status `active` and owner `orchestrator`, reload it and resume from its latest `Interaction log` entry. Do not repeat actions already recorded there.
 
 ## Process
@@ -658,7 +698,7 @@ Ticket completion, module completion and goal achievement are separate.
 
 The orchestrator marks a goal `achieved` when it decides verification is satisfied, using evidence already in tickets and run files: accepted criteria, defined verification, completed verification work, required human acceptance, and disposition of adversarial findings.
 
-Outside an active Human and Agent Task, it must not re-run tests, inspect artifacts, or otherwise execute verification in the orchestrator thread. Checks performed inside that type remain ticket Evidence and do not replace independently required verification. If verification evidence is missing, create tickets.
+Outside an active Human and Agent Task, it must not re-run tests, inspect artifacts, or otherwise execute verification in the orchestrator thread. A non-mutating liveness check used only to present an already-prepared human environment is process work, not goal-verification evidence. Checks performed inside Human and Agent Task remain ticket Evidence and do not replace independently required verification. If verification evidence is missing, create tickets.
 
 Agent judgement used as verification is an `Agent Task` or `Adversarial Review`. Human judgement is `Discuss/Gather Inputs`.
 
