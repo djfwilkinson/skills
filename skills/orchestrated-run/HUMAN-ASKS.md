@@ -28,10 +28,43 @@ asks/
 The orchestrator writes `asks/` as process work, like `LOG.md`. A subagent must
 never create, edit, or delete these files.
 
-Use static, self-contained HTML with relative links. Do not require a build
-step, server, dependency, script, or install. The ask pages themselves are not
-a prepared human environment. A preview, service, artifact, or other resource
-the ask refers to still follows prepared-human-environment rules.
+Create pages from the bundled templates:
+
+- copy `templates/ask-index.html` to `asks/index.html` when the run first needs
+  an ask page;
+- copy `templates/ask-detail.html` to `asks/<ticket-id>.html` for each human
+  ticket.
+
+Both are static, self-contained HTML with relative links. Their local inline
+renderer is part of the template. Do not add an external script, network
+request, build step, server, dependency, or install. The ask pages themselves
+are not a prepared human environment. A preview, service, artifact, or other
+resource the ask refers to still follows prepared-human-environment rules.
+
+## Template data
+
+Each template starts with one `ORCHESTRATOR DATA` object. Copy the template,
+then edit only that object. Do not regenerate the styles, markup, or renderer
+for routine ask changes.
+
+`ask-index.html` has one `ledgerData.asks` array. Keep one record per relevant
+human ticket and change its `presentation` value as the ticket moves through
+`presented`, `upcoming`, `answered`, or `withdrawn`. The renderer:
+
+- makes only `presented` records live table rows;
+- lists `upcoming` records separately without presenting their full ask;
+- omits `answered` and `withdrawn` records from the index;
+- derives counts and the oldest-ask age.
+
+`ask-detail.html` has one `askPageData` object. Resources, ordered sections,
+steps, commands, expected reply, ticket metadata, and presentation lifecycle
+all live in that object. For Human and Agent Task, replace the current ask data
+rather than appending earlier turns.
+
+Keep data as plain text. Do not add HTML, executable values, secret values, or
+unsupported information to either object. If the template or renderer itself
+needs changing, fix the bundled template first and then replace affected run
+pages from ticket state.
 
 ## Source of truth
 
@@ -44,7 +77,8 @@ Build the page mechanically from:
 
 Do not add findings, evidence, options, procedures, or conclusions that are not
 already on tickets or run files. If an ask page and its ticket disagree, the
-ticket is correct. Rewrite the page before the next user-visible message.
+ticket is correct. Update its template data before the next user-visible
+message.
 
 The secret-values ban applies to the index and every ask page.
 
@@ -88,24 +122,28 @@ Immediately before first presentation:
 1. perform the allowed liveness check;
 2. record the page path, source, liveness result, and presentation time in
    Presentation;
-3. write or replace the per-ticket page;
+3. copy a missing page from the bundled template and populate its
+   `ORCHESTRATOR DATA` object;
 4. set `presentation: presented`;
-5. add or update its live index row;
+5. add or update its record in the index data so it becomes a live row;
 6. when the client supports local files, open the page or index
-   non-mutatingly and record success or failure in Presentation;
+   non-mutatingly and record success only when the template renders its
+   populated data without a visible error;
 7. send the complete first ask in chat with links to the page and index.
 
 When a Human and Agent Task produces a new current ask, update its page and
 index row before presenting that ask.
 
-Whenever presentation leaves `presented`, remove the live index row. When a
-Human and Agent Task changes to `upcoming` while the orchestrator works, mark
-the page not awaiting a reply. When presentation becomes `answered`, mark the
-page answered and record the answer time in Presentation. When it becomes
-`withdrawn`, mark the page withdrawn and record the withdrawal time and reason
-in Presentation. Keep those pages as presentation history; a late response to
-a withdrawn page cannot complete the ticket. Re-presentation replaces the page
-with the new current ask and adds a new live row.
+Whenever presentation leaves `presented`, change the index record's
+`presentation`; the renderer removes its live row. When a Human and Agent Task
+changes to `upcoming` while the orchestrator works, update the detail data so
+the page says it is not awaiting a reply. When presentation becomes `answered`,
+mark the detail data answered and record the answer time in Presentation. When
+it becomes `withdrawn`, mark the detail data withdrawn with its time and reason
+and record both in Presentation. Keep those pages as presentation history; a
+late response to a withdrawn page cannot complete the ticket.
+Re-presentation replaces the detail data with the new current ask and changes
+the index record to `presented`.
 
 Every withdrawal of a presented ask sets ticket YAML presentation to
 `withdrawn`, removes the live row, marks the page withdrawn, records the reason
@@ -169,6 +207,6 @@ the condensed line only when that exact ask has already been presented.
 ## Recovery
 
 After compaction, reload every presented human ticket first. Rebuild or repair
-the index and pages from Objective, the latest Interaction log entry, and
-Presentation before another user-visible message. Never infer presentation
-state or the current ask from HTML alone.
+the index and pages from the bundled templates using Objective, the latest
+Interaction log entry, and Presentation before another user-visible message.
+Never infer presentation state or the current ask from HTML alone.

@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Human ask</title>
+  <script>
+    /*
+     * ORCHESTRATOR DATA
+     * Edit this object only. Keep the renderer and markup unchanged.
+     *
+     * Resources: [{ label, href, detail, state }]
+     * Sections: [{ heading, body, items: ["Text", { text, detail, code }] }]
+     * Metadata: [{ label, value }]
+     *
+     * Set presentation.state to presented | upcoming | answered | withdrawn.
+     * For answered or withdrawn, set endedAt. For withdrawn, also set reason.
+     */
+    const askPageData = {
+      templateVersion: 1,
+      run: {
+        id: "RUN-ID",
+        name: "Run name",
+        project: "Project"
+      },
+      ticket: {
+        id: "T-000-DIS",
+        type: "Discuss",
+        path: "../tickets/T-000-DIS.md",
+        href: "../tickets/T-000-DIS.md"
+      },
+      presentation: {
+        state: "upcoming",
+        presentedAt: "",
+        endedAt: "",
+        reason: ""
+      },
+      ask: {
+        title: "Ask title",
+        why: "Why this ask is required.",
+        resources: [],
+        sections: [],
+        expectedReply: {
+          heading: "Your reply",
+          body: "State the expected reply, result, or evidence."
+        }
+      },
+      metadata: [],
+      backHref: "index.html"
+    };
+  </script>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --surface: #ffffff;
+      --surface-soft: #f0f2f5;
+      --text: #191b1f;
+      --muted: #656b76;
+      --line: #dde1e7;
+      --accent: #3d63dd;
+      --accent-soft: #edf2ff;
+      --success: #1f7a4c;
+      --success-soft: #e7f6ed;
+      --warning: #946200;
+      --warning-soft: #fff4d6;
+      --danger: #b42318;
+      --danger-soft: #ffebe9;
+      --radius: 12px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111317;
+        --surface: #181b20;
+        --surface-soft: #20242b;
+        --text: #f2f3f5;
+        --muted: #a4aab4;
+        --line: #30353d;
+        --accent: #89a2ff;
+        --accent-soft: #222b4d;
+        --success: #70d6a3;
+        --success-soft: #173629;
+        --warning: #f2c66d;
+        --warning-soft: #392f1b;
+        --danger: #ff8b83;
+        --danger-soft: #3e211f;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 15px/1.6 ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    a { color: var(--accent); }
+    .shell {
+      width: min(980px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 26px 0 72px;
+    }
+    .back {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+      text-decoration: none;
+    }
+    .back:hover, .back:focus-visible { color: var(--text); }
+    .notice {
+      margin-top: 24px;
+      padding: 14px 16px;
+      border: 1px solid currentColor;
+      border-radius: var(--radius);
+      font-size: 13px;
+    }
+    .notice.upcoming { color: var(--warning); background: var(--warning-soft); }
+    .notice.answered { color: var(--success); background: var(--success-soft); }
+    .notice.withdrawn, .notice.error { color: var(--danger); background: var(--danger-soft); }
+    .top {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 240px;
+      gap: 48px;
+      padding: 44px 0 30px;
+      border-bottom: 1px solid var(--line);
+    }
+    .eyebrow {
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 750;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 8px 0 12px;
+      font-size: clamp(30px, 5vw, 48px);
+      line-height: 1.08;
+      letter-spacing: -.04em;
+    }
+    .lede { max-width: 640px; margin: 0; color: var(--muted); font-size: 17px; }
+    .meta {
+      align-self: end;
+      padding-left: 22px;
+      border-left: 1px solid var(--line);
+    }
+    .meta-row { margin-top: 13px; }
+    .meta-row:first-child { margin-top: 0; }
+    .meta-label {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+    .meta-value { font-size: 13px; font-weight: 650; overflow-wrap: anywhere; }
+    .state-presented { color: var(--success); }
+    .state-upcoming { color: var(--warning); }
+    .state-answered { color: var(--success); }
+    .state-withdrawn { color: var(--danger); }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 240px;
+      gap: 48px;
+      padding-top: 34px;
+    }
+    h2 { margin: 0 0 12px; font-size: 15px; }
+    .section { padding: 0 0 28px; }
+    .resource-list { display: grid; gap: 10px; }
+    .resource {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 650;
+      text-decoration: none;
+    }
+    .resource:hover, .resource:focus-visible { border-color: var(--accent); }
+    .resource small {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-weight: 400;
+    }
+    .resource-state { color: var(--success); font-size: 11px; white-space: nowrap; }
+    .body-copy { margin: 0 0 14px; }
+    .checklist { margin: 0; padding: 0; list-style: none; counter-reset: ask-items; }
+    .checklist li {
+      display: grid;
+      grid-template-columns: 26px minmax(0, 1fr);
+      gap: 10px;
+      padding: 12px 0;
+      border-top: 1px solid var(--line);
+      counter-increment: ask-items;
+    }
+    .checklist li:last-child { border-bottom: 1px solid var(--line); }
+    .checklist li::before {
+      color: var(--muted);
+      content: counter(ask-items, decimal-leading-zero);
+      font: 12px/1.9 ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .item-detail { display: block; margin-top: 3px; color: var(--muted); font-size: 13px; }
+    code {
+      display: block;
+      margin-top: 8px;
+      padding: 9px 11px;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--surface-soft);
+      color: var(--text);
+      font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+      white-space: pre-wrap;
+    }
+    .reply {
+      padding: 18px;
+      border-left: 3px solid var(--accent);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      background: var(--accent-soft);
+    }
+    .reply p { margin: 5px 0 0; }
+    .side {
+      align-self: start;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    .side dl { margin: 0; }
+    .side div { padding: 11px 0; border-top: 1px solid var(--line); }
+    .side div:first-child { padding-top: 0; border: 0; }
+    .side div:last-child { padding-bottom: 0; }
+    dt { color: var(--muted); font-size: 11px; font-weight: 650; text-transform: uppercase; }
+    dd { margin: 3px 0 0; font-size: 12px; overflow-wrap: anywhere; }
+    dd.path { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .note { margin-top: 32px; color: var(--muted); font-size: 12px; }
+    [hidden] { display: none !important; }
+    @media (max-width: 720px) {
+      .shell { width: min(100% - 24px, 980px); }
+      .top, .layout { grid-template-columns: 1fr; gap: 24px; }
+      .top { padding-top: 32px; }
+      .meta {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        padding: 20px 0 0;
+        border-top: 1px solid var(--line);
+        border-left: 0;
+      }
+      .meta-row { margin: 0; }
+      .side { order: -1; }
+    }
+    @media print {
+      :root { --bg: #fff; --surface: #fff; --text: #111; --muted: #555; --line: #ccc; }
+      .shell { width: 100%; padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <a class="back" id="back-link" href="index.html"><span aria-hidden="true">←</span> Action ledger</a>
+    <p class="notice error" id="render-error" hidden>Unable to render this ask page. Use the complete ask in chat or open the ticket.</p>
+    <p class="notice" id="lifecycle-notice" hidden></p>
+
+    <section class="top">
+      <div>
+        <div class="eyebrow" id="ticket-identity">Human involvement</div>
+        <h1 id="ask-title">Ask title</h1>
+        <p class="lede" id="ask-why">Why this ask is required.</p>
+      </div>
+      <div class="meta" aria-label="Ask metadata">
+        <div class="meta-row"><span class="meta-label">State</span><span class="meta-value" id="presentation-state">Upcoming</span></div>
+        <div class="meta-row"><span class="meta-label">Presented</span><time class="meta-value" id="presented-at">Not presented</time></div>
+        <div class="meta-row"><span class="meta-label">Run</span><span class="meta-value" id="run-name">Run name</span></div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <article>
+        <section class="section" id="resources-section" hidden>
+          <h2>Prepared resources</h2>
+          <div class="resource-list" id="resource-list"></div>
+        </section>
+        <div id="ask-sections"></div>
+        <section class="reply" id="expected-reply">
+          <h2 id="reply-heading">Your reply</h2>
+          <p id="reply-body">State the expected reply, result, or evidence.</p>
+        </section>
+      </article>
+
+      <aside class="side" aria-label="Ticket information">
+        <dl id="ticket-metadata"></dl>
+      </aside>
+    </div>
+
+    <p class="note">This page contains derived presentation data. The ticket remains authoritative.</p>
+    <noscript><p class="notice error">This page needs its included local renderer. Use the complete ask in chat or open the ticket.</p></noscript>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const byId = (id) => document.getElementById(id);
+      const text = (value, fallback = "") => {
+        const result = String(value ?? "").trim();
+        return result || fallback;
+      };
+      const element = (tag, className, content) => {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (content !== undefined) node.textContent = content;
+        return node;
+      };
+      const safeHref = (value) => {
+        const href = text(value);
+        if (!href) return null;
+        try {
+          const url = new URL(href, document.baseURI);
+          return ["file:", "http:", "https:"].includes(url.protocol) ? href : null;
+        } catch {
+          return null;
+        }
+      };
+      const formatDate = (value) => {
+        const date = new Date(value);
+        if (!value || Number.isNaN(date.getTime())) return "Not recorded";
+        return new Intl.DateTimeFormat(undefined, {
+          dateStyle: "medium",
+          timeStyle: "short"
+        }).format(date);
+      };
+      const addMetadata = (list, label, value, className = "", href = "") => {
+        if (!text(value)) return;
+        const group = document.createElement("div");
+        const description = element("dd", className);
+        const resolvedHref = safeHref(href);
+        if (resolvedHref) {
+          const link = element("a", "", value);
+          link.href = resolvedHref;
+          description.append(link);
+        } else {
+          description.textContent = value;
+        }
+        group.append(element("dt", "", label), description);
+        list.append(group);
+      };
+      const lifecycleMessage = (presentation) => {
+        const ended = presentation.endedAt ? ` Recorded ${formatDate(presentation.endedAt)}.` : "";
+        if (presentation.state === "upcoming") return `This page is not awaiting a reply. The orchestrator is preparing the next presentation.${ended}`;
+        if (presentation.state === "answered") return `This ask has been answered and is no longer actionable.${ended}`;
+        if (presentation.state === "withdrawn") {
+          const reason = text(presentation.reason, "The prepared result changed or became unavailable.");
+          return `This ask was withdrawn and cannot be completed. ${reason}${ended}`;
+        }
+        return "";
+      };
+      const renderResource = (resource) => {
+        const href = safeHref(resource.href);
+        const node = href ? element("a", "resource") : element("div", "resource");
+        if (href) node.href = href;
+        const copy = document.createElement("span");
+        copy.append(element("span", "", text(resource.label, "Open resource")));
+        if (resource.detail) copy.append(element("small", "", resource.detail));
+        node.append(copy);
+        if (resource.state) node.append(element("span", "resource-state", resource.state));
+        return node;
+      };
+      const renderItem = (item) => {
+        const listItem = document.createElement("li");
+        const content = document.createElement("span");
+        if (typeof item === "string") {
+          content.textContent = item;
+        } else {
+          content.append(document.createTextNode(text(item?.text, "Review this item.")));
+          if (item?.detail) content.append(element("span", "item-detail", item.detail));
+          if (item?.code) content.append(element("code", "", item.code));
+        }
+        listItem.append(content);
+        return listItem;
+      };
+      const renderSection = (section) => {
+        const wrapper = element("section", "section");
+        wrapper.append(element("h2", "", text(section.heading, "Details")));
+        if (section.body) wrapper.append(element("p", "body-copy", section.body));
+        if (Array.isArray(section.items) && section.items.length) {
+          const list = element("ol", "checklist");
+          list.append(...section.items.map(renderItem));
+          wrapper.append(list);
+        }
+        return wrapper;
+      };
+
+      try {
+        const presentation = askPageData.presentation ?? {};
+        const state = ["presented", "upcoming", "answered", "withdrawn"].includes(presentation.state)
+          ? presentation.state
+          : "upcoming";
+
+        const backHref = safeHref(askPageData.backHref);
+        if (backHref) byId("back-link").href = backHref;
+        byId("ticket-identity").textContent = `${text(askPageData.ticket?.type, "Human involvement")} · ${text(askPageData.ticket?.id, "Ticket")}`;
+        byId("ask-title").textContent = text(askPageData.ask?.title, "Human ask");
+        byId("ask-why").textContent = text(askPageData.ask?.why, "See the ticket for why this ask is required.");
+        document.title = `${text(askPageData.ask?.title, "Human ask")} · ${text(askPageData.ticket?.id, "Ticket")}`;
+
+        const stateNode = byId("presentation-state");
+        stateNode.textContent = state[0].toUpperCase() + state.slice(1);
+        stateNode.className = `meta-value state-${state}`;
+        const presentedAt = byId("presented-at");
+        presentedAt.textContent = presentation.presentedAt ? formatDate(presentation.presentedAt) : "Not presented";
+        if (presentation.presentedAt) presentedAt.dateTime = presentation.presentedAt;
+        byId("run-name").textContent = `${text(askPageData.run?.project, "Project")} · ${text(askPageData.run?.name, "Run")}`;
+
+        const noticeText = lifecycleMessage({ ...presentation, state });
+        const notice = byId("lifecycle-notice");
+        notice.hidden = true;
+        notice.textContent = "";
+        if (noticeText) {
+          notice.textContent = noticeText;
+          notice.className = `notice ${state}`;
+          notice.hidden = false;
+        }
+
+        const resources = Array.isArray(askPageData.ask?.resources) ? askPageData.ask.resources : [];
+        byId("resource-list").replaceChildren(...resources.map(renderResource));
+        byId("resources-section").hidden = resources.length === 0;
+
+        const sections = Array.isArray(askPageData.ask?.sections) ? askPageData.ask.sections : [];
+        byId("ask-sections").replaceChildren(...sections.map(renderSection));
+
+        const expectedReply = askPageData.ask?.expectedReply ?? {};
+        byId("reply-heading").textContent = text(expectedReply.heading, "Your reply");
+        byId("reply-body").textContent = text(expectedReply.body, "Reply with the requested result or evidence.");
+        byId("expected-reply").hidden = state !== "presented";
+
+        const metadata = byId("ticket-metadata");
+        metadata.replaceChildren();
+        addMetadata(metadata, "Ticket", askPageData.ticket?.id, "", askPageData.ticket?.href);
+        addMetadata(metadata, "Ticket path", askPageData.ticket?.path, "path");
+        for (const item of Array.isArray(askPageData.metadata) ? askPageData.metadata : []) {
+          addMetadata(metadata, text(item.label, "Detail"), item.value);
+        }
+      } catch (error) {
+        byId("render-error").hidden = false;
+        console.error("Ask page render failed", error);
+      }
+    })();
+  </script>
+</body>
+</html>

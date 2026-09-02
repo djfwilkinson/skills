@@ -730,11 +730,15 @@ Orchestrator-owned human-ticket section that points to the current ask source an
 
 ### Ask page
 
-An orchestrator-written, static HTML copy of one current return-to-user ask under the run's `asks/` directory. It is a derived artifact, not a run file, and comes from Objective or the latest Interaction log entry plus Presentation. The ticket remains authoritative. First presentation still happens completely in chat. An ask page is not a prepared human environment and never contains secret values.
+An orchestrator-written, self-contained HTML copy of one current return-to-user ask under the run's `asks/` directory. It is instantiated from the bundled detail template and updated through its single structured data object. It is a derived artifact, not a run file, and comes from Objective or the latest Interaction log entry plus Presentation. The ticket remains authoritative. First presentation still happens completely in chat. An ask page is not a prepared human environment and never contains secret values.
 
 ### Ask index
 
-The orchestrator-written `asks/index.html` table of presented human tickets. Each live row names the requested action and why it exists and links the ticket and ask page. It is a derived artifact, not a run file, presentation state or a source for compaction recovery. Withdrawn, answered and upcoming asks are not live rows.
+The orchestrator-written `asks/index.html` action ledger instantiated from the bundled index template and updated through its single structured data object. Each live row names the requested action and why it exists and links the ticket and ask page. It is a derived artifact, not a run file, presentation state or a source for compaction recovery. Withdrawn, answered and upcoming asks are not live rows; upcoming involvement may appear separately without presenting its ask.
+
+### Ask template
+
+One of the self-contained HTML skeletons stored under the orchestrated-run skill's `templates/` directory. The index and detail templates each keep mutable presentation data in one `ORCHESTRATOR DATA` object and keep layout and rendering code stable. Run pages are copies populated from authoritative tickets and Presentation, not references to the library files.
 
 Avoid:
 - **reports folder** or **reviews folder** for `asks/`

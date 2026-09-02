@@ -53,8 +53,8 @@ same skill folder:
   and exact type contract that apply.
 - Read [RUN-STATE.md](RUN-STATE.md) before creating or updating run files and
   after compaction.
-- Read [HUMAN-ASKS.md](HUMAN-ASKS.md) before every human-ticket presentation
-  state change and after compaction when any human ticket is presented.
+- Read [HUMAN-ASKS.md](HUMAN-ASKS.md) and use its templates before every
+  human-ticket presentation state change and after compaction with a presented ticket.
 
 These references are mandatory parts of the contract, not optional guidance or
 skills to invoke. If a required reference cannot be read, stop and report that
@@ -254,8 +254,9 @@ Task current asks live in the latest Interaction log entry.
 Create human tickets with `presentation: upcoming`. Immediately before first
 presentation, perform the allowed liveness check; record the ask source,
 ask-page path, presentation time, and liveness result in Presentation; write
-the per-ticket ask page under `asks/`; set ticket status to `active`, owner to
-`orchestrator`, and presentation to `presented`; then add its live index row.
+the per-ticket ask page from the bundled template under `asks/`; set ticket
+status to `active`, owner to `orchestrator`, and presentation to `presented`;
+then update the index template data to add its live row.
 When the client supports opening local files, open the ask page or index
 non-mutatingly at first presentation and record success in Presentation. That
 is the link-availability check for later messages in this client.
@@ -443,8 +444,9 @@ exact type contract in `TICKET-CONTRACTS.md`.
 
 Reload every presented human ticket from Objective or its latest Interaction
 log entry and Presentation. Read `HUMAN-ASKS.md`, then rebuild missing or stale
-ask pages and the index from those tickets before another user-visible message.
-Tickets, not HTML, determine current presentation state and ask content.
+ask pages and the index from those tickets and the bundled templates before
+another user-visible message. Tickets, not HTML, determine current presentation
+state and ask content.
 
 If a Human and Agent Task has status `active` and owner `orchestrator`, reload
 it and resume from its latest Interaction log entry. Do not repeat recorded
