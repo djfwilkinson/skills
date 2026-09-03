@@ -595,7 +595,7 @@ What the orchestrator does when a ticket returns or a Human and Agent Task ends:
 
 ### Boundary inspection
 
-A Discuss/Gather Inputs ticket through which the user inspects one result produced by one or more named implementation tickets. It may also be the human-acceptance ticket when acceptance concerns that same result.
+A Discuss/Gather Inputs ticket through which the user inspects one coherent batch of results produced by one or more named implementation tickets. It groups each result with its checks and may also be the human-acceptance ticket when acceptance concerns that same batch.
 
 ### Boundary validation ticket
 

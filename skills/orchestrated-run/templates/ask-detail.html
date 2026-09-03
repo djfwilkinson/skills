@@ -11,8 +11,10 @@
      * ORCHESTRATOR DATA
      * Edit this object only. Keep the renderer and markup unchanged.
      *
+     * Covered tickets: [{ id, path, href }]
      * Resources: [{ label, href, detail, state }]
      * Sections: [{ heading, body, items: ["Text", { text, detail, code }] }]
+     * Response examples: ["accept", "T-012-AGT: describe the change needed"]
      * Metadata: [{ label, value }]
      *
      * Set presentation.state to presented | upcoming | answered | withdrawn.
@@ -29,7 +31,8 @@
         id: "T-000-DIS",
         type: "Discuss",
         path: "../tickets/T-000-DIS.md",
-        href: "../tickets/T-000-DIS.md"
+        href: "../tickets/T-000-DIS.md",
+        covered: []
       },
       presentation: {
         state: "upcoming",
@@ -44,7 +47,8 @@
         sections: [],
         expectedReply: {
           heading: "Your reply",
-          body: "State the expected reply, result, or evidence."
+          body: "State the expected reply, result, or evidence.",
+          examples: []
         }
       },
       metadata: [],
@@ -227,6 +231,39 @@
       background: var(--accent-soft);
     }
     .reply p { margin: 5px 0 0; }
+    .response-examples { display: grid; gap: 8px; margin-top: 14px; }
+    .response-example {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+    .response-example code {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+    .copy-line { display: flex; gap: 8px; align-items: center; }
+    .copy-line > :first-child { min-width: 0; overflow-wrap: anywhere; }
+    .copy-button {
+      flex: 0 0 auto;
+      padding: 4px 7px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface-soft);
+      color: var(--muted);
+      cursor: pointer;
+      font: 10px/1.3 ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .copy-button:hover, .copy-button:focus-visible {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
     .side {
       align-self: start;
       padding: 18px;
@@ -293,6 +330,7 @@
         <section class="reply" id="expected-reply">
           <h2 id="reply-heading">Your reply</h2>
           <p id="reply-body">State the expected reply, result, or evidence.</p>
+          <div class="response-examples" id="reply-examples" hidden></div>
         </section>
       </article>
 
@@ -338,17 +376,65 @@
           timeStyle: "short"
         }).format(date);
       };
-      const addMetadata = (list, label, value, className = "", href = "") => {
+      const copyText = async (value) => {
+        if (window.isSecureContext && navigator.clipboard?.writeText) {
+          try {
+            await navigator.clipboard.writeText(value);
+            return;
+          } catch {
+            // Fall back for local files and browser views without clipboard permission.
+          }
+        }
+        const field = element("textarea", "", value);
+        field.setAttribute("readonly", "");
+        field.style.position = "fixed";
+        field.style.opacity = "0";
+        document.body.append(field);
+        field.select();
+        const copied = document.execCommand("copy");
+        field.remove();
+        if (!copied) throw new Error("Copy command was unavailable");
+      };
+      const copyButton = (value) => {
+        const button = element("button", "copy-button", "Copy");
+        const copyLabel = `Copy ${value}`;
+        button.type = "button";
+        button.setAttribute("aria-label", copyLabel);
+        button.addEventListener("click", async () => {
+          try {
+            await copyText(value);
+            button.textContent = "Copied";
+            button.setAttribute("aria-label", "Copied");
+          } catch {
+            button.textContent = "Copy failed";
+            button.setAttribute("aria-label", "Copy failed");
+          }
+          window.setTimeout(() => {
+            button.textContent = "Copy";
+            button.setAttribute("aria-label", copyLabel);
+          }, 1600);
+        });
+        return button;
+      };
+      const addMetadata = (list, label, value, className = "", href = "", copyValue = "") => {
         if (!text(value)) return;
         const group = document.createElement("div");
         const description = element("dd", className);
         const resolvedHref = safeHref(href);
+        let valueNode;
         if (resolvedHref) {
           const link = element("a", "", value);
           link.href = resolvedHref;
-          description.append(link);
+          valueNode = link;
         } else {
-          description.textContent = value;
+          valueNode = element("span", "", value);
+        }
+        if (copyValue) {
+          const row = element("span", "copy-line");
+          row.append(valueNode, copyButton(copyValue));
+          description.append(row);
+        } else {
+          description.append(valueNode);
         }
         group.append(element("dt", "", label), description);
         list.append(group);
@@ -398,6 +484,11 @@
         }
         return wrapper;
       };
+      const renderResponseExample = (value) => {
+        const example = element("div", "response-example");
+        example.append(element("code", "", value), copyButton(value));
+        return example;
+      };
 
       try {
         const presentation = askPageData.presentation ?? {};
@@ -440,12 +531,29 @@
         const expectedReply = askPageData.ask?.expectedReply ?? {};
         byId("reply-heading").textContent = text(expectedReply.heading, "Your reply");
         byId("reply-body").textContent = text(expectedReply.body, "Reply with the requested result or evidence.");
+        const responseExamples = Array.isArray(expectedReply.examples)
+          ? expectedReply.examples.map((value) => text(value)).filter(Boolean)
+          : [];
+        byId("reply-examples").replaceChildren(...responseExamples.map(renderResponseExample));
+        byId("reply-examples").hidden = responseExamples.length === 0;
         byId("expected-reply").hidden = state !== "presented";
 
         const metadata = byId("ticket-metadata");
         metadata.replaceChildren();
-        addMetadata(metadata, "Ticket", askPageData.ticket?.id, "", askPageData.ticket?.href);
+        addMetadata(
+          metadata,
+          "Ask ticket",
+          askPageData.ticket?.id,
+          "",
+          askPageData.ticket?.href,
+          askPageData.ticket?.id
+        );
         addMetadata(metadata, "Ticket path", askPageData.ticket?.path, "path");
+        for (const covered of Array.isArray(askPageData.ticket?.covered) ? askPageData.ticket.covered : []) {
+          const id = text(covered.id, "Ticket");
+          const display = covered.path ? `${id} · ${covered.path}` : id;
+          addMetadata(metadata, "Covered ticket", display, "path", covered.href, id);
+        }
         for (const item of Array.isArray(askPageData.metadata) ? askPageData.metadata : []) {
           addMetadata(metadata, text(item.label, "Detail"), item.value);
         }

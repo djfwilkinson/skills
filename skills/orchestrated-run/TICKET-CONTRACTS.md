@@ -353,6 +353,11 @@ For acceptance, present the exact result, how to inspect it, the acceptance
 basis, and a request to accept it or describe required changes. Do not use a
 structured questions form or multiple-choice prompt for acceptance.
 
+One Discuss may inspect or accept several named implementation tickets when
+their results form one usable review. Group each result with its checks and
+acceptance basis, then request one response that accepts all or names the
+ticket IDs needing changes. Do not create one Discuss per amendment by default.
+
 The current Discuss ask lives in Objective. On Discuss and Human Task, the
 orchestrator records the user response in Evidence, writes
 `execution_result`, then reconciles.

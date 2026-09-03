@@ -61,6 +61,11 @@ steps, commands, expected reply, ticket metadata, and presentation lifecycle
 all live in that object. For Human and Agent Task, replace the current ask data
 rather than appending earlier turns.
 
+For a grouped inspection, put every covered implementation ticket in
+`ticket.covered`, group its checks into ordered sections, and put useful
+complete replies in `expectedReply.examples`. The template makes the ask ID,
+covered IDs, and each example response individually copyable.
+
 Keep data as plain text. Do not add HTML, executable values, secret values, or
 unsupported information to either object. If the template or renderer itself
 needs changing, fix the bundled template first and then replace affected run
@@ -87,6 +92,7 @@ The secret-values ban applies to the index and every ask page.
 One page represents one human ticket. It contains:
 
 - full ticket ID, type, and ticket path;
+- every covered implementation ticket ID for a grouped inspection;
 - the complete current return-to-user ask for that type;
 - why the ask is required, using the ticket's Objective or Interactive reason;
 - any prepared resource path or URL and its current state;
@@ -126,9 +132,10 @@ Immediately before first presentation:
    `ORCHESTRATOR DATA` object;
 4. set `presentation: presented`;
 5. add or update its record in the index data so it becomes a live row;
-6. when the client supports local files, open the page or index
-   non-mutatingly and record success only when the template renders its
-   populated data without a visible error;
+6. best-effort launch the absolute `asks/index.html` path in the default
+   external browser with `open` on macOS, `Start-Process` on Windows, or
+   `xdg-open` on Linux; do not use Cursor's file opener for HTML, wait, verify,
+   retry, or treat launch failure as a blocker;
 7. send the complete first ask in chat with links to the page and index.
 
 When a Human and Agent Task produces a new current ask, update its page and
@@ -167,6 +174,8 @@ Build it from the ticket, not earlier chat:
   and recommendation when present, expected reply, and ticket path.
 - Acceptance: exact result or path, inspection method, acceptance basis,
   request to accept or describe changes, and ticket path.
+- Grouped acceptance: group each result and check set under its covered ticket
+  IDs, then request one reply accepting all or naming IDs needing changes.
 - Human and Agent Task: only the current ask from its latest Interaction log
   entry under that type's contract.
 

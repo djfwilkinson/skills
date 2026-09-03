@@ -257,9 +257,9 @@ ask-page path, presentation time, and liveness result in Presentation; write
 the per-ticket ask page from the bundled template under `asks/`; set ticket
 status to `active`, owner to `orchestrator`, and presentation to `presented`;
 then update the index template data to add its live row.
-When the client supports opening local files, open the ask page or index
-non-mutatingly at first presentation and record success in Presentation. That
-is the link-availability check for later messages in this client.
+At first presentation, best-effort launch the absolute ask-index path in the
+default external browser as specified in `HUMAN-ASKS.md`. Do not wait, verify,
+retry, or record the launch as a client-link check.
 Present the complete type-appropriate ask in chat with the ticket path and
 links to its ask page and index. A link alone is not a presentation.
 
@@ -332,18 +332,18 @@ Discuss and a boundary validation Agent Task that both name its ID and both
 resolve before its module or the run completes. The inspection must not be
 superseded, and validation Evidence must meet its success conditions.
 
-When an implementation ticket completes, attach it to an existing open
-non-active boundary-inspection and boundary-validation pair for the same module and
-inspectable result, or create the pair immediately. Record covered
-implementation IDs on both tickets. Keep the pair blocked on known active or
-ready implementation tickets intended for that same result. Make both tickets
-ready when no such ticket remains, or earlier when the current result is
-independently inspectable and delaying feedback would stall the run. This is
-the batching boundary; do not wait for unknown future work.
+When an implementation ticket completes, attach it to an open non-active
+boundary-inspection and boundary-validation pair for a coherent inspection
+batch, or create the pair immediately. One user amendment set is one batch by
+default: record all covered IDs on both tickets and keep them blocked on its
+known active or ready implementation tickets. Present one grouped inspection
+after the batch returns. Split only when results cannot be inspected coherently
+or delay would stall the run; never split merely because the batch has several
+tickets, modules, or check sets, and do not wait for unknown future work.
 
-Run the boundary inspection and boundary validation in parallel. Neither
-depends on the other. When inspection is also required acceptance of that same
-result, use the same Discuss ticket.
+Run boundary inspection and boundary validation in parallel; neither depends on the other.
+A grouped ask maps results and checks to covered IDs and asks for one reply accepting all
+or naming IDs needing changes; use the same Discuss for acceptance of that batch.
 
 Immediately before presenting a boundary inspection, rebuild its ask from the
 current covered-ticket record and establish its inspection freeze in
