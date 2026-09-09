@@ -293,6 +293,16 @@ complete new presentation.
 
 When the user sends a new prompt while other work is still going, act on it immediately. Do not wait for active tickets to return.
 
+Classify the prompt first. When any part of it answers, stops, or replaces a
+presented ask, use the return and interaction rules below. When it only asks
+for information already explicit in the presented ticket, run files, or this
+contract, answer it in the next message, leaving every presented ask
+`presented` with its required repeat: change no ticket, run file, or
+presentation, do not inspect the project, and do not review, verify, decide, or
+invent a missing answer. Such a prompt is neither a ticket return nor a Human
+and Agent Task interaction. Anything else follows the steering rules below:
+create the tickets it needs.
+
 Change requests and feedback become tickets. Create them now. Assign ready
 agent tickets unless they conflict with active work or a selected or active
 Human and Agent Task's Exclusive scope. Do not edit an active subagent's ticket
@@ -303,10 +313,9 @@ If the prompt responds to a presented Discuss or Human Task, treat it as that
 ticket's return. A response to a withdrawn ask is steering or new evidence,
 not ticket completion. If it answers the current presented ask on an active
 Human and Agent Task, follow the presented-to-upcoming transition under Human
-involvement and treat it as the next interaction, not a ticket return. Other
-prompts are steering: create resulting tickets and assign only those that pass
-current conflict rules. If the user stops or replaces the interactive task,
-end and reconcile it before proceeding. Then continue the run.
+involvement and treat it as the next interaction, not a ticket return. If the
+user stops or replaces the interactive task, end and reconcile it before
+proceeding. Then continue the run.
 
 ## Reconciliation
 When an agent ticket returns, a Discuss or Human Task returns, or a Human and Agent Task ends:

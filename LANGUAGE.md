@@ -670,7 +670,7 @@ The first Research ticket or tickets of a run. Inspect enough to propose goals a
 
 ### Steering
 
-A user prompt while other work is still going. Act immediately. Change requests become tickets. Do not edit an active subagent's ticket file.
+A user prompt while other work is still going. Act immediately. A prompt that only asks for information already explicit in the run record gets a direct reply and no ticket, state or log change; it is not a ticket return. Change requests become tickets. Do not edit an active subagent's ticket file.
 
 ### Context compaction
 
