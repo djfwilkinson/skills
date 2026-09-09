@@ -62,9 +62,10 @@ all live in that object. For Human and Agent Task, replace the current ask data
 rather than appending earlier turns.
 
 For a grouped inspection, put every covered implementation ticket in
-`ticket.covered`, group its checks into ordered sections, and put useful
-complete replies in `expectedReply.examples`. The template makes the ask ID,
-covered IDs, and each example response individually copyable.
+`ticket.covered`, group each result with its recorded outcomes into ordered
+sections, and put useful complete replies in `expectedReply.examples`. The
+template makes the ask ID, covered IDs, and each example response individually
+copyable.
 
 Keep data as plain text. Do not add HTML, executable values, secret values, or
 unsupported information to either object. If the template or renderer itself
@@ -174,8 +175,9 @@ Build it from the ticket, not earlier chat:
   and recommendation when present, expected reply, and ticket path.
 - Acceptance: exact result or path, inspection method, acceptance basis,
   request to accept or describe changes, and ticket path.
-- Grouped acceptance: group each result and check set under its covered ticket
-  IDs, then request one reply accepting all or naming IDs needing changes.
+- Grouped acceptance: group each result and its recorded evidence under its
+  covered ticket IDs, then request one reply accepting all or naming IDs
+  needing changes. Do not list checks for the user to perform.
 - Human and Agent Task: only the current ask from its latest Interaction log
   entry under that type's contract.
 

@@ -351,8 +351,11 @@ or delay would stall the run; never split merely because the batch has several
 tickets, modules, or check sets, and do not wait for unknown future work.
 
 Run boundary inspection and boundary validation in parallel; neither depends on the other.
-A grouped ask maps results and checks to covered IDs and asks for one reply accepting all
-or naming IDs needing changes; use the same Discuss for acceptance of that batch.
+A grouped ask maps results to covered IDs, reports each check a subagent already ran as a
+recorded outcome with its source ticket, and asks for one reply accepting all or naming IDs
+needing changes; use the same Discuss for acceptance. Take those outcomes from covered
+implementation Evidence, and from validation Evidence once it returns. Never wait for
+validation or re-run a check in the orchestrator thread to build the ask.
 
 Immediately before presenting a boundary inspection, rebuild its ask from the
 current covered-ticket record and establish its inspection freeze in

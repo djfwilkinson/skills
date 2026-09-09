@@ -484,7 +484,7 @@ When the completed work is UI, the ticket may put the ux-ui-reviewer skill file 
 
 ### Discuss/Gather Inputs
 
-Ticket type for information, preference, product decision, review, judgement, or acceptance from the user. Orchestrator-handled. **Discuss** is the shorthand. Its current ask lives in Objective. An acceptance request is returned directly in chat with the result, inspection path and acceptance basis, not presented through a structured questions form.
+Ticket type for information, preference, product decision, review, judgement, or acceptance from the user. Orchestrator-handled. A check a subagent can run belongs on an Agent Task, not in the ask. **Discuss** is the shorthand. Its current ask lives in Objective. An acceptance request is returned directly in chat with the result, inspection path and acceptance basis, not presented through a structured questions form.
 
 Related:
 - Human Task
@@ -595,7 +595,7 @@ What the orchestrator does when a ticket returns or a Human and Agent Task ends:
 
 ### Boundary inspection
 
-A Discuss/Gather Inputs ticket through which the user inspects one coherent batch of results produced by one or more named implementation tickets. It groups each result with its checks and may also be the human-acceptance ticket when acceptance concerns that same batch.
+A Discuss/Gather Inputs ticket through which the user inspects one coherent batch of results produced by one or more named implementation tickets. It groups each result with the evidence already recorded for it, asks only for judgement a subagent cannot make, and may also be the human-acceptance ticket when acceptance concerns that same batch.
 
 ### Boundary validation ticket
 

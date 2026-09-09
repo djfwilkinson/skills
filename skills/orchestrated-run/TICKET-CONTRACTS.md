@@ -353,10 +353,17 @@ For acceptance, present the exact result, how to inspect it, the acceptance
 basis, and a request to accept it or describe required changes. Do not use a
 structured questions form or multiple-choice prompt for acceptance.
 
+Ask only for judgement a subagent cannot make. Never ask the user to perform or
+confirm a check a subagent can run, under any label, including inspection
+method or expected result; report it as a recorded outcome from its ticket
+instead. Point the user at a file, page, or preview only when the judgement
+needs eyes on it, and give a command only as optional reproduction.
+
 One Discuss may inspect or accept several named implementation tickets when
-their results form one usable review. Group each result with its checks and
-acceptance basis, then request one response that accepts all or names the
-ticket IDs needing changes. Do not create one Discuss per amendment by default.
+their results form one usable review. Group each result with its recorded
+evidence and acceptance basis, then request one response that accepts all or
+names the ticket IDs needing changes. Do not create one Discuss per amendment
+by default.
 
 The current Discuss ask lives in Objective. On Discuss and Human Task, the
 orchestrator records the user response in Evidence, writes
@@ -364,7 +371,9 @@ orchestrator records the user response in Evidence, writes
 
 ## Human Task (orchestrator)
 
-The user performs the actual task.
+The user performs the actual task. Use this type only for an external action the
+run must not automate, including one needing the user's authority, credentials,
+access, or presence.
 
 Objective is a complete ask: what to do, how to do it, in order, with the
 commands, paths, URLs, and expected output the user needs. Include hints and
