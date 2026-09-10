@@ -344,7 +344,8 @@ Do not fix findings unless Objective explicitly includes remediation.
 The orchestrator handles this ticket because it owns the user conversation.
 
 Ask only for information, a decision, review, or acceptance required by the
-ticket. Write the ask from evidence already on tickets or run files: the
+ticket. Write it under Writing the ask in `HUMAN-ASKS.md`, from evidence
+already on tickets or run files: the
 question and any options, recommendation, or draft that exist. Do not invent
 them. If a product decision needs prepared options and they are missing, the
 ticket is not `ready`: open Research or Explore Options first.
@@ -375,8 +376,9 @@ The user performs the actual task. Use this type only for an external action the
 run must not automate, including one needing the user's authority, credentials,
 access, or presence.
 
-Objective is a complete ask: what to do, how to do it, in order, with the
-commands, paths, URLs, and expected output the user needs. Include hints and
+Objective is a complete ask under Writing the ask in `HUMAN-ASKS.md`: what to
+do, how to do it, in order, with the commands, paths, URLs, and expected output
+the user needs. Include hints and
 known recovery steps only when supported by ticket or run-file evidence. Name
 an account or secret-store location when required. Never put secret values in
 the ask or ticket. If procedure details are unknown, the ticket is not `ready`:

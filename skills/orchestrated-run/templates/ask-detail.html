@@ -11,6 +11,7 @@
      * ORCHESTRATOR DATA
      * Edit this object only. Keep the renderer and markup unchanged.
      *
+     * summary: one sentence stating the ask. why: why it matters to the user.
      * Covered tickets: [{ id, path, href }]
      * Resources: [{ label, href, detail, state }]
      * Sections: [{ heading, body, items: ["Text", { text, detail, code }] }]
@@ -42,7 +43,8 @@
       },
       ask: {
         title: "Ask title",
-        why: "Why this ask is required.",
+        summary: "One sentence stating the ask.",
+        why: "Why this matters to the user.",
         resources: [],
         sections: [],
         expectedReply: {
@@ -144,7 +146,8 @@
       line-height: 1.08;
       letter-spacing: -.04em;
     }
-    .lede { max-width: 640px; margin: 0; color: var(--muted); font-size: 17px; }
+    .lede { max-width: 640px; margin: 0; color: var(--text); font-size: 17px; }
+    .why { max-width: 640px; margin: 9px 0 0; color: var(--muted); font-size: 14px; }
     .meta {
       align-self: end;
       padding-left: 22px;
@@ -311,7 +314,8 @@
       <div>
         <div class="eyebrow" id="ticket-identity">Human involvement</div>
         <h1 id="ask-title">Ask title</h1>
-        <p class="lede" id="ask-why">Why this ask is required.</p>
+        <p class="lede" id="ask-summary" hidden></p>
+        <p class="why" id="ask-why" hidden></p>
       </div>
       <div class="meta" aria-label="Ask metadata">
         <div class="meta-row"><span class="meta-label">State</span><span class="meta-value" id="presentation-state">Upcoming</span></div>
@@ -500,7 +504,12 @@
         if (backHref) byId("back-link").href = backHref;
         byId("ticket-identity").textContent = `${text(askPageData.ticket?.type, "Human involvement")} · ${text(askPageData.ticket?.id, "Ticket")}`;
         byId("ask-title").textContent = text(askPageData.ask?.title, "Human ask");
-        byId("ask-why").textContent = text(askPageData.ask?.why, "See the ticket for why this ask is required.");
+        const summary = text(askPageData.ask?.summary);
+        byId("ask-summary").textContent = summary;
+        byId("ask-summary").hidden = !summary;
+        const why = text(askPageData.ask?.why);
+        byId("ask-why").textContent = why;
+        byId("ask-why").hidden = !why;
         document.title = `${text(askPageData.ask?.title, "Human ask")} · ${text(askPageData.ticket?.id, "Ticket")}`;
 
         const stateNode = byId("presentation-state");

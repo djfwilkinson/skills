@@ -710,7 +710,7 @@ The orchestrator's user-facing handling of Discuss, Human Task, and Human and Ag
 
 ### Return-to-user ask
 
-The current action, decision, review or acceptance requested from the user. A Human Task includes the applicable procedure, commands, URLs, paths, expected result and evidence to return. Discuss includes the question, essential context, options and expected reply. Acceptance includes the exact result or path, inspection method, acceptance basis and request to accept or describe changes. Human and Agent Task uses only its latest Interaction log ask. Include evidence-backed hints and known recovery steps only when they apply. Every first presentation includes the ticket path, has a derived ask page, and never includes secret values.
+The current action, decision, review or acceptance requested from the user. Every ask stands alone for a reader who has only that ask: it opens with one sentence naming what is being decided and what the thing now does for the user, then gives the detail. An artifact that exists only for agents is not put to the user for acceptance. A Human Task includes the applicable procedure, commands, URLs, paths, expected result and evidence to return. Discuss includes the question, essential context, options and expected reply. Acceptance includes the exact result or path, inspection method, acceptance basis and request to accept or describe changes. Human and Agent Task uses only its latest Interaction log ask. Include evidence-backed hints and known recovery steps only when they apply. Every first presentation includes the ticket path, has a derived ask page, and never includes secret values.
 
 ### Prepared human environment
 

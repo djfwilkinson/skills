@@ -16,8 +16,8 @@
      *   id: "T-014-DIS",
      *   type: "Discuss",
      *   presentation: "presented", // presented | upcoming | answered | withdrawn
-     *   action: "Review the booking calendar",
-     *   reason: "Confirm conflict handling before module acceptance.",
+     *   action: "Confirm double bookings are blocked", // the ask page summary, verbatim
+     *   reason: "Why this matters to the user, not the process reason.",
      *   ticketPath: "../tickets/T-014-DIS.md",
      *   ticketHref: "../tickets/T-014-DIS.md",
      *   pageHref: "T-014-DIS.html",
@@ -31,7 +31,8 @@
         id: "RUN-ID",
         name: "Run name",
         project: "Project",
-        updatedAt: ""
+        updatedAt: "",
+        complete: false
       },
       asks: []
     };
@@ -101,6 +102,15 @@
       letter-spacing: -.035em;
     }
     .run-meta { color: var(--muted); text-align: right; }
+    .run-complete {
+      margin: 26px 0 0;
+      padding: 14px 17px;
+      border: 1px solid var(--success);
+      border-radius: var(--radius);
+      color: var(--success);
+      font-size: 16px;
+      font-weight: 650;
+    }
     .stats { display: flex; gap: 30px; margin: 26px 0; }
     .stat strong { display: block; font-size: 22px; letter-spacing: -.02em; }
     .stat span { color: var(--muted); font-size: 12px; }
@@ -272,6 +282,8 @@
       </div>
     </header>
 
+    <p class="run-complete" id="run-complete" hidden>This orchestrated run is complete.</p>
+
     <section class="stats" aria-label="Ask summary">
       <div class="stat"><strong id="current-count">0</strong><span>Action needed now</span></div>
       <div class="stat"><strong id="upcoming-count">0</strong><span>Coming later</span></div>
@@ -421,6 +433,7 @@
         updatedAt.textContent = ledgerData.run?.updatedAt ? `Updated ${formatDate(ledgerData.run.updatedAt)}` : "Update time not recorded";
         if (ledgerData.run?.updatedAt) updatedAt.dateTime = ledgerData.run.updatedAt;
         document.title = `Action ledger · ${text(ledgerData.run?.name, "Run")}`;
+        byId("run-complete").hidden = ledgerData.run?.complete !== true;
 
         byId("current-count").textContent = String(current.length);
         byId("upcoming-count").textContent = String(upcoming.length);

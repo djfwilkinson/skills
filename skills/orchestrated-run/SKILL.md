@@ -257,8 +257,8 @@ ask-page path, presentation time, and liveness result in Presentation; write
 the per-ticket ask page from the bundled template under `asks/`; set ticket
 status to `active`, owner to `orchestrator`, and presentation to `presented`;
 then update the index template data to add its live row.
-At first presentation, best-effort launch the absolute ask-index path in the
-default external browser as specified in `HUMAN-ASKS.md`. Do not wait, verify,
+At first presentation, best-effort launch the ask in the default external
+browser, choosing the path `HUMAN-ASKS.md` specifies. Do not wait, verify,
 retry, or record the launch as a client-link check.
 Present the complete type-appropriate ask in chat with the ticket path and
 links to its ask page and index. A link alone is not a presentation.
@@ -351,9 +351,9 @@ or delay would stall the run; never split merely because the batch has several
 tickets, modules, or check sets, and do not wait for unknown future work.
 
 Run boundary inspection and boundary validation in parallel; neither depends on the other.
-A grouped ask maps results to covered IDs, reports each check a subagent already ran as a
-recorded outcome with its source ticket, and asks for one reply accepting all or naming IDs
-needing changes; use the same Discuss for acceptance. Take those outcomes from covered
+A grouped ask maps results to covered IDs, says what each result now does for the user,
+reports each check a subagent already ran as a recorded outcome with its source ticket, and
+asks for one reply accepting all or naming IDs needing changes; use the same Discuss for acceptance. Take those outcomes from covered
 implementation Evidence, and from validation Evidence once it returns. Never wait for
 validation or re-run a check in the orchestrator thread to build the ask.
 
@@ -502,7 +502,11 @@ The run is complete when:
 
 An empty ticket queue does not mean the run is complete.
 
-When the run is complete, return to the user with a concise summary. Use only what is already in the run files:
+When the run is complete, set `run.complete` in the index template data if that
+index exists, then
+return to the user with a message that opens with the bold line
+`**This orchestrated run is complete.**` and a concise summary under it. Use
+only what is already in the run files:
 
 - goals achieved;
 - important decisions;

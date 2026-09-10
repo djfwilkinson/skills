@@ -54,11 +54,13 @@ human ticket and change its `presentation` value as the ticket moves through
 - makes only `presented` records live table rows;
 - lists `upcoming` records separately without presenting their full ask;
 - omits `answered` and `withdrawn` records from the index;
-- derives counts and the oldest-ask age.
+- derives counts and the oldest-ask age;
+- shows the run-complete line when `run.complete` is `true`.
 
-`ask-detail.html` has one `askPageData` object. Resources, ordered sections,
-steps, commands, expected reply, ticket metadata, and presentation lifecycle
-all live in that object. For Human and Agent Task, replace the current ask data
+`ask-detail.html` has one `askPageData` object. The one-sentence summary,
+resources, ordered sections, steps, commands, expected reply, ticket metadata,
+and presentation lifecycle all live in that object. `ask.summary` carries that
+sentence and `ask.why` why the ask matters to the user. For Human and Agent Task, replace the current ask data
 rather than appending earlier turns.
 
 For a grouped inspection, put every covered implementation ticket in
@@ -88,14 +90,40 @@ message.
 
 The secret-values ban applies to the index and every ask page.
 
+## Writing the ask
+
+Write every ask for a reader who has only that ask. Name the thing, describe in
+observable terms what it now does for the user, and state what is being decided
+or done, without needing the ticket, the module, chat history, or the run.
+Restating a name or label as its own purpose describes nothing.
+
+Lead with one sentence stating the ask in the words the user uses for their own
+product, then give the detail under it. Technical terms belong in an ask whose
+product or judgement is technical; say what one means for the product when that
+is not already plain.
+
+Do not ask the user to judge an aggregate from its name. `Accept module 04 is
+complete` fails because it says nothing about what that module was meant to
+deliver. Name the aggregate when it helps, then state each result being judged.
+
+Never ask the user to accept an artifact that exists only for agents, such as an
+evidence file. When a document, report, design, or prepared environment is
+itself the deliverable, ask about what it gives the user: say what it holds, why
+it exists, and when it will matter.
+
+A Human and Agent Task turn after the first is the current observation or step,
+what to look at, and the expected reply. It does not restate the task.
+
 ## Per-ticket page
 
 One page represents one human ticket. It contains:
 
 - full ticket ID, type, and ticket path;
 - every covered implementation ticket ID for a grouped inspection;
+- the one-sentence summary of the ask;
 - the complete current return-to-user ask for that type;
-- why the ask is required, using the ticket's Objective or Interactive reason;
+- why the ask matters to the user, from the ticket's Objective, never the
+  process or Interactive reason;
 - any prepared resource path or URL and its current state;
 - the expected reply, result, or evidence;
 - the presentation state and time recorded in Presentation.
@@ -111,8 +139,9 @@ Interaction log entry, not previous turns.
 `index.html` has one live table row per ticket with
 `presentation: presented`. Include:
 
-- the action and its object in one sentence;
-- why the ask is required;
+- `action`, holding a presented ask page's summary sentence verbatim, or a
+  short involvement label for an upcoming record;
+- why the ask matters to the user;
 - ticket ID and ticket path;
 - type;
 - presentation time;
@@ -129,14 +158,16 @@ Immediately before first presentation:
 1. perform the allowed liveness check;
 2. record the page path, source, liveness result, and presentation time in
    Presentation;
-3. copy a missing page from the bundled template and populate its
-   `ORCHESTRATOR DATA` object;
+3. copy the bundled template only when the page file is missing, then populate
+   or replace its `ORCHESTRATOR DATA` object;
 4. set `presentation: presented`;
 5. add or update its record in the index data so it becomes a live row;
-6. best-effort launch the absolute `asks/index.html` path in the default
+6. best-effort launch the absolute `asks/<ticket-id>.html` path, or
+   `asks/index.html` when presenting several asks at once, in the default
    external browser with `open` on macOS, `Start-Process` on Windows, or
    `xdg-open` on Linux; do not use Cursor's file opener for HTML, wait, verify,
-   retry, or treat launch failure as a blocker;
+   retry, or treat launch failure as a blocker. Launch again when a withdrawn
+   ask is re-presented. Do not launch again for each Human and Agent Task turn;
 7. send the complete first ask in chat with links to the page and index.
 
 When a Human and Agent Task produces a new current ask, update its page and
@@ -166,7 +197,8 @@ Keep `index.html` even when no live rows remain so its path is stable.
 First presentation of an ask remains complete in chat. A link alone is not a
 presentation.
 
-Build it from the ticket, not earlier chat:
+Build it from the ticket, not earlier chat. Writing the ask governs every type
+below; each list is the extra payload that type carries, not a substitute:
 
 - Human Task: what to do, applicable steps, commands, URLs and paths, expected
   result, evidence to return, ticket path, and evidence-backed hints or
