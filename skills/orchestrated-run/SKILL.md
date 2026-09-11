@@ -95,13 +95,11 @@ an active `Human and Agent Task`. See `RUN-STATE.md` for change-plan ownership.
    docs or spec when cheap to establish.
 3. Dispatch those tickets with the Research assignment prompt and those references.
 4. When bootstrap is a set, wait for all of it before activating goals or
-   creating `Agent Task`, `Explore Options`, or `Human and Agent Task` tickets;
-   Discuss needed for discovery may start sooner. Reconcile the set together
-   under `RUN-STATE.md`, subject to step 5.
+   creating any other ticket; Discuss needed for discovery may start sooner.
+   Reconcile the set together under `RUN-STATE.md`, subject to step 5.
 5. Until planning depth is recorded, create only Discuss and Research tickets
-   from bootstrap follow-ups. Do not create an `Agent Task`, `Explore Options`,
-   or `Human and Agent Task` ticket from them, even as `proposed`; those drafts
-   stay on the proposing ticket.
+   from bootstrap follow-ups. Do not create any other ticket type from them,
+   even as `proposed`; those drafts stay on the proposing ticket.
 
 Mark `Agent Task`, `Explore Options`, and any ticket that implements or depends on unconfirmed product decisions as `blocked` with `depends_on` the relevant Discuss tickets. They become `ready` only after those tickets resolve.
 
@@ -127,6 +125,15 @@ Planning depth is `standard`, where Research feeds Agent Tasks directly, or
 `reviewed planning`, where qualifying change sets pass through Plan and Plan
 Review tickets first.
 
+Never create, ready, or dispatch a Plan or Plan Review unless
+`WORKINGHINTS.md` records the confirmed planning depth as `reviewed planning`.
+An unset, proposed, recommended, or `standard` value forbids both types.
+
+If either type already exists without that value, do not infer planning depth
+from it or use its change plan. Let an active worker return, then clear owner,
+set the ticket `blocked` as invalid, create no reviews, and reconcile its
+original proposing drafts under the recorded depth.
+
 After goals become `active` and before creating `Agent Task`, `Explore
 Options`, or `Human and Agent Task` tickets from bootstrap follow-ups, offer the
 choice once when a reconciled bootstrap ticket records:
@@ -137,22 +144,25 @@ choice once when a reconciled bootstrap ticket records:
 - a conflict between two sources it could not settle.
 
 The condition must name its artifact; an open unknown alone does not qualify.
-Do not offer for research-only runs or after the user states a preference. Use
-Discuss for the offer and record the value in `WORKINGHINTS.md` and `LOG.md`.
-If no offer is due, record `standard` in `WORKINGHINTS.md` and its basis in
-`LOG.md`. While the ask is unanswered, steering may create Research to draft
-and classify requested work, but implementation waits.
+Do not offer for research-only runs. If the user stated a preference, record it
+in `WORKINGHINTS.md` and `LOG.md` without asking. Otherwise use Discuss for the
+offer; if no offer is due, record `standard` in `WORKINGHINTS.md` and its basis
+in `LOG.md`. Only a stated preference, a returned offer, or that no-offer
+default confirms the value. While the ask is unanswered, steering may create
+Research to draft and classify requested work. Do not create, ready, or
+dispatch Plan, Plan Review, Agent Task, Explore Options, or Human and Agent
+Task until planning depth is recorded.
 
 Never ask twice. Under `standard`, report later qualifying conditions in that
 pass's progress update and continue. A process decision never overrides a user
 answer. User steering may change the depth for undispatched work; record it in
 `WORKINGHINTS.md` and `LOG.md`, without retroactively planning implemented work.
 
-Under reviewed planning, a proposing ticket qualifies a change set by
-classifying it as moderately complex or higher or naming a schema, persistence
-layer, public API, protocol, data migration, or canonical doc it changes. The
-orchestrator follows that record, departing only for a missing or contradictory
-label and logging why.
+When `WORKINGHINTS.md` records confirmed planning depth as `reviewed planning`, a
+proposing ticket qualifies a change set by classifying it as moderately complex
+or higher or naming a schema, persistence layer, public API, protocol, data
+migration, or canonical doc it changes. The orchestrator follows that record,
+departing only for a missing or contradictory label and logging why.
 
 - One classified draft is one change set unless the proposing ticket groups
   drafts that share a plan. Use one Plan ticket per change set.
@@ -410,6 +420,10 @@ invalidated result never verifies the fixed result.
 
 ### Change plans
 
+Follow this section only while `WORKINGHINTS.md` records confirmed planning
+depth as `reviewed planning`. Otherwise take none of its create, ready,
+assignment, or dispatch actions.
+
 Reconcile a Plan return by result:
 
 - `completed`: create the round's Plan Review tickets, replace `reviews` and
@@ -547,6 +561,7 @@ After compaction, rebuild context from:
 
 Reload completed tickets only when their detailed results become relevant.
 Planning depth is recovered from `WORKINGHINTS.md`.
+Reapply its Plan and Plan Review gate before acting on recovered tickets.
 
 Before acting on any active, ready, or presented ticket, read its schema and
 exact type contract in `TICKET-CONTRACTS.md`.
@@ -588,12 +603,13 @@ The run is complete when:
 - no unresolved ticket is required for an achieved goal;
 - every resolved implementation ticket has implementation coverage from a
   resolved boundary inspection and resolved boundary validation ticket;
-- every change plan whose change set is still in the run is `resolved` and
-  accepted with every ID in its `reviews` resolved or cancelled, and every
-  implementation ticket it governs names it in `plans`; a `cancelled` Plan
-  ticket carries the record its cancellation cited;
-- no work a ticket record classified as needing a change plan was implemented
-  without one, unless `LOG.md` records the departure and its reason;
+- under reviewed planning, every change plan whose change set is still in the
+  run is `resolved` and accepted with every ID in its `reviews` resolved or
+  cancelled, and every implementation ticket it governs names it in `plans`; a
+  `cancelled` Plan ticket carries the record its cancellation cited;
+- under reviewed planning, no work a ticket record classified as needing a
+  change plan was implemented without one, unless `LOG.md` records the
+  departure and its reason;
 - required human tasks and acceptance are complete;
 - significant adversarial findings are resolved or explicitly accepted by the user;
 - open entries in `UNKNOWNS.md` required for achieved goals are closed;

@@ -193,19 +193,23 @@ and sequences the work; an open decision in a change plan that needs
 investigation becomes an Explore Options ticket, and no Plan Review starts
 until it returns and the plan is revised.
 
-A Plan is not `ready` until Objective names its change set and goal outcome;
-Reads name the proposing tickets and drafts, governing run state, end user and
-canonical docs when known, and discovered project paths; and
-Completion requires every Plan-prompt section at the change plan path. Objective
-and Completion permit only the worker-maintained ticket sections and change
-plan write, prohibiting project, external-state, and prepared-environment
-changes.
+Do not create a Plan or Plan Review, even as `proposed` or `blocked`, unless
+`WORKINGHINTS.md` records confirmed planning depth as `reviewed planning`.
 
-A Plan Review is not `ready` until the Plan returned `completed` with no
-approach-blocking investigation, its file exists, Objective names the lens, and
-Reads name the plan, governing goals and acceptance criteria, non-goals and
-working hints. Product-lens Reads also name the end user and cited canonical
-sections or their recorded gaps.
+A Plan is not `ready` unless that confirmed value is `reviewed planning`. It
+also requires an Objective naming its change set and goal outcome; Reads naming
+the proposing tickets and drafts, governing run state, end user and canonical
+docs when known, and discovered project paths; and Completion requiring every
+Plan-prompt section at the change plan path. Objective and Completion permit
+only the worker-maintained ticket sections and change plan write, prohibiting
+project, external-state, and prepared-environment changes.
+
+A Plan Review is not `ready` unless that confirmed value is `reviewed
+planning`. It also requires the Plan to have returned `completed` with no
+approach-blocking investigation, its file to exist, Objective to name the lens,
+and Reads to name the plan, governing goals and acceptance criteria, non-goals
+and working hints. Product-lens Reads also name the end user and cited
+canonical sections or their recorded gaps.
 
 A boundary validation ticket is its own Agent Task. It checks goal-level,
 repo-wide, or cross-area requirements for the implementation tickets it names.
@@ -344,7 +348,7 @@ Return on the ticket:
 
 ## Plan (subagent)
 
-Write one agent-facing change plan for one change set at
+Under reviewed planning, write one agent-facing change plan for one change set at
 `plans/<plan-ticket-id>.md`. Its path is stable. The active Plan worker owns its
 content; otherwise only the orchestrator may change its Status and revisions
 banner.
@@ -400,13 +404,14 @@ record.
 
 ## Plan Review (subagent)
 
-Try to show that a change plan will not work or will not deliver what it
-claims. One lens per ticket, named in Objective. Exactly two lenses exist:
-`consequences` and `product`.
+Under reviewed planning, try to show that a change plan will not work or will
+not deliver what it claims. One lens per ticket, named in Objective. Exactly
+two lenses exist: `consequences` and `product`.
 
-Neither lens depends on the other; dispatch both together. Their shared read is
-not a conflict. The orchestrator does not review, reviewers do not write the
-plan, and Adversarial Review does not replace this type.
+Neither lens depends on the other. Once both are `ready`, dispatch them
+together; their shared read is not a conflict. The orchestrator does not review,
+reviewers do not write the plan, and Adversarial Review does not replace this
+type.
 
 Assignment prompt, after the shared agent rules:
 

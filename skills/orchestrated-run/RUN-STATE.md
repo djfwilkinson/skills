@@ -147,8 +147,9 @@ user confirms them.
 Use the same model as the orchestrator for subagents by default. Record a user
 override in `WORKINGHINTS.md`.
 
-Record planning depth as a working hint, with the end user and the canonical
-docs or spec when the run has them.
+Record confirmed planning depth as a working hint, with the end user and
+canonical docs or spec when known. A proposed or recommended depth is not
+confirmed and does not satisfy a Plan or Plan Review gate.
 
 If a working hint conflicts with a goal, the subagent records the conflict on
 its ticket. The orchestrator decides whether it needs Discuss or a process
@@ -186,8 +187,9 @@ related goals and pillars, known dependencies, and status:
 
 Modules may be added, split, merged, or retired when reconciliation says the
 run needs that. Set a module `complete` only when every completed
-implementation ticket in it has implementation coverage, planning coverage is
-satisfied for its work, and required module review is resolved.
+implementation ticket in it has implementation coverage, planning depth is
+recorded, planning coverage is satisfied when that depth is reviewed planning,
+and required module review is resolved.
 
 ## Log
 
