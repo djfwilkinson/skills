@@ -168,7 +168,8 @@ Immediately before first presentation:
    external browser with `open` on macOS, `Start-Process` on Windows, or
    `xdg-open` on Linux; do not use Cursor's file opener for HTML, wait, verify,
    retry, or treat launch failure as a blocker. Launch again when a withdrawn
-   ask is re-presented. Do not launch again for each Human and Agent Task turn;
+   ask is re-presented. Do not record this external launch as a successful open
+   in the current client. Do not launch again for each Human and Agent Task turn;
 7. send the complete first ask in chat with links to the page and index.
 
 When a Human and Agent Task produces a new current ask, update its page and

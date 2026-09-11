@@ -51,9 +51,9 @@ While a ticket is active, the worker may update only:
 - `Interaction log`;
 - `Blockers / follow-ups`.
 
-A Plan ticket's worker also writes the change plan file named in its
-Completion. No other type writes a file under the run directory. Agent Task and
-Explore Options write project files under their own Objective.
+A Plan worker may also write its Completion-named change plan; no other type
+writes under the run directory. Agent Task and Explore Options may write
+project files under their Objective.
 
 The worker must not modify other ticket metadata. When the orchestrator is the
 worker for a Human and Agent Task, it still updates orchestrator-owned fields
@@ -193,22 +193,19 @@ and sequences the work; an open decision in a change plan that needs
 investigation becomes an Explore Options ticket, and no Plan Review starts
 until it returns and the plan is revised.
 
-A Plan ticket is not `ready` until Objective names the change set and the
-outcome it serves by goal ID; Reads name the returned research tickets
-including their draft implementation tickets, the governing goals, non-goals
-and working hints, the end user and the canonical docs when the run has them,
-and the project paths research already found; Completion names the change plan
-path and requires every section in the Plan prompt; and Objective and
-Completion prohibit changes to project files, external state, and prepared
-human environments, naming the worker-maintained ticket sections and change
-plan file as the only permitted writes.
+A Plan is not `ready` until Objective names its change set and goal outcome;
+Reads name the proposing tickets and drafts, governing run state, end user and
+canonical docs when known, and discovered project paths; and
+Completion requires every Plan-prompt section at the change plan path. Objective
+and Completion permit only the worker-maintained ticket sections and change
+plan write, prohibiting project, external-state, and prepared-environment
+changes.
 
-A Plan Review ticket is not `ready` until its Plan ticket returned
-`execution_result: completed` with no open investigation its approach depends
-on, the change plan file exists, the lens is named in Objective, and Reads name
-the plan, the governing goals with their outcomes and acceptance criteria, the
-non-goals and working hints, and for the product lens the end user and the
-canonical doc sections the plan cites or the recorded gap.
+A Plan Review is not `ready` until the Plan returned `completed` with no
+approach-blocking investigation, its file exists, Objective names the lens, and
+Reads name the plan, governing goals and acceptance criteria, non-goals and
+working hints. Product-lens Reads also name the end user and cited canonical
+sections or their recorded gaps.
 
 A boundary validation ticket is its own Agent Task. It checks goal-level,
 repo-wide, or cross-area requirements for the implementation tickets it names.
@@ -242,47 +239,32 @@ tickets. Do not plan the run. Record follow-ups on this ticket. The orchestrator
 decides what happens next. A Plan ticket also writes the change plan named in
 its Completion; no other type writes a file under the run directory.
 
-Classify every piece of implementation work you propose or recommend as
-trivial, as following an established project pattern, or as moderately complex
-or higher. Moderately complex or higher means it needs decisions beyond
-following an existing pattern, changes several files or areas that must change
-together, or is hard to reverse. Name any schema, persistence layer, public
-API, protocol, data migration, or canonical doc it changes. Use those exact
-labels and record them with the work itself in Blockers / follow-ups. On a Plan
-ticket, record them with the corresponding draft under Proposed implementation
-tickets in the change plan instead.
+Classify proposed or recommended implementation work as `trivial`, `following
+an established project pattern`, or `moderately complex or higher`. The last
+means it needs decisions beyond an existing pattern, changes several files or
+areas together, or is hard to reverse. Name any schema, persistence layer,
+public API, protocol, data migration, or canonical doc it changes. Record the
+exact label and surfaces with the work in Blockers / follow-ups, or with its
+draft under Proposed implementation tickets on a Plan.
 
-If multiple reasonable choices would produce meaningfully different product,
-architectural, operational, compatibility, or scope outcomes, stop short of
-committing the choice. Record the smallest decision that would unblock the
-work, the options, and a recommendation. Complete only severable work that
-stays correct under every recorded option. Name the withheld boundary in
-Blockers / follow-ups and record what is done. Set execution_result to blocked.
+Apply this product-decision test: reasonable alternatives produce meaningfully
+different product, architectural, operational, compatibility, or scope
+outcomes; a local implementation choice following an established pattern is
+process. Examples include goals, architecture, public API, persistence, UX,
+dependencies, platforms, and scope trade-offs. Unless the type prompt says to
+classify and continue, stop before committing a product decision. Complete only
+severable work that stays correct under every option. Record the smallest
+decision, options, recommendation, completed work, and withheld boundary in
+Blockers / follow-ups; set execution_result to blocked.
 
 Return by finishing the ticket record and execution_result.
 ```
 
 ## Research (subagent)
 
-Close a knowledge gap. Set the allowed depth in Objective and Completion. Depth
-is effort on surrounding context and hunting, not which sources are allowed.
-
-- `triage`: decide whether research is needed and, if so, whether `surface` or
-  `deep`. Do not hunt the answer. Use only when that routing decision is the
-  Objective.
-- `surface`: pull obvious context. Objective may pre-authorize continuing to
-  `deep` in the same assignment when surface cannot meet Completion. Without
-  that authorization, return the partial result, request deep on the same gap,
-  record new unknowns, and report `blocked`.
-- `deep`: get a full picture and hunt. Close in-scope gaps this assignment has
-  permission to investigate; record remaining unknowns.
-
-Prefer `surface` over a standalone triage ticket. The orchestrator chooses the
-allowed depth path.
-
-Research drafts and classifies follow-up Agent Tasks under either planning
-depth, using the classification in the shared agent rules. That classification
-decides whether a change set gets a change plan; the rule is in `SKILL.md`.
+Close a knowledge gap at the `triage`, `surface`, or `deep` depth chosen in
+Objective and Completion. Prefer `surface` to standalone triage. Research
+drafts and classifies follow-up Agent Tasks at either planning depth.
 
 Assignment prompt, after the shared agent rules:
 
@@ -362,18 +344,10 @@ Return on the ticket:
 
 ## Plan (subagent)
 
-Write the change plan for one coherent change set under reviewed planning. A
-change plan is engine text for the subagent that will implement it and the two
-reviewers that will attack it. It carries no user-facing copy.
-
-Store it at `plans/<plan-ticket-id>.md`. The path is stable for the life of the
-change set. The active Plan ticket's worker is the only agent that changes its
-content. When no Plan ticket is active, the orchestrator may write only its
-Status and revisions banner. Plan Review workers never write it.
-
-The prompt below replaces the shared product-decision rule for this type, and
-carries the full test, its examples, and the local-pattern sentence, so the
-worker classifies choices from the same text the orchestrator applies.
+Write one agent-facing change plan for one change set at
+`plans/<plan-ticket-id>.md`. Its path is stable. The active Plan worker owns its
+content; otherwise only the orchestrator may change its Status and revisions
+banner.
 
 Assignment prompt, after the shared agent rules:
 
@@ -385,15 +359,13 @@ authorises you to write it. Do not change project files, external state, or any
 prepared human environment. Do not implement any part of the plan. Do not
 create tickets.
 
-This prompt replaces the shared rule about stopping on a product choice.
-
 Write the change plan for the subagent that will implement it and for the
 reviewers who will attack it. Keep it mechanical. It has no user-facing copy.
 
-Plan from Objective, Completion, and Reads, including any draft implementation
-tickets earlier research recorded. Investigate the project only as far as the
-plan requires. If closing a gap needs its own investigation, record the gap and
-the investigation it needs rather than guessing.
+Plan from Objective, Completion, and Reads, including draft implementation
+tickets earlier work recorded. Investigate only as far as the plan requires. If
+closing a gap needs its own investigation, record that need rather than
+guessing.
 
 Write it with these sections:
 - Goals and requirements served, by run goal ID, with canonical doc or spec
@@ -409,18 +381,11 @@ Write it with these sections:
 - Open decisions, with options, a recommendation, and what is stable under each
 - Status and revisions
 
-Classify every choice you make. A choice needs the user when reasonable
-alternatives would produce meaningfully different product, architectural,
-operational, compatibility, or scope outcomes. Examples include changing goals;
-architecture, public API, persistence, UX, dependency, or platform choices; and
-scope trade-offs. A local implementation choice that follows an established
-project pattern does not need the user.
-
-Put every choice of the first kind under Open decisions, not Approach, and keep
-planning what stays correct under every option. Put choices of the second kind
-under Approach, each marked local. Set execution_result to completed when the
-rest of the plan is usable, and to blocked when the plan depends on an
-undecided choice or on an investigation you recorded as still open.
+Classify every choice by the shared product-decision test, but continue instead
+of stopping. Put product decisions under Open decisions, keep planning what
+stays correct under every option, and put process choices under Approach marked
+local. Set execution_result to completed when the rest is usable, or blocked
+when the plan depends on an undecided choice or open investigation.
 
 When this ticket is a revision, read the Plan Review tickets and the decisions
 named in Objective. Apply every finding the orchestrator accepted, and add a
@@ -439,14 +404,9 @@ Try to show that a change plan will not work or will not deliver what it
 claims. One lens per ticket, named in Objective. Exactly two lenses exist:
 `consequences` and `product`.
 
-Both reviews for a round are dispatched in one wave and run in parallel;
-neither depends on the other. Reading the same change plan is not a file
-conflict. The orchestrator must not be the reviewer. Reviewers never write the
-change plan, and Adversarial Review is never used on one.
-
-This prompt also replaces the shared product-decision rule, and carries the
-same test, so a reviewer classifies a choice it finds instead of stopping on
-it.
+Neither lens depends on the other; dispatch both together. Their shared read is
+not a conflict. The orchestrator does not review, reviewers do not write the
+plan, and Adversarial Review does not replace this type.
 
 Assignment prompt, after the shared agent rules:
 
@@ -472,13 +432,8 @@ Do not edit the plan. Do not implement any part of it. Do not write your own
 plan. Do not change project files, external state, or any prepared human
 environment.
 
-This prompt replaces the shared rule about stopping on a product choice. You
-classify the choices you find and finish the review. A choice needs the user
-when reasonable alternatives would produce meaningfully different product,
-architectural, operational, compatibility, or scope outcomes. Examples include
-changing goals; architecture, public API, persistence, UX, dependency, or
-platform choices; and scope trade-offs. A local implementation choice that
-follows an established project pattern does not need the user.
+Classify each choice you find by the shared product-decision test and finish the
+review instead of stopping.
 
 Return on the ticket:
 - findings, each with a ticket-scoped ID such as `T-005-PLR/F-001`, its

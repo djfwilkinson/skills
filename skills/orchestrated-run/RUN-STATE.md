@@ -160,23 +160,16 @@ when only those entries apply. Do not add growing run files by default.
 
 ## Change plans
 
-Under reviewed planning, a change set whose proposing record met the test in
-`SKILL.md` has one change plan at `plans/<plan-ticket-id>.md`. Most work has
-none.
-
-A change plan is persistent memory. It is not a run file and not a source of
-run state: goals, non-goals, unknowns and working hints stay in run files. Its
-required sections and its prompt live in `TICKET-CONTRACTS.md`.
+A change plan is persistent memory at `plans/<plan-ticket-id>.md`, but not a
+run file or source of run state. Its sections and prompt live in
+`TICKET-CONTRACTS.md`; wider state stays in run files.
 
 The active Plan ticket's worker owns the file. When no Plan ticket is active,
 the orchestrator may write only the Status and revisions banner, marking the
 plan accepted, superseded, or dropped with its change set. Content changes
 require reassigning the Plan ticket.
 
-Planning coverage is the completion requirement in `SKILL.md`: every change
-plan still in the run is accepted with its reviews closed and its tickets
-naming it, and no work classified as needing a plan was implemented without one
-outside a logged departure.
+`SKILL.md` owns planning coverage and completion.
 
 ## Pillars
 
@@ -209,11 +202,9 @@ satisfied for its work, and required module review is resolved.
 - blockers;
 - ticket ID.
 
-Also record the planning-depth choice, or the decision not to offer it with its
-basis; change plan acceptance; any reclassification of a choice in either
-direction; declined review findings with their reasons; revision rounds with
-their ticket IDs; any departure from a proposing ticket's classification of
-whether work needs a change plan; and the record cited when a Plan ticket is
-cancelled.
+For planning, also record the depth choice or no-offer basis; plan acceptance;
+choice reclassifications; declined findings and reasons; revision-round ticket
+IDs; departures from plan-need classifications and reasons; and the record
+cited for Plan cancellation.
 
 Detailed investigation and implementation notes stay on tickets.
