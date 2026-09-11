@@ -40,7 +40,7 @@ The orchestrator must not:
 
 Product decisions stay with the user when the product-decision rule below applies. Process decisions stay with the orchestrator: which ticket to create, whom to assign, whether to accept an execution result, whether a goal is verified, whether adversarial review is due, whether the run is complete.
 
-A subagent reports what it found. It does not create run-level plans or tickets. The orchestrator decides how that changes the run. Follow-ups in a ticket are proposals, not a whitelist.
+A subagent reports what it found. It does not plan the run or create tickets. A Plan ticket's change plan is that ticket's bounded deliverable, not run-level planning. The orchestrator decides how that changes the run. Follow-ups in a ticket are proposals, not a whitelist.
 
 ## Required references
 
@@ -64,7 +64,7 @@ the shared rules and exact type prompt from `TICKET-CONTRACTS.md`.
 
 ## Run files
 
-Conversation context is temporary. Persistent memory is run files, ticket files, and project files. After compaction or a lost thread, recover the run from those files plus this skill.
+Conversation context is temporary. Persistent memory is run files, ticket files, change plans, and project files. After compaction or a lost thread, recover the run from those files plus this skill.
 
 Create a new run at:
 
@@ -86,6 +86,7 @@ asks/
 ```
 
 Do not fill the Markdown files during setup. `tickets/` and `asks/` start empty.
+Create `plans/` only when planning depth is recorded as reviewed planning.
 Ask pages are orchestrator-owned presentation artifacts derived from human
 tickets; they are never a source of truth. Resume a run when the user or
 invocation identifies it. Otherwise create a new run.
@@ -97,7 +98,7 @@ Use stable IDs: goals `G-001`, non-goals `NG-001`, unknowns `U-001`, pillars `P-
 The orchestrator owns and writes all run files and `asks/` artifacts except
 active subagent-owned ticket files.
 
-A subagent owns its agent ticket file while the ticket is active. No other agent edits that ticket until it is returned. The orchestrator owns an active `Human and Agent Task` ticket.
+A subagent owns its agent ticket file while the ticket is active. No other agent edits that ticket until it is returned. The orchestrator owns an active `Human and Agent Task` ticket. A Plan ticket's worker owns its change plan file while the ticket is active; `RUN-STATE.md` has the rest of change-plan ownership.
 
 ## Start the run
 
@@ -107,13 +108,20 @@ A subagent owns its agent ticket file while the ticket is active. No other agent
    independently. Do not do the research in the orchestrator thread. Attach a
    `## Reads` list of likely project paths or directories. A surface bootstrap
    always pre-authorises escalation to deep in the same assignment when surface
-   cannot meet Completion.
+   cannot meet Completion. Bootstrap Objectives also record who the end user is
+   and which docs or spec are canonical, when the project makes that cheap to
+   establish.
 3. Dispatch those tickets with the Research assignment prompt and those references.
 4. When bootstrap is a set, wait for every ticket in that set to return before
    activating goals or creating production, Explore Options, or Human and Agent
    Task tickets. A Discuss needed to continue discovery may be created earlier.
    Reconcile the set together, copy proposals into run files using
-   `RUN-STATE.md`, and decide which follow-ups become tickets.
+   `RUN-STATE.md`, and decide which follow-ups become tickets, subject to the
+   hold in step 5.
+5. Until planning depth is recorded, create only Discuss and Research tickets
+   from bootstrap follow-ups. Do not create an `Agent Task`, `Explore Options`,
+   or `Human and Agent Task` ticket from them, even as `proposed`; those drafts
+   stay on the proposing ticket.
 
 Mark `Agent Task`, `Explore Options`, and any ticket that implements or depends on unconfirmed product decisions as `blocked` with `depends_on` the relevant Discuss tickets. They become `ready` only after those tickets resolve.
 
@@ -133,6 +141,75 @@ question before asking the user. Do not ask for goals with no project context
 when the project can provide useful information first. Do not start
 implementation in bootstrap.
 
+## Planning depth
+
+Planning depth is a run-level setting with two values:
+
+- `standard`: Research feeds implementation Agent Tasks directly.
+- `reviewed planning`: a change set that meets the test below gets a `Plan`
+  ticket, two `Plan Review` tickets, and implementation tickets created from
+  the accepted change plan.
+
+Offer the choice once, after the run's goals are `active`, and before creating
+any `Agent Task`, `Explore Options`, or `Human and Agent Task` ticket from
+bootstrap follow-ups. Offer only when a reconciled bootstrap ticket records at
+least one of these:
+
+- a follow-up it classified as moderately complex or higher, or as changing a
+  schema, persistence layer, public API, protocol, data migration, or canonical
+  doc;
+- a conflict between two sources it could not settle.
+
+Each condition is a named artifact in the ticket record. Open unknowns are not
+a condition. Do not offer when the run is research or investigation only, or
+when the user already stated a planning-depth preference.
+
+The ask is a `Discuss/Gather Inputs` ticket. Record a stated or returned value
+in `WORKINGHINTS.md` and `LOG.md`. When no offer is made and the user stated no
+preference, record planning depth as `standard` in `WORKINGHINTS.md` and record
+the basis in `LOG.md`. While an offer is unanswered, steering that requests
+implementation becomes Research to draft and classify the work without
+implementing it; resulting implementation waits on the answer.
+
+There is no second planning-depth ask. Under `standard`, name any later
+condition from that list in the progress update for its reconciliation pass and
+continue at `standard`. A process decision must not overwrite a stated user
+answer. The user may change planning depth by steering: record the change in
+`WORKINGHINTS.md` and `LOG.md`, apply it to work not yet dispatched, and do not
+retroactively plan work already implemented.
+
+Under reviewed planning, most work still goes straight to an `Agent Task`. A
+change set gets a change plan only when the ticket that proposed the work
+classified it as moderately complex or higher, or named a schema, persistence
+layer, public API, protocol, data migration, or canonical doc it changes. Every
+agent ticket classifies the work it proposes under the shared agent rules.
+
+The orchestrator decides from that classification. It may depart from it only
+when the label is missing or the record contradicts itself, and records the
+departure and its reason in `LOG.md`.
+
+- each classified draft is its own change set unless the proposing ticket names
+  drafts that share one plan; one change plan per change set, never one per
+  implementation ticket;
+- drafts for a planned change set go on the Plan ticket's Reads instead of
+  becoming tickets; drafts for unplanned work become Agent Tasks as under
+  `standard`;
+- implementation tickets created from an accepted change plan are governed by
+  it and need no further classification;
+- for work the user asks for directly, create Research to draft and classify
+  it before choosing a `Plan` or `Agent Task`;
+- a finding or recommendation the orchestrator turns into implementation work
+  carries its proposing ticket's classification; a record with none is a
+  missing label;
+- when no change set qualifies after the user chose reviewed planning, say so
+  in the next progress update.
+
+Reviewed planning needs the end user and the canonical docs or spec. When
+bootstrap did not establish them, open Research to close the gap where the
+project can answer it cheaply, and otherwise record the gap as an unknown and
+continue; the product lens then reviews against the goals the plan cites.
+Missing either blocks neither the offer nor reviewed planning.
+
 ## Run state
 Read [RUN-STATE.md](RUN-STATE.md) before creating or updating goals,
 non-goals, unknowns, working hints, pillars, modules, or the log. Tickets keep
@@ -146,9 +223,9 @@ Local implementation choices that follow established project patterns are proces
 
 When a ticket lists alternatives, apply the same test. Meaningfully different outcomes are enough prepared evidence for Discuss/Gather Inputs; use the existing options and recommendation without another Research or Explore Options ticket. Reconcile local pattern-following alternatives as a process decision and record the option and reason in `LOG.md`.
 
-A subagent that hits such a choice records it on the ticket and stops short of committing it. The orchestrator must not commit it either.
+A subagent that hits such a choice records it and stops short of committing it: on its ticket, or under Open decisions in a change plan when executing a Plan ticket. The orchestrator must not commit it either.
 
-Process decisions are not user tickets unless they need a product choice. The orchestrator decides next work, assignment, acceptance of results, verification, review scheduling, and run completion.
+Process decisions are not user tickets unless they need a product choice. Planning depth is the single named exception: this skill requires it to be put to the user once. No other process decision becomes a user ticket. The orchestrator decides next work, assignment, acceptance of results, verification, review scheduling, and run completion.
 
 ## Tickets
 Read [TICKET-CONTRACTS.md](TICKET-CONTRACTS.md) before creating a ticket.
@@ -384,6 +461,86 @@ of `achieved` to `active` or `blocked` as the remaining work requires, and
 create a new boundary inspection after fixes. A reply or acceptance for an
 invalidated result never verifies the fixed result.
 
+### Change plans
+
+When a Plan ticket returns `completed`, set it `blocked` with `depends_on` its
+current-round Plan Review tickets and record those IDs in `reviews`. Never
+leave a Plan ticket `ready` while its reviews run. When it returns `blocked` on
+an undecided choice or an unclosed investigation the approach depends on, block
+it on the Discuss, Research, or Explore Options ticket that settles it and
+create no review yet. When it returns `failed`, reassign it; a second failure
+blocks it on a Discuss asking whether to keep the change set. Set it `resolved`
+only on acceptance; that status is the acceptance record.
+
+Each review round creates new Plan Review IDs and replaces `reviews`, so review
+Findings are never overwritten. When a Plan Review is replaced, update both
+`reviews` and `depends_on`. Resolve a Plan Review ticket only when it returns
+`execution_result: completed`; reassign or block an incomplete review under
+normal reconciliation. Cancel a review only when its round is superseded
+before it returns. Do not accept the change plan until every recorded Plan
+Review finding is applied in the change plan or explicitly declined with a
+reason. Earlier rounds live in `LOG.md`.
+
+Accepting a reviewed change plan is a process decision. Open Discuss before
+accepting when the plan records an Open decision meeting the product-decision
+test, when either review reports a finding meeting it, when the orchestrator
+declines to apply such a finding, or when the plan's Approach committed such a
+choice. That last case is a fault in the plan: treat it as an Open decision. Do
+not exempt the consequences lens. An Open-decision Discuss and the reviews may
+run at the same time; acceptance waits for both. Never accept a plan that still
+records a live Open decision: once Discuss settles it, reassign the Plan ticket
+to write the chosen option into the plan, then review the changed part. Record
+acceptance, any
+reclassification of a choice in either direction, and declined findings with
+their reasons in `LOG.md` and in the plan's Status and revisions banner. If the
+user asks to see plans, record that as a working hint and give the path in that
+pass's progress update; it is reading material, not an ask.
+
+After a revision, review only the changed parts, and repeat a full review only
+when the revision is itself high-impact or cross-cutting. Settle contradictory
+findings between lenses, through Discuss when the contradiction meets the
+product-decision test. Cap a finding's revision-and-review loop at two rounds
+against the same part of the change plan. If the second round still rejects the
+approach or reports a product-decision-class finding there, open Discuss before
+revising again. If a process-class finding survives the second round, the
+orchestrator applies or declines it with a reason. Review a revision made from
+either disposition through both lenses only for whether it faithfully applies
+that disposition; do not reopen the settled finding without new evidence.
+
+Never cancel a change plan because of a review. A review that rejects the
+approach itself is evidence of an unresolved unknown or an undecided choice:
+create Research for an unknown, or Discuss or Explore Options for a choice,
+taking that reading from the review's own classification; block the Plan ticket
+on that ticket, then reassign the same Plan ticket for revision. When
+reassigning, the Objective names the remaining change set, the accepted and
+declined finding IDs, and any Discuss decision, and Reads name that round's
+Plan Review tickets and the parts of the plan to re-review. A Plan ticket is
+`cancelled` only when its change set
+leaves the run, and only against a cited record: a goal `abandoned` through
+Discuss, a new non-goal covering the change set, or a `retired` run module.
+Splitting a change set is a scope change, not a cancellation: revise the
+original plan down to its remaining set and create a new Plan ticket for the
+separated one.
+
+Create implementation tickets a change plan governs from the accepted plan, each
+naming its Plan ticket ID in `plans` and carrying the plan on Reads. Do not
+create them before acceptance. An unresolved implementation ticket that already
+exists for that change set becomes `blocked` on the Plan ticket, is revised or
+cancelled from the accepted plan, and names that plan in `plans` if it
+survives. A `resolved` implementation ticket is never reopened by a plan; a plan
+that invalidates its result follows the invalidation rules above.
+
+When later research, steering, or a returned ticket invalidates an accepted
+change plan, let any active reviews return first, then record in `LOG.md` that
+their findings apply to a superseded plan. Mark the plan superseded in its
+banner and `LOG.md`, set its Plan ticket `ready` or `blocked` on the ticket that
+settles the change until the revised plan is accepted again, block governed
+implementation tickets that have not started, let active ones return and
+reconcile them against the revised plan, and revise and re-review the changed
+parts before they are `ready` again. Work already implemented follows
+implementation coverage and boundary inspection. A returned ticket that does
+not invalidate the plan proposes new work, classified like any other.
+
 ## Adversarial Review scheduling
 
 The orchestrator must not be the reviewer. Default to one Adversarial Review at
@@ -396,6 +553,11 @@ overlapping reviews of the same completed work. A pre-completion review may
 also satisfy the last module boundary when its Reads cover both scopes. A
 worker recommendation to review is a proposal.
 
+A Plan Review is not an Adversarial Review. It does not satisfy a run module
+boundary or pre-completion review, an Adversarial Review does not satisfy plan
+review, and Adversarial Review is never used on a change plan. An Adversarial
+Review of completed work may put the accepted change plan on Reads.
+
 ## Progress updates
 
 For chat progress, a ticket is closed when its status becomes `resolved` or `cancelled`.
@@ -406,6 +568,9 @@ give the ticket ID and one sentence with the user-visible result. For
 `cancelled`, give the ticket ID and concise user-relevant reason in `LOG.md`;
 do not imply an execution result. A ticket cancelled before it was dispatched
 or presented needs no progress line unless the user was told it was upcoming.
+For a resolved Plan ticket, name the change set that now has a reviewed
+approach and what it will produce, from the goals that plan cites. For a
+resolved Plan Review, name the plan reviewed and whether it needs changes.
 Do not paste ticket YAML, Reads, Findings, Interaction log, or detailed
 evidence. Do not ask the user to approve routine progress.
 
@@ -432,7 +597,7 @@ Before compacting:
 
 Detailed ticket results stay in their ticket files. Copy into run-level files only what affects the wider state of the run.
 
-Compaction itself must not draw new conclusions, create new tickets, or modify the plan.
+Compaction itself must not draw new conclusions, create new tickets, or change planned work.
 
 After compaction, rebuild context from:
 
@@ -447,9 +612,12 @@ After compaction, rebuild context from:
 9. `PILLARS.md`;
 10. `MODULES.md`;
 11. relevant entries from `LOG.md`;
-12. tickets needed for current work.
+12. tickets needed for current work;
+13. change plans for any Plan or Plan Review ticket that is active, ready, or
+    blocked, and any accepted change plan governing current implementation work.
 
 Reload completed tickets only when their detailed results become relevant.
+Planning depth is recovered from `WORKINGHINTS.md`.
 
 Before acting on any active, ready, or presented ticket, read its schema and
 exact type contract in `TICKET-CONTRACTS.md`.
@@ -495,6 +663,12 @@ The run is complete when:
 - no unresolved ticket is required for an achieved goal;
 - every resolved implementation ticket has implementation coverage from a
   resolved boundary inspection and resolved boundary validation ticket;
+- every change plan whose change set is still in the run is `resolved` and
+  accepted with every ID in its `reviews` resolved or cancelled, and every
+  implementation ticket it governs names it in `plans`; a `cancelled` Plan
+  ticket carries the record its cancellation cited;
+- no work a ticket record classified as needing a change plan was implemented
+  without one, unless `LOG.md` records the departure and its reason;
 - required human tasks and acceptance are complete;
 - significant adversarial findings are resolved or explicitly accepted by the user;
 - open entries in `UNKNOWNS.md` required for achieved goals are closed;

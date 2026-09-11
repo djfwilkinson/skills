@@ -382,7 +382,7 @@ Avoid:
 
 ### Subagent
 
-The agent assigned to execute one agent ticket. It owns that ticket file while the ticket is active, does only the bounded Objective, and must not edit run files or create tickets.
+The agent assigned to execute one agent ticket. It owns that ticket file while the ticket is active, does only the bounded Objective, and must not edit run files or create tickets. A Plan ticket's subagent also owns and writes its change plan file.
 
 Related:
 - worker (adjective for ticket sections that this agent may write, not a third role)
@@ -395,11 +395,11 @@ Avoid:
 
 ### Worker
 
-Adjective for ticket ownership of sections: `execution_result` is worker-owned; Unknowns, Findings, Work performed, Evidence, Interaction log, and Blockers / follow-ups are worker-maintained. A subagent is the worker for an agent ticket. The orchestrator may record `execution_result` and the user response in Evidence for Discuss or Human Task, and is the worker for a Human and Agent Task. Worker is not a third role.
+Adjective for ticket ownership of sections: `execution_result` is worker-owned; Unknowns, Findings, Work performed, Evidence, Interaction log, and Blockers / follow-ups are worker-maintained. A subagent is the worker for an agent ticket. The orchestrator may record `execution_result` and the user response in Evidence for Discuss or Human Task, and is the worker for a Human and Agent Task. A Plan ticket's worker also writes the change plan file its Completion names; no other type writes a file under the run directory. Worker is not a third role.
 
 ### Agent ticket
 
-A ticket executed by a subagent after assignment: Research, Agent Task, Explore Options, or Adversarial Review. The only way those tickets get done.
+A ticket executed by a subagent after assignment: Research, Agent Task, Explore Options, Plan, Plan Review, or Adversarial Review. The only way those tickets get done.
 
 Related:
 - human ticket
@@ -440,21 +440,38 @@ Related:
 
 ### Run
 
-One orchestrated-run instance: a coordinated body of work with shared run files, tickets, and an orchestrator. Persistent memory is run files, ticket files, and project files. Conversation context is temporary. Completing the run is a process decision of the orchestrator, not an empty ticket queue.
+One orchestrated-run instance: a coordinated body of work with shared run files, tickets, and an orchestrator. Persistent memory is run files, ticket files, change plans, and project files. Conversation context is temporary. Completing the run is a process decision of the orchestrator, not an empty ticket queue.
 
 Avoid:
 - using **run** for a ticket execution or a shell command when the process instance is meant
 
 ### Run file
 
-A run-level state document the orchestrator writes, except that an active agent ticket file is owned by its subagent. Kinds: goals, non-goals, unknowns, working hints, log, pillars, modules and tickets. Ask pages and the ask index are derived artifacts stored under the run, not run files or recovery sources. Current filenames are the layout, not the concepts.
+A run-level state document the orchestrator writes, except that an active agent ticket file is owned by its subagent. Kinds: goals, non-goals, unknowns, working hints, log, pillars, modules and tickets. Ask pages and the ask index are derived artifacts stored under the run, not run files or recovery sources. A change plan is persistent memory stored under the run and owned by its Plan ticket's active worker; it is not a run file. Current filenames are the layout, not the concepts.
 
 Avoid:
 - treating a ticket's Unknowns or Findings as a second copy of the unknowns run file
 
+### Planning depth
+
+A run-level setting for how work reaches implementation: `standard`, where Research feeds implementation Agent Tasks directly, or `reviewed planning`. It is a process decision, and the only one this skill requires to be put to the user. Offered once, after goals are active, and only when a reconciled bootstrap ticket recorded one of the named offer conditions. Recorded as a working hint.
+
+Related:
+- reviewed planning
+- research depth
+
+Avoid:
+- naming it `deep`, which is a research depth
+- unqualified **depth**
+- offering it twice in one run
+
+### Reviewed planning
+
+The planning depth in which a change set the proposing ticket classified as moderately complex or higher, or as changing a schema, persistence layer, public API, protocol, data migration, or canonical doc, gets a Plan ticket, two Plan Review tickets, and implementation tickets created from the accepted change plan. Most work is not in that class and still goes straight to an Agent Task.
+
 ### Ticket type
 
-The contract for how a ticket is executed and what it may do. The orchestrator picks the type when creating the ticket. The types and ID suffixes are Research (`RES`), Agent Task (`AGT`), Explore Options (`EXP`), Adversarial Review (`ADV`), Discuss/Gather Inputs (`DIS`), Human Task (`HUM`), and Human and Agent Task (`HAT`).
+The contract for how a ticket is executed and what it may do. The orchestrator picks the type when creating the ticket. The types and ID suffixes are Research (`RES`), Agent Task (`AGT`), Explore Options (`EXP`), Plan (`PLN`), Plan Review (`PLR`), Adversarial Review (`ADV`), Discuss/Gather Inputs (`DIS`), Human Task (`HUM`), and Human and Agent Task (`HAT`).
 
 ### Research
 
@@ -466,15 +483,46 @@ Ticket type that closes a knowledge gap. Depth is effort on surrounding context 
 
 Bootstrap is surface when the invocation already states the outcome, acceptance basis and useful paths; deep when discovery is needed.
 
+Its Agent Task drafts carry the classification every agent ticket gives the work it proposes. Under reviewed planning that classification decides which change sets get a change plan.
+
 ### Agent Task
 
-Ticket type for bounded production work. Implement from Objective, Completion, and Reads. Not ready until those name what to change and what done looks like. Reads are files Research already found, not the repo.
+Ticket type for bounded production work. Implement from Objective, Completion, and Reads. Not ready until those name what to change and what done looks like. Reads are files Research already found or an accepted change plan, not the repo.
 
 A UX/UI review whose result is the review is this type, with the ux-ui-reviewer skill file on Reads.
 
 ### Explore Options
 
 Ticket type for investigating alternatives without committing them to the production solution. Temporary artifacts (prototypes, experiments) are allowed if labelled temporary. Those are not response-only artifacts.
+
+### Change set
+
+The work one change plan governs: one classified draft on its own, or the drafts the proposing ticket named as sharing a plan. Its implementation tickets name that Plan ticket ID in `plans`. A change set may be narrower than a run module. One change plan per change set, never one per implementation ticket.
+
+### Plan
+
+Ticket type that writes one change plan for one coherent change set under reviewed planning. Its prompt replaces the shared product-decision rule and carries the full test, its examples, and the local-pattern sentence, so the worker classifies every choice it commits. It is the only type that writes a file under the run directory.
+
+### Change plan
+
+The document a Plan ticket produces at `plans/<plan-ticket-id>.md`, written for the subagent that will implement it and the two reviewers that will attack it. Engine text: it holds no user-facing copy and is never presented for user acceptance. Persistent memory, but not a run file and not a source of run state. Only ever revised, so its path is stable for the life of the change set.
+
+Related:
+- plan acceptance
+- planning coverage
+
+Avoid:
+- calling it an **implementation plan**, which names the alignment plan
+- unqualified **plan**
+- asking the user to accept one
+
+### Plan Review
+
+Ticket type that tries to show a change plan will not work or will not deliver what it claims. Exactly two review lenses exist. The orchestrator must not be the reviewer, reviewers never write the plan, and Adversarial Review is not used on a change plan. A Plan Review does not satisfy a required Adversarial Review, and an Adversarial Review does not satisfy plan review.
+
+### Review lens
+
+The single perspective a Plan Review ticket uses, named in its Objective. `consequences` covers whether the choices hold, what else must change, and ordering, compatibility and migration risk. `product` covers whether the plan reaches the outcomes and acceptance criteria of the goals and the canonical doc or spec sections it cites. Exactly two lenses exist.
 
 ### Adversarial Review
 
@@ -491,7 +539,7 @@ Related:
 - product decision
 
 Avoid:
-- using Discuss for process decisions the orchestrator owns
+- using Discuss for process decisions the orchestrator owns, other than the planning-depth offer
 
 ### Human Task
 
@@ -531,7 +579,7 @@ Ticket status `blocked` is waiting (often `depends_on`). Execution `blocked` is 
 
 ### Product decision
 
-A choice that needs user involvement when multiple reasonable options would produce meaningfully different product, architectural, operational, compatibility, or scope outcomes. A subagent that hits one records options and a recommendation and stops short of committing it. The orchestrator must not commit it either.
+A choice that needs user involvement when multiple reasonable options would produce meaningfully different product, architectural, operational, compatibility, or scope outcomes. A subagent that hits one records options and a recommendation and stops short of committing it, on its ticket or under Open decisions in a change plan. The orchestrator must not commit it either.
 
 Related:
 - process decision
@@ -543,7 +591,7 @@ Avoid:
 
 ### Process decision
 
-A choice that stays with the orchestrator: which ticket to create, whom to assign, whether to accept an execution result, whether a goal is verified, whether adversarial review is due, whether the run is complete, next work, review scheduling. Local implementation that follows established project patterns is process.
+A choice that stays with the orchestrator: which ticket to create, whom to assign, whether to accept an execution result, whether a goal is verified, whether adversarial review is due, whether the run is complete, next work, review scheduling. Local implementation that follows established project patterns is process. Accepting a reviewed change plan is process. Planning depth is the single process decision this skill requires to be put to the user, and that exception does not extend to any other process decision.
 
 ### Goal
 
@@ -575,7 +623,7 @@ Related:
 
 ### Module (run)
 
-A grouping of related run work into a manageable part. Status `proposed | active | complete | blocked | retired`. It becomes complete only after its implementation coverage and required module review resolve. This is not a source-code module and not a UI module.
+A grouping of related run work into a manageable part. Status `proposed | active | complete | blocked | retired`. It becomes complete only after its implementation coverage, planning coverage, and required module review resolve. This is not a source-code module and not a UI module.
 
 Related:
 - project module (a target project's code or directory module)
@@ -604,6 +652,14 @@ An Agent Task that checks goal-level, repo-wide or cross-area requirements for t
 ### Implementation coverage
 
 The requirement that every completed implementation ticket is named by one non-superseded resolved boundary inspection and one resolved boundary validation ticket whose Evidence meets its success conditions before its module or the run completes.
+
+### Plan acceptance
+
+The orchestrator's process decision that a reviewed change plan may be implemented, recorded by setting its Plan ticket `resolved`. Not human acceptance: the user is never asked to accept a change plan. Discuss comes first when the plan or either review raises a choice meeting the product-decision test, when the plan's Approach committed such a choice, or when the orchestrator declines such a finding.
+
+### Planning coverage
+
+The requirement that every change plan whose change set is still in the run is `resolved` and accepted, with its `reviews` resolved or cancelled and every implementation ticket it governs naming it in `plans`, and that no work classified as needing a plan was implemented without one outside a logged departure.
 
 ### Inspection freeze
 
@@ -639,6 +695,7 @@ Related:
 Avoid:
 - treating alignment plan and implementation plan as two artifacts
 - unqualified **plan** next to a commit preview
+- confusing it with an orchestrated-run **change plan**, which is one change set's agent-facing plan inside a run
 
 ### Benefit
 
@@ -674,7 +731,7 @@ A user prompt while other work is still going. Act immediately. A prompt that on
 
 ### Context compaction
 
-Recovering the run from the skill plus run files and tickets after conversation compaction. Not a second planning process; those actions belong to reconciliation.
+Recovering the run from the skill plus run files, tickets and relevant change plans after conversation compaction. Not a second planning process; those actions belong to reconciliation.
 
 ### Dispatch
 
@@ -690,7 +747,7 @@ Ticket YAML field for who currently executes an active ticket. Orchestrator-owne
 
 ### Follow-up
 
-A proposal on a ticket for the orchestrator. Not a whitelist. Agent Tasks only when Objective, Completion, and Reads are already specified. Human and Agent Task only when its bounded work and need for repeated branching interaction are already clear.
+A proposal on a ticket for the orchestrator. Not a whitelist. Agent Tasks only when Objective, Completion, and Reads are already specified. Human and Agent Task only when its bounded work and need for repeated branching interaction are already clear. Proposed implementation work carries its classification and the surfaces it changes.
 
 ### Log
 

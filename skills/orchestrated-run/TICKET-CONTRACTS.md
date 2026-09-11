@@ -16,10 +16,12 @@ Store tickets in `tickets/` as Markdown with ticket YAML.
 | Research | `RES` | `T-001-RES` |
 | Agent Task | `AGT` | `T-002-AGT` |
 | Explore Options | `EXP` | `T-003-EXP` |
-| Adversarial Review | `ADV` | `T-004-ADV` |
-| Discuss/Gather Inputs | `DIS` | `T-005-DIS` |
-| Human Task | `HUM` | `T-006-HUM` |
-| Human and Agent Task | `HAT` | `T-007-HAT` |
+| Plan | `PLN` | `T-004-PLN` |
+| Plan Review | `PLR` | `T-005-PLR` |
+| Adversarial Review | `ADV` | `T-006-ADV` |
+| Discuss/Gather Inputs | `DIS` | `T-007-DIS` |
+| Human Task | `HUM` | `T-008-HUM` |
+| Human and Agent Task | `HAT` | `T-009-HAT` |
 
 Use one number sequence across every type. Increment the number for each new
 ticket regardless of suffix. The full ID is the stable ID. The numeric prefix,
@@ -35,7 +37,8 @@ and continue the global number sequence.
 
 ## Ticket ownership and schema
 
-`status`, `owner`, and `presentation` are orchestrator-owned.
+`status`, `owner`, `presentation`, `plans`, and `reviews` are
+orchestrator-owned.
 `execution_result` is worker-owned and unset until execution ends.
 
 While a ticket is active, the worker may update only:
@@ -47,6 +50,10 @@ While a ticket is active, the worker may update only:
 - `Evidence`;
 - `Interaction log`;
 - `Blockers / follow-ups`.
+
+A Plan ticket's worker also writes the change plan file named in its
+Completion. No other type writes a file under the run directory. Agent Task and
+Explore Options write project files under their own Objective.
 
 The worker must not modify other ticket metadata. When the orchestrator is the
 worker for a Human and Agent Task, it still updates orchestrator-owned fields
@@ -68,6 +75,8 @@ goals: []
 unknowns: []
 pillars: []
 modules: []
+plans: []
+reviews: []
 depends_on: []
 owner: null
 ---
@@ -114,6 +123,10 @@ inspection freeze when applicable>
 <worker-maintained: proposals for the orchestrator; leave empty when none>
 ```
 
+`plans` holds the Plan ticket IDs for change plans that govern the ticket.
+`reviews` is used only on a Plan ticket and holds the current round's Plan
+Review ticket IDs.
+
 Ticket statuses:
 
 `proposed | ready | active | blocked | resolved | cancelled`
@@ -144,7 +157,8 @@ repeat it.
 
 An Agent Task is not `ready` until Objective, Completion, and Reads name what to
 change and what done looks like. Vague Research follow-ups stay Research or
-unknowns. Agent Task Reads are files Research already found, not the repo.
+unknowns. Agent Task Reads are files Research already found or an accepted
+change plan, not the repo.
 
 A Human Task is not `ready` until Objective is a complete ask the user can
 perform without inventing the procedure, and Completion names the observable
@@ -174,7 +188,27 @@ condition, not the expected result of one interaction.
 Explore Options is the type for deciding what to build when that reasoning
 needs investigation. That reasoning does not land on an Agent Task. Local
 implementation choices that follow established project patterns are process
-decisions and do not require Explore Options.
+decisions and do not require Explore Options. A Plan ticket commits an approach
+and sequences the work; an open decision in a change plan that needs
+investigation becomes an Explore Options ticket, and no Plan Review starts
+until it returns and the plan is revised.
+
+A Plan ticket is not `ready` until Objective names the change set and the
+outcome it serves by goal ID; Reads name the returned research tickets
+including their draft implementation tickets, the governing goals, non-goals
+and working hints, the end user and the canonical docs when the run has them,
+and the project paths research already found; Completion names the change plan
+path and requires every section in the Plan prompt; and Objective and
+Completion prohibit changes to project files, external state, and prepared
+human environments, naming the worker-maintained ticket sections and change
+plan file as the only permitted writes.
+
+A Plan Review ticket is not `ready` until its Plan ticket returned
+`execution_result: completed` with no open investigation its approach depends
+on, the change plan file exists, the lens is named in Objective, and Reads name
+the plan, the governing goals with their outcomes and acceptance criteria, the
+non-goals and working hints, and for the product lens the end user and the
+canonical doc sections the plan cites or the recorded gap.
 
 A boundary validation ticket is its own Agent Task. It checks goal-level,
 repo-wide, or cross-area requirements for the implementation tickets it names.
@@ -198,13 +232,25 @@ to the result: leave worker-maintained sections empty when they have nothing to
 record, and use a concise Evidence pointer when the changed files or checks are
 the evidence. Do not leave the detailed record only in chat.
 
-Set execution_result to completed, blocked, or failed. That is your result, not
-the persistent ticket status. The orchestrator owns status and owner.
+Set execution_result to null before starting this assignment. Before you
+return, set it to completed, blocked, or failed. That is your result, not the
+persistent ticket status. The orchestrator owns status and owner.
 
 Do not edit run-level files (GOALS.md, NONGOALS.md, UNKNOWNS.md,
 WORKINGHINTS.md, LOG.md, PILLARS.md, MODULES.md, or asks/). Do not create
-tickets or run-level plans. Record follow-ups on this ticket. The orchestrator
-decides what happens next.
+tickets. Do not plan the run. Record follow-ups on this ticket. The orchestrator
+decides what happens next. A Plan ticket also writes the change plan named in
+its Completion; no other type writes a file under the run directory.
+
+Classify every piece of implementation work you propose or recommend as
+trivial, as following an established project pattern, or as moderately complex
+or higher. Moderately complex or higher means it needs decisions beyond
+following an existing pattern, changes several files or areas that must change
+together, or is hard to reverse. Name any schema, persistence layer, public
+API, protocol, data migration, or canonical doc it changes. Use those exact
+labels and record them with the work itself in Blockers / follow-ups. On a Plan
+ticket, record them with the corresponding draft under Proposed implementation
+tickets in the change plan instead.
 
 If multiple reasonable choices would produce meaningfully different product,
 architectural, operational, compatibility, or scope outcomes, stop short of
@@ -234,6 +280,10 @@ is effort on surrounding context and hunting, not which sources are allowed.
 Prefer `surface` over a standalone triage ticket. The orchestrator chooses the
 allowed depth path.
 
+Research drafts and classifies follow-up Agent Tasks under either planning
+depth, using the classification in the shared agent rules. That classification
+decides whether a change set gets a change plan; the rule is in `SKILL.md`.
+
 Assignment prompt, after the shared agent rules:
 
 ```text
@@ -257,7 +307,8 @@ implications; and follow-ups. Keep the record proportional to the result.
 
 For every Agent Task follow-up, draft Objective, Completion, and Reads from
 what you found, or name which part is missing and which ticket type could close
-it. These drafts are proposals. Do not create tickets. Propose Human and Agent
+it. When several drafts must ship together, name them as one change set and say
+why. These drafts are proposals. Do not create tickets. Propose Human and Agent
 Task only when its bounded work and need for repeated branching interaction
 are already clear.
 
@@ -309,6 +360,137 @@ Return on the ticket:
 - temporary artifacts created
 ```
 
+## Plan (subagent)
+
+Write the change plan for one coherent change set under reviewed planning. A
+change plan is engine text for the subagent that will implement it and the two
+reviewers that will attack it. It carries no user-facing copy.
+
+Store it at `plans/<plan-ticket-id>.md`. The path is stable for the life of the
+change set. The active Plan ticket's worker is the only agent that changes its
+content. When no Plan ticket is active, the orchestrator may write only its
+Status and revisions banner. Plan Review workers never write it.
+
+The prompt below replaces the shared product-decision rule for this type, and
+carries the full test, its examples, and the local-pattern sentence, so the
+worker classifies choices from the same text the orchestrator applies.
+
+Assignment prompt, after the shared agent rules:
+
+```text
+This ticket is Plan. Produce the change plan named in Objective, at the plan
+path in Completion. Apart from the worker-maintained sections of this ticket,
+that file is the only file you may write, and this instruction is what
+authorises you to write it. Do not change project files, external state, or any
+prepared human environment. Do not implement any part of the plan. Do not
+create tickets.
+
+This prompt replaces the shared rule about stopping on a product choice.
+
+Write the change plan for the subagent that will implement it and for the
+reviewers who will attack it. Keep it mechanical. It has no user-facing copy.
+
+Plan from Objective, Completion, and Reads, including any draft implementation
+tickets earlier research recorded. Investigate the project only as far as the
+plan requires. If closing a gap needs its own investigation, record the gap and
+the investigation it needs rather than guessing.
+
+Write it with these sections:
+- Goals and requirements served, by run goal ID, with canonical doc or spec
+  sections when available and the recorded gap otherwise
+- Approach and the local choices it commits, each marked local, with rejected
+  alternatives and why
+- Changes by area, in execution order, with paths, each stating the observable
+  effect of that change
+- Knock-on effects: callers, dependents, tests, docs, config, data, migrations
+- Risks and compatibility
+- Verification proposals for goal-level and cross-area checks
+- Proposed implementation tickets, each with draft Objective, Completion, Reads
+- Open decisions, with options, a recommendation, and what is stable under each
+- Status and revisions
+
+Classify every choice you make. A choice needs the user when reasonable
+alternatives would produce meaningfully different product, architectural,
+operational, compatibility, or scope outcomes. Examples include changing goals;
+architecture, public API, persistence, UX, dependency, or platform choices; and
+scope trade-offs. A local implementation choice that follows an established
+project pattern does not need the user.
+
+Put every choice of the first kind under Open decisions, not Approach, and keep
+planning what stays correct under every option. Put choices of the second kind
+under Approach, each marked local. Set execution_result to completed when the
+rest of the plan is usable, and to blocked when the plan depends on an
+undecided choice or on an investigation you recorded as still open.
+
+When this ticket is a revision, read the Plan Review tickets and the decisions
+named in Objective. Apply every finding the orchestrator accepted, and add a
+Status and revisions entry naming what changed and which findings it answers.
+Do not drop an accepted finding without recording why it does not apply.
+
+Return on the ticket: the plan path, every Approach commitment so the
+orchestrator can check your classification, open decisions, evidence, and
+follow-ups. The plan file is the deliverable; do not copy it into the ticket
+record.
+```
+
+## Plan Review (subagent)
+
+Try to show that a change plan will not work or will not deliver what it
+claims. One lens per ticket, named in Objective. Exactly two lenses exist:
+`consequences` and `product`.
+
+Both reviews for a round are dispatched in one wave and run in parallel;
+neither depends on the other. Reading the same change plan is not a file
+conflict. The orchestrator must not be the reviewer. Reviewers never write the
+change plan, and Adversarial Review is never used on one.
+
+This prompt also replaces the shared product-decision rule, and carries the
+same test, so a reviewer classifies a choice it finds instead of stopping on
+it.
+
+Assignment prompt, after the shared agent rules:
+
+```text
+This ticket is Plan Review. Try to show that the change plan named in Reads
+will not work or will not deliver what it claims. Review only through the lens
+named in Objective.
+
+consequences: check whether the choices hold, what else must change for the
+plan to work, what the plan breaks or leaves inconsistent, and whether the
+order, compatibility, and migration handling are safe.
+
+product: check the plan against the goals it cites, including their outcomes
+and acceptance criteria, and the canonical doc or spec sections it cites. Use
+the observable effect the plan states for each area. Report where the plan
+contradicts those requirements, drifts past a non-goal, or would finish without
+reaching the cited outcome.
+
+When Objective names parts of the plan, review only those parts through your
+lens.
+
+Do not edit the plan. Do not implement any part of it. Do not write your own
+plan. Do not change project files, external state, or any prepared human
+environment.
+
+This prompt replaces the shared rule about stopping on a product choice. You
+classify the choices you find and finish the review. A choice needs the user
+when reasonable alternatives would produce meaningfully different product,
+architectural, operational, compatibility, or scope outcomes. Examples include
+changing goals; architecture, public API, persistence, UX, dependency, or
+platform choices; and scope trade-offs. A local implementation choice that
+follows an established project pattern does not need the user.
+
+Return on the ticket:
+- findings, each with a ticket-scoped ID such as `T-005-PLR/F-001`, its
+  location in the plan, evidence, and impact or severity
+- for each finding, whether it is a choice the user should take by that test,
+  or one the orchestrator can settle
+- whether any finding rejects the approach itself rather than its detail
+- what the plan should change, as proposals
+- checks that found no problem
+- remaining uncertainty
+```
+
 ## Adversarial Review (subagent)
 
 Actively try to show that completed work is incorrect, incomplete, or
@@ -354,7 +536,9 @@ For acceptance, present the exact result, how to inspect it, the acceptance
 basis, and a request to accept it or describe required changes. Do not use a
 structured questions form or multiple-choice prompt for acceptance.
 
-Ask only for judgement a subagent cannot make. Never ask the user to perform or
+Ask only for judgement a subagent cannot make. The planning-depth offer is the
+one Discuss whose subject is process: it asks for a preference no subagent can
+supply. Never ask the user to perform or
 confirm a check a subagent can run, under any label, including inspection
 method or expected result; report it as a recorded outcome from its ticket
 instead. Point the user at a file, page, or preview only when the judgement

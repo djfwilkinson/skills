@@ -107,7 +107,7 @@ complete` fails because it says nothing about what that module was meant to
 deliver. Name the aggregate when it helps, then state each result being judged.
 
 Never ask the user to accept an artifact that exists only for agents, such as an
-evidence file. When a document, report, design, or prepared environment is
+evidence file or a change plan. When a document, report, design, or prepared environment is
 itself the deliverable, ask about what it gives the user: say what it holds, why
 it exists, and when it will matter.
 
@@ -123,7 +123,8 @@ One page represents one human ticket. It contains:
 - the one-sentence summary of the ask;
 - the complete current return-to-user ask for that type;
 - why the ask matters to the user, from the ticket's Objective, never the
-  process or Interactive reason;
+  process or Interactive reason, except the planning-depth offer, whose subject
+  is how the run works;
 - any prepared resource path or URL and its current state;
 - the expected reply, result, or evidence;
 - the presentation state and time recorded in Presentation.
@@ -205,6 +206,11 @@ below; each list is the extra payload that type carries, not a substitute:
   recovery steps when they apply.
 - Discuss/Gather Inputs: the question or decision, essential context, options
   and recommendation when present, expected reply, and ticket path.
+- Planning depth offer: what reviewed planning changes about how the run
+  reaches the user's result, the recorded conditions this run met, the cost as
+  the planning and review work it adds before implementation, that change
+  plans are agent-facing and require no user sign-off, the recommendation, and
+  the ticket path.
 - Acceptance: exact result or path, inspection method, acceptance basis,
   request to accept or describe changes, and ticket path.
 - Grouped acceptance: group each result and its recorded evidence under its
@@ -214,7 +220,7 @@ below; each list is the extra payload that type carries, not a substitute:
   entry under that type's contract.
 
 Do not add unsupported hints. Do not paste ticket metadata, Reads, related run
-IDs, or the process reason. Acceptance is not an options question; present it
+IDs, or the process reason. The planning-depth offer is the single exception. Acceptance is not an options question; present it
 directly and wait for the user's reply.
 
 After that same ask has been presented once, later user-visible messages may

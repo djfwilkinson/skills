@@ -4,9 +4,10 @@ This file is part of the `orchestrated-run` contract. Read it before creating or
 updating run files and after compaction. It is not a skill and must not be
 invoked.
 
-Conversation context is temporary. Run files, tickets, and project files are
-persistent memory. The orchestrator owns every run file. Subagents may identify
-changes on their tickets but must not write run files.
+Conversation context is temporary. Run files, tickets, change plans, and
+project files are persistent memory. The orchestrator owns every run file.
+Subagents may identify changes on their tickets but must not write run files. A
+change plan is written only by its Plan ticket's active worker.
 
 ## Unknowns
 
@@ -146,6 +147,9 @@ user confirms them.
 Use the same model as the orchestrator for subagents by default. Record a user
 override in `WORKINGHINTS.md`.
 
+Record planning depth as a working hint, with the end user and the canonical
+docs or spec when the run has them.
+
 If a working hint conflicts with a goal, the subagent records the conflict on
 its ticket. The orchestrator decides whether it needs Discuss or a process
 change.
@@ -153,6 +157,26 @@ change.
 Put `WORKINGHINTS.md` on Reads when it has entries that apply. Do not paste it
 as the ticket's main context. Name exact hint, goal, and unknown IDs or headings
 when only those entries apply. Do not add growing run files by default.
+
+## Change plans
+
+Under reviewed planning, a change set whose proposing record met the test in
+`SKILL.md` has one change plan at `plans/<plan-ticket-id>.md`. Most work has
+none.
+
+A change plan is persistent memory. It is not a run file and not a source of
+run state: goals, non-goals, unknowns and working hints stay in run files. Its
+required sections and its prompt live in `TICKET-CONTRACTS.md`.
+
+The active Plan ticket's worker owns the file. When no Plan ticket is active,
+the orchestrator may write only the Status and revisions banner, marking the
+plan accepted, superseded, or dropped with its change set. Content changes
+require reassigning the Plan ticket.
+
+Planning coverage is the completion requirement in `SKILL.md`: every change
+plan still in the run is accepted with its reviews closed and its tickets
+naming it, and no work classified as needing a plan was implemented without one
+outside a logged departure.
 
 ## Pillars
 
@@ -169,8 +193,8 @@ related goals and pillars, known dependencies, and status:
 
 Modules may be added, split, merged, or retired when reconciliation says the
 run needs that. Set a module `complete` only when every completed
-implementation ticket in it has implementation coverage and required module
-review is resolved.
+implementation ticket in it has implementation coverage, planning coverage is
+satisfied for its work, and required module review is resolved.
 
 ## Log
 
@@ -184,5 +208,12 @@ review is resolved.
 - unknown IDs opened or closed;
 - blockers;
 - ticket ID.
+
+Also record the planning-depth choice, or the decision not to offer it with its
+basis; change plan acceptance; any reclassification of a choice in either
+direction; declined review findings with their reasons; revision rounds with
+their ticket IDs; any departure from a proposing ticket's classification of
+whether work needs a change plan; and the record cited when a Plan ticket is
+cancelled.
 
 Detailed investigation and implementation notes stay on tickets.
