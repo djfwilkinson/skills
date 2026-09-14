@@ -1,6 +1,12 @@
 ---
 name: orchestrated-run
-description: Coordinate a substantial project run through one user-facing orchestrator, shared run files, and subagent tickets. The orchestrator owns the process: run state, ticket creation and assignment, user interaction, steering, reconciliation, next work, and goal verification. Subagents execute individual tickets from a type prompt and file references. Use only when explicitly invoked by the user.
+description: >-
+  Coordinate a substantial project run through one user-facing orchestrator,
+  shared run files, and subagent tickets. The orchestrator owns the process:
+  run state, ticket creation and assignment, user interaction, steering,
+  reconciliation, next work, and goal verification. Subagents execute
+  individual tickets from a type prompt and file references. Use only when
+  explicitly invoked by the user.
 disable-model-invocation: true
 metadata:
   invocation: user-only

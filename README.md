@@ -5,11 +5,13 @@ Cursor agent skills I keep here so I can install them on another machine.
 - [public-docs](skills/public-docs/SKILL.md): Write public-facing docs and copy without AI tells.
 - [user-response](skills/user-response/SKILL.md): Shape chat replies and temporary response artifacts without a heavy rewrite pass.
 - [orchestrated-run](skills/orchestrated-run/SKILL.md): Run a project through one orchestrator, shared run files, and ticketed subagents.
+- [defect-capture](skills/defect-capture/SKILL.md): Capture defect reports in parallel as durable defect tickets.
+- [orchestrated-defect-run](skills/orchestrated-defect-run/SKILL.md): Triage, resolve, check, and review a captured defect list through orchestrated-run.
 - [project-alignment](skills/project-alignment/SKILL.md): Establish a project's shared language and write an alignment plan or implement the alignment changes.
 - [ux-ui-reviewer](skills/ux-ui-reviewer/SKILL.md): Review an implemented interface for task completion, consistency, and related UX problems.
 - [git-stage-commit](skills/git-stage-commit/SKILL.md): Analyze git changes, group them, and stage and commit.
 
-project-alignment depends on orchestrated-run. A UX/UI review inside an orchestrated-run is an Agent Task that reads ux-ui-reviewer. Adversarial Review of completed UI work may also read that skill.
+project-alignment depends on orchestrated-run. orchestrated-defect-run depends on orchestrated-run and the defect-ticket contract bundled with defect-capture. A UX/UI review inside an orchestrated-run is an Agent Task that reads ux-ui-reviewer. Adversarial Review of completed UI work may also read that skill.
 
 ## Repo management
 
@@ -32,6 +34,8 @@ mkdir -p ~/.cursor/skills
 cp -R skills/public-docs ~/.cursor/skills/
 cp -R skills/user-response ~/.cursor/skills/
 cp -R skills/orchestrated-run ~/.cursor/skills/
+cp -R skills/defect-capture ~/.cursor/skills/
+cp -R skills/orchestrated-defect-run ~/.cursor/skills/
 cp -R skills/project-alignment ~/.cursor/skills/
 cp -R skills/ux-ui-reviewer ~/.cursor/skills/
 cp -R skills/git-stage-commit ~/.cursor/skills/
@@ -46,6 +50,8 @@ mkdir -p ~/.cursor/skills
 ln -s "$(pwd)/skills/public-docs" ~/.cursor/skills/public-docs
 ln -s "$(pwd)/skills/user-response" ~/.cursor/skills/user-response
 ln -s "$(pwd)/skills/orchestrated-run" ~/.cursor/skills/orchestrated-run
+ln -s "$(pwd)/skills/defect-capture" ~/.cursor/skills/defect-capture
+ln -s "$(pwd)/skills/orchestrated-defect-run" ~/.cursor/skills/orchestrated-defect-run
 ln -s "$(pwd)/skills/project-alignment" ~/.cursor/skills/project-alignment
 ln -s "$(pwd)/skills/ux-ui-reviewer" ~/.cursor/skills/ux-ui-reviewer
 ln -s "$(pwd)/skills/git-stage-commit" ~/.cursor/skills/git-stage-commit

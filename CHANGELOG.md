@@ -8,6 +8,11 @@ Dated sections contain only these bullets:
 - removed: `skill-id`
 - renamed: `old-id` -> `new-id`
 
+## 2026-09-14
+
+- added: `defect-capture`
+- added: `orchestrated-defect-run`
+
 ## 2026-08-26
 
 - added: `git-stage-commit`

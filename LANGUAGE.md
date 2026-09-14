@@ -11,6 +11,7 @@ When naming, describing, or changing project concepts, use these terms.
 - [Packaging and authoring](#packaging-and-authoring)
 - [Writing](#writing)
 - [Orchestrated-run and project-alignment](#orchestrated-run-and-project-alignment)
+- [Defect capture and defect runs](#defect-capture-and-defect-runs)
 - [UX/UI review](#uxui-review)
 - [Git stage and commit](#git-stage-and-commit)
 - [Checkout extras](#checkout-extras)
@@ -821,6 +822,156 @@ For chat progress updates, a ticket whose ticket status has just become `resolve
 ### Orchestrator thread
 
 The conversation where the orchestrator works. Must not execute agent-ticket work or invent verification evidence there. Human and Agent Task is the narrow exception for bounded orchestrator work.
+
+## Defect capture and defect runs
+
+### Defect list
+
+A dated folder of defect tickets and their copied evidence under
+`.agent-runs/defect-lists/`. It is the durable source used by defect capture
+and an orchestrated defect run.
+
+Related:
+- defect ticket
+- orchestrated defect run
+
+Avoid:
+- **defect run folder**, because the list persists independently of an
+  orchestrated run
+- treating the orchestrated-run `tickets/` directory as the defect list
+
+### Defect ticket
+
+One captured defect report and its defect-level lifecycle record, stored as
+`D-<number>.md` in a defect list. It preserves the user's context, copied
+evidence, triage, resolution, review outcomes, and links to orchestrated-run
+tickets. Its stable `D-` ID is not an orchestrated-run ticket ID.
+
+Related:
+- ticket (the bounded work item inside an orchestrated run)
+- work-tracker item (an external human work item)
+
+Avoid:
+- merging its status with orchestrated-run ticket status
+- letting an orchestrated-run subagent edit it directly
+- calling an orchestrated-run ticket a defect ticket merely because it handles
+  a defect
+
+### Defect capture
+
+The user-invoked process that creates or resumes a defect list and dispatches
+one background ticket writer per submitted defect. Capture records the report;
+it does not triage the code, decide duplicates, or implement a fix.
+
+Related:
+- capture state
+- defect ticket
+
+Avoid:
+- calling it an orchestrated run
+- waiting for one independent ticket writer before accepting the next defect
+
+### Capture state
+
+Whether a defect ticket's initial report is `drafting`, `ready`, or `failed`.
+Separate from defect status. Only a ready capture is eligible for triage.
+
+### Capture owner
+
+The persistent assignment identifier of the capture writer that currently owns
+a defect ticket. `null` means the file is free. A non-null capture owner
+survives compaction and prevents another capture writer or the defect-run
+orchestrator from editing the source file.
+
+### Orchestrated defect run
+
+A user-invoked specialization that starts one orchestrated run for a defect
+list and adds defect-specific triage, implementation, automated product check,
+source reconciliation, and user-review rules. It uses the same orchestrator
+thread and does not create a nested orchestrator.
+
+Related:
+- orchestrated-run
+- defect list
+- automated product check
+
+Avoid:
+- treating it as a replacement for orchestrated-run
+- copying defect tickets into the orchestrated-run ticket directory
+
+### Defect status
+
+The defect-level projection recorded on a defect ticket:
+`backlog | triaged | in progress | blocked | awaiting automated review |
+automated reviewing | awaiting user review | surfaced for user review | done |
+failed review`.
+
+It summarizes the current defect outcome across the orchestrated-run tickets
+handling it. It is separate from ticket status, presentation state, execution
+result, goal status, and module status. `blocked` is a reversible detour.
+`failed review` remains visible while being scheduled like backlog.
+
+Avoid:
+- using `in progress` as an alias for orchestrated-run ticket `active`
+- using `done` as an alias for execution result `completed`, ticket status
+  `resolved`, goal status `achieved`, or module status `complete`
+- describing `awaiting user review` as a presented ask; only `surfaced for user
+  review` maps to presentation state `presented`
+
+### Automated product check
+
+A defect-run Agent Task that exercises the actual product or prepared artifact
+against the captured user-visible scenario after implementation. Its outcome
+is `passed`, `failed`, or `inconclusive`. `inconclusive` means the scenario
+could not be created or observed safely and the exact gap must be surfaced in
+user review.
+
+It does not replace boundary validation, Plan Review, Adversarial Review, or
+human acceptance. It is check-producing work, not an implementation ticket,
+and does not itself need implementation coverage.
+
+Related:
+- boundary validation ticket
+- Adversarial Review
+- product-check outcome
+
+Avoid:
+- calling code inspection alone an automated product check
+- treating `inconclusive` as passed
+- creating unsafe data merely to force a result
+
+### Product-check outcome
+
+The result recorded in an automated product check's Evidence:
+
+- `passed`: the scenario ran and produced the expected observable result;
+- `failed`: the scenario ran and showed the result was absent or incorrect;
+- `inconclusive`: the scenario could not safely establish the result.
+
+This is not execution result. A completed Agent Task may have an inconclusive
+product-check outcome when its Completion explicitly allows and defines that
+fallback.
+
+### Defect resolution
+
+The supported disposition recorded when a defect reaches `done`:
+`fixed | duplicate | not-a-defect | cannot-reproduce | wont-fix`.
+
+Fixed requires implementation coverage and user acceptance. A duplicate stays
+triaged until its canonical defect is done and canonical verification
+explicitly covers the duplicate's reported scenario. Other non-fix resolutions
+require evidence and use Discuss when they meet the normal product-decision
+test. `wont-fix` is a product decision unless the user already made it.
+
+### Failed review cycle
+
+The new triage and remediation cycle created when an automated check proves the
+result is incorrect, automated validation finds a material issue, or the user
+requests changes. The defect retains `failed review`, increments its cycle,
+and gets new orchestrated-run tickets after every in-flight check for the prior
+cycle returns. Earlier ticket evidence remains unchanged; upcoming or presented
+inspection follows the normal invalidation lifecycle rather than being falsely
+closed.
 
 ## UX/UI review
 
