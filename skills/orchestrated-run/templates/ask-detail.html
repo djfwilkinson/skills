@@ -15,14 +15,17 @@
      * Covered tickets: [{ id, path, href }]
      * Resources: [{ label, href, detail, state }]
      * Sections: [{ heading, body, items: ["Text", { text, detail, code }] }]
-     * Response examples: ["accept", "T-012-AGT: describe the change needed"]
+     * Explain what to inspect or compare and which observations distinguish
+     * the possible replies. For choices, describe each option's visible
+     * behavior, downstream effects, and whether it can be deferred.
+     * Response examples omit the ask ticket ID; the renderer prefixes it.
      * Metadata: [{ label, value }]
      *
      * Set presentation.state to presented | upcoming | answered | withdrawn.
      * For answered or withdrawn, set endedAt. For withdrawn, also set reason.
      */
     const askPageData = {
-      templateVersion: 1,
+      templateVersion: 2,
       run: {
         id: "RUN-ID",
         name: "Run name",
@@ -489,8 +492,13 @@
         return wrapper;
       };
       const renderResponseExample = (value) => {
+        const ticketId = text(askPageData.ticket?.id);
+        const reply = text(value);
+        const prefixed = ticketId && reply !== ticketId && !reply.startsWith(`${ticketId}:`)
+          ? `${ticketId}: ${reply}`
+          : reply;
         const example = element("div", "response-example");
-        example.append(element("code", "", value), copyButton(value));
+        example.append(element("code", "", prefixed), copyButton(prefixed));
         return example;
       };
 

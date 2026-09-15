@@ -60,8 +60,12 @@ human ticket and change its `presentation` value as the ticket moves through
 `ask-detail.html` has one `askPageData` object. The one-sentence summary,
 resources, ordered sections, steps, commands, expected reply, ticket metadata,
 and presentation lifecycle all live in that object. `ask.summary` carries that
-sentence and `ask.why` why the ask matters to the user. For Human and Agent Task, replace the current ask data
-rather than appending earlier turns.
+sentence and `ask.why` why the ask matters to the user. `expectedReply.body`
+states what the returned result must contain. Its examples omit the ask ticket
+ID because the renderer displays and copies each as `<ask-ticket-id>: <reply>`.
+For a finite choice, include one complete reply example per option.
+For Human and Agent Task, replace the current ask data rather than appending
+earlier turns.
 
 For a grouped inspection, put every covered implementation ticket in
 `ticket.covered`, group each result with its recorded outcomes into ordered
@@ -97,6 +101,15 @@ observable terms what it now does for the user, and state what is being decided
 or done, without needing the ticket, the module, chat history, or the run.
 Restating a name or label as its own purpose describes nothing.
 
+When the ask needs judgement, state exactly what to inspect or compare and
+which observable results distinguish the possible replies. For a decision,
+describe what the user would observe under each option, its known knock-on
+effects for later development, compatibility, or scope, and whether it can be
+deferred to a named later goal, module, or project-plan step. Say why it must be
+decided now when deferral is unsafe or would block current work. Use only
+recorded evidence; if these consequences are not known, prepare them before
+making the ticket `ready`.
+
 Lead with one sentence stating the ask in the words the user uses for their own
 product, then give the detail under it. Technical terms belong in an ask whose
 product or judgement is technical; say what one means for the product when that
@@ -125,12 +138,15 @@ One page represents one human ticket. It contains:
 - why the ask matters to the user, from the ticket's Objective, never the
   process or Interactive reason, except the planning-depth offer, whose subject
   is how the run works;
+- what to inspect or compare and which results distinguish the available
+  replies;
 - any prepared resource path or URL and its current state;
 - the expected reply, result, or evidence;
 - the presentation state and time recorded in Presentation.
 
-For acceptance, include the exact result or path, inspection method, acceptance
-basis, and request to accept or describe changes.
+For acceptance, include the exact result or path, inspection method, what
+successful and change-needed results look like, acceptance basis, and request
+to accept or describe changes.
 
 For Human and Agent Task, the page contains only the current ask from the latest
 Interaction log entry, not previous turns.
@@ -206,14 +222,17 @@ below; each list is the extra payload that type carries, not a substitute:
   result, evidence to return, ticket path, and evidence-backed hints or
   recovery steps when they apply.
 - Discuss/Gather Inputs: the question or decision, essential context, options
-  and recommendation when present, expected reply, and ticket path.
+  and recommendation when present, each option's observable behavior, known
+  knock-on effects and deferral point or reason it must be decided now,
+  expected reply, and ticket path.
 - Planning depth offer: what reviewed planning changes about how the run
   reaches the user's result, the recorded conditions this run met, the cost as
   the planning and review work it adds before implementation, that change
   plans are agent-facing and require no user sign-off, the recommendation, and
   the ticket path.
-- Acceptance: exact result or path, inspection method, acceptance basis,
-  request to accept or describe changes, and ticket path.
+- Acceptance: exact result or path, inspection method, successful and
+  change-needed observations, acceptance basis, request to accept or describe
+  changes, and ticket path.
 - Grouped acceptance: group each result and its recorded evidence under its
   covered ticket IDs, then request one reply accepting all or naming IDs
   needing changes. Do not list checks for the user to perform.

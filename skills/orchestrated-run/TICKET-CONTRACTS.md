@@ -492,9 +492,17 @@ question and any options, recommendation, or draft that exist. Do not invent
 them. If a product decision needs prepared options and they are missing, the
 ticket is not `ready`: open Research or Explore Options first.
 
+For each decision option, explain the behavior the user would observe, known
+knock-on effects for later development, compatibility, or scope, and whether
+the choice can be deferred to a named later goal, module, or project-plan step.
+If it cannot, explain what current work it blocks or would make unsafe. The
+ticket is not `ready` until evidence supports those explanations; open Research
+or Explore Options to prepare what is missing.
+
 For acceptance, present the exact result, how to inspect it, the acceptance
-basis, and a request to accept it or describe required changes. Do not use a
-structured questions form or multiple-choice prompt for acceptance.
+basis, what observations indicate success or required changes, and a request
+to accept it or describe required changes. Do not use a structured questions
+form or multiple-choice prompt for acceptance.
 
 Ask only for judgement a subagent cannot make. The planning-depth offer is the
 one Discuss whose subject is process: it asks for a preference no subagent can
