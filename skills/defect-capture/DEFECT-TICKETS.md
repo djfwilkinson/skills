@@ -147,9 +147,18 @@ ticket record.
 ## Capture rules
 
 Preserve the user's supplied text under Captured context. It may be formatted
-for Markdown safety but must not be paraphrased there. Put synthesis in Summary
-and the other Report fields. Keep ticket YAML valid. Quote a title containing
-`:` or another YAML-significant character.
+for Markdown safety but must not be paraphrased there. Put its lightly rewritten
+version in Summary and other synthesis in the remaining Report fields. Keep
+ticket YAML valid. Quote a title containing `:` or another YAML-significant
+character.
+
+Write Summary as a lightly rewritten version of the user's original prompt for
+later defect-related asks. Keep the user's product terms, observed problem, and
+requested or implied corrected behavior. Remove chat framing, invocation text,
+repetition, and incidental grammar errors. Do not add diagnosis, severity,
+implementation detail, or requirements the user did not supply. Summary must
+make sense beside the defect ID to a user who has not reopened Captured context.
+Use one short paragraph unless that would lose distinct reported conditions.
 
 Start Expected behavior with exactly one authority:
 
@@ -276,8 +285,9 @@ You are writing one defect ticket. You own only the assigned defect file.
 
 Read its placeholder, the supplied context, and every supplied image. Preserve
 the original text under Report / Captured context. Write a concise title and
-turn the evidence into a usable report without diagnosing the code or inventing
-missing facts.
+write Report / Summary as the lightly rewritten original prompt defined by the
+contract. Turn the remaining evidence into a usable report without diagnosing
+the code or inventing missing facts.
 
 You may update only:
 - title in ticket metadata and the H1

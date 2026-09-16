@@ -103,6 +103,21 @@ unknown merely because implementation detail is absent. Apply the normal
 planning-depth gate before creating implementation work. Triage Research may
 proceed while a planning-depth ask is unresolved because it does not implement.
 
+## Defect context in human asks
+
+Every Discuss, Human Task, or Human and Agent Task ask whose decision, action,
+or review is scoped to a source defect starts its defect-specific content with
+the defect ID and Report / Summary under the label `Original report`. Put both
+in the human ticket's Objective, or in the latest Interaction log entry for
+Human and Agent Task, so chat and the ask page derive them from the normal ask
+source.
+
+Use Summary as written: it is the capture writer's lightly rewritten original
+prompt, not a diagnosis or current result. Do not substitute the title, Triage,
+or a later implementation summary. In a grouped ask, repeat the ID and Summary
+inside each defect's result. If an older defect has no usable Summary, lightly
+rewrite Captured context for that ask without changing the source Report.
+
 ## Assignment extensions
 
 For every agent ticket, copy the shared agent rules and exact type prompt from
@@ -317,6 +332,8 @@ can be judged together. This inspection asks whether the implemented result is
 acceptable, not whether the confirmed outcome should have been pursued. The
 ask:
 
+- opens each defect's result with its ID and Report / Summary as the original
+  report;
 - maps each result and recorded automated outcome to its defect ID;
 - names each duplicate separately and asks the user to inspect its reported
   scenario even when one canonical implementation covers it;
