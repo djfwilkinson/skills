@@ -16,7 +16,8 @@ It requires `/orchestrated-run` and the defect-ticket contract bundled with
 defect-specific process. The orchestrated-run skill and its required references
 remain authoritative for ticket types, ticket status, assignment, ownership,
 planning depth, reconciliation, implementation coverage, review, human asks,
-and run completion.
+and run completion, except for the confirmed-outcome specialization named
+below.
 
 Read
 [DEFECT-TICKETS.md](../defect-capture/DEFECT-TICKETS.md) before changing a
@@ -33,9 +34,12 @@ Discuss/Gather Inputs to ask which list to run.
 Inspect `orchestrated_run` on the list's defect tickets. If it points to one
 incomplete run, resume that run. If different incomplete runs claim the list
 or its defects, report the conflict and do not start another. Otherwise start
-a new `/orchestrated-run` whose request is to resolve or reach a supported
-disposition for every ready defect in that list. Do not copy the defect files
-into the orchestrated-run folder.
+a new `/orchestrated-run` whose request is to implement each ready defect's
+confirmed outcome. Treat those outcomes, including confirmed amendment
+outcomes, as part of the user's invocation. Use Research when no outcome is
+confirmed. Consider a non-fix disposition only when later evidence shows
+implementation is inappropriate. Do not copy the defect files into the
+orchestrated-run folder.
 
 Put the source list path, this skill-file path, and the
 `DEFECT-TICKETS.md` path in `WORKINGHINTS.md` as required recovery references.
@@ -48,6 +52,8 @@ Record these user-confirmed working hints:
 
 - defect status is a projection onto source defect tickets, not an
   orchestrated-run ticket status;
+- confirmed outcomes under `DEFECT-TICKETS.md`, including confirmed Additional
+  context, must not be put back to the user as decisions;
 - only an active implementation Agent Task moves a defect to `in progress`;
 - a dedicated automated product check must run against the actual product or
   prepared artifact before the defect is presented for user review;
@@ -76,7 +82,9 @@ to:
 - inventory defects with `capture_state: ready`;
 - treat `backlog` and `failed review` as triage-eligible only when
   `capture_owner: null` and the current cycle has no unresolved triage Research;
-- propose one goal per defect to fix it or establish a supported disposition;
+- propose one goal per defect that faithfully carries its confirmed outcome;
+  when no outcome is confirmed, propose Research to establish it before
+  deciding implementation or disposition;
 - identify obvious duplicate or related groups without committing them;
 - propose useful pillars or modules based on product areas or likely shared
   causes;
@@ -89,16 +97,23 @@ already `done`, include it only when evidence indicates its resolution has
 been invalidated.
 
 After bootstrap reconciliation, activate goals that match the user's request
-to handle the list. Apply the normal planning-depth gate before creating
-implementation work. Triage Research may proceed while a planning-depth ask
-is unresolved because it does not implement.
+to handle the list. A goal that faithfully restates a confirmed minimum outcome
+matches that request, is complete enough to activate, and does not become an
+unknown merely because implementation detail is absent. Apply the normal
+planning-depth gate before creating implementation work. Triage Research may
+proceed while a planning-depth ask is unresolved because it does not implement.
 
 ## Assignment extensions
 
 For every agent ticket, copy the shared agent rules and exact type prompt from
 orchestrated-run's `TICKET-CONTRACTS.md`. Then add the applicable extension
-below. An extension narrows the ticket; it never relaxes the base contract or
-allows a subagent to edit a source defect ticket.
+below. Also copy the Confirmed-outcome assignment extension from
+`DEFECT-TICKETS.md` into every agent ticket in this run, including bootstrap,
+Plan, Plan Review, boundary validation, Adversarial Review, and tickets created
+through steering. These extensions specialize the product-decision test for
+confirmed defect outcomes. They do not relax ticket types, ownership,
+implementation coverage, or the ban on subagents editing source defect
+tickets.
 
 ### Defect triage Research
 
@@ -131,6 +146,10 @@ or related defects. Search the whole supplied defect list for duplicate or
 highly related reports. Distinguish the same symptom from the same likely root
 cause.
 
+Apply the Confirmed-outcome run rules and assignment extension from
+`DEFECT-TICKETS.md`. Resolve implementation details from project evidence
+before proposing a human decision.
+
 Return a concise defect-ticket update proposal for the orchestrator, including
 Triage content, duplicate_of, canonical duplicates, symmetric related_defects,
 and evidence pointers. Draft and classify the next implementation work under
@@ -155,6 +174,16 @@ to `done` when evidence settles it without a product decision. Apply the normal
 product-decision test case by case and use Discuss when reasonable alternatives
 would produce meaningfully different outcomes. `wont-fix` requires Discuss
 unless the user already made that product decision.
+
+### Pre-implementation human decisions
+
+Apply the Pre-implementation decision gate in `DEFECT-TICKETS.md` before every
+discovery Discuss, goal-confirmation ask, Plan or Plan Review decision,
+Explore Options outcome, implementation blocker, or Human and Agent Task
+product-decision stop. This gate overrides only a base action that would re-ask
+a confirmed outcome or treat UX involvement alone as a product decision.
+Planning-depth asks, supported non-fix decisions, genuinely unresolved product
+choices, and post-implementation inspection still follow orchestrated-run.
 
 ### Implementation
 
@@ -284,7 +313,9 @@ relevant, expected state, and known expiry or restart procedure. Otherwise
 create a separate preparation Agent Task.
 
 Present coherent defects as one grouped boundary inspection when the results
-can be judged together. The ask:
+can be judged together. This inspection asks whether the implemented result is
+acceptable, not whether the confirmed outcome should have been pursued. The
+ask:
 
 - maps each result and recorded automated outcome to its defect ID;
 - names each duplicate separately and asks the user to inspect its reported

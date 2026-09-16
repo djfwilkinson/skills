@@ -883,6 +883,26 @@ a defect ticket. `null` means the file is free. A non-null capture owner
 survives compaction and prevents another capture writer or the defect-run
 orchestrator from editing the source file.
 
+### Defect outcome authority
+
+The marker at the start of a defect ticket's Expected behavior:
+`user-stated | defect-implied | unknown`.
+
+`user-stated` means the user directly gave the required result.
+`defect-implied` means the report unambiguously gives the minimum corrected
+state, such as "missing icon" meaning an icon should be present. Both are
+confirmed run requirements. Prefer `defect-implied` when the report describes
+an observable as missing, absent, broken, incorrect, or unexpectedly different;
+an unspecified implementation detail does not make the outcome unknown.
+Confirmed outcomes in Additional context have the same authority while the
+original Report remains unchanged. `unknown` means Research or, only when
+project evidence cannot settle it, Discuss must establish the outcome.
+
+Avoid:
+- asking whether to implement a user-stated or defect-implied outcome
+- treating an unspecified implementation detail as an unknown outcome
+- treating UX involvement alone as a product decision
+
 ### Orchestrated defect run
 
 A user-invoked specialization that starts one orchestrated run for a defect
