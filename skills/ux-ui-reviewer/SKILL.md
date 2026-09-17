@@ -1,6 +1,6 @@
 ---
 name: ux-ui-reviewer
-description: Review an implemented interface for task completion, consistency, and related UX problems.
+description: Review an implemented interface for task completion, consistency, and related UX problems, then optionally capture selected findings as defects.
 disable-model-invocation: true
 argument-hint: "[optional screen, flow or area]"
 metadata:
@@ -200,8 +200,11 @@ Inconsequential optical nits and taste are not `high` or `blocker`. Obvious cons
 
 ## Finding format
 
+Give each finding a review-local ID so the user can select it for defect
+capture.
+
 ```text
-### [severity] <what is wrong>
+### F-001 [severity] <what is wrong>
 section: <section name> (importance: high | medium | low)
 location: <screen, component or interaction>
 user problem: <what the user experiences and why it matters>
@@ -222,3 +225,41 @@ No finding without both a user problem and a concrete fix.
 6. Sections reviewed with no finding
 
 Order findings by severity, then task flow.
+
+## Defect capture handoff
+
+Apply this handoff only after a directly invoked, user-facing review. When
+following this file from an orchestrated-run ticket, do not ask the user, start
+another skill, or edit a defect list. Return the UX findings to the
+orchestrator through the assigned ticket.
+
+If the review has no findings, do not offer defect capture.
+
+After presenting the complete review:
+
+1. Offer once to create defect tickets from all findings, selected findings, or
+   none. Let the user select findings by their review-local IDs. If the caller
+   already requested capture for all or named findings, use that selection
+   without asking again.
+2. Treat an affirmative selection as an explicit invocation of
+   `defect-capture`. Read and follow
+   [its skill file](../defect-capture/SKILL.md) and
+   [defect-ticket contract](../defect-capture/DEFECT-TICKETS.md). Defect capture
+   owns the list folder, IDs, placeholders, evidence import, background
+   writers, and reconciliation. Do not write a parallel ticket format.
+3. Submit one selected UX finding as one defect context bundle. Include the
+   exact finding block as the submitted report text that Captured context must
+   preserve; the selection response is authorization, not report content. Add
+   the review area, relevant sibling comparison, and durable evidence paths.
+   Do not merge selected findings. Mark `recommended fix` and
+   `preferred implementation` as reviewer recommendations for triage, not
+   user-stated implementation requirements unless the user explicitly adopted
+   them. Do not make throwaway scripts or throwaway artifacts durable.
+4. Follow defect-capture's dispatch and reconciliation rules. As soon as at
+   least one selected defect has `capture_state: ready`, report the ready
+   defect IDs and list path, give the exact invocation
+   `/orchestrated-defect-run <defect-list-path>`, and ask whether to start it
+   now. An affirmative response explicitly invokes that skill. Identify any
+   selected captures still drafting or failed; only ready defects enter the
+   run. If the run starts while other capture writers are active, newly ready
+   defects enter through the run's steering process.

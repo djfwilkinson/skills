@@ -9,7 +9,8 @@ argument-hint: "<defect-list-path>"
 
 This skill is user-invoked. Start it only when the user explicitly invokes
 `orchestrated-defect-run`. A request to start it from an active
-`defect-capture` is an explicit invocation.
+`defect-capture`, including one started from the `ux-ui-reviewer` handoff, is
+an explicit invocation.
 
 It requires `/orchestrated-run` and the defect-ticket contract bundled with
 `defect-capture`. Start one orchestrated run and apply this skill as its
