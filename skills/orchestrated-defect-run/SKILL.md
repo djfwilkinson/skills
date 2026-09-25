@@ -66,13 +66,13 @@ Record these user-confirmed working hints:
   acknowledgement is permitted defect-capture process work.
 
 This run sequences human inspection more strictly than orchestrated-run's
-default parallel presentation. For defect-run boundary inspections, this
+default parallel presentation. For defect-run human boundary inspections, this
 working hint overrides only the base sentences that boundary inspection and
 boundary validation run in parallel and that presentation never waits for
-validation. When implementation completes, create or attach its coverage pair
-under orchestrated-run's Reconciliation rules and dispatch boundary validation,
-but keep the inspection upcoming until the dedicated product check and that
-boundary validation return. Build the ask only from recorded evidence. This is
+validation. When implementation completes, create or attach its coverage
+tickets under orchestrated-run's Reconciliation rules and dispatch boundary
+validation, but keep the human inspection upcoming until the dedicated product
+check and that boundary validation return. Build the ask only from recorded evidence. This is
 presentation scheduling, not a substitute for either ticket.
 
 ## Bootstrap and goals
@@ -250,8 +250,8 @@ result.
 
 This is a check-producing Agent Task, like an Agent Task whose result is a
 UX/UI review; it need not change project files. It is not an implementation
-ticket, is not a covered implementation ID, and does not require another
-boundary-inspection and boundary-validation pair. Its Reads name the source
+ticket, is not a covered implementation ID, and does not require its own
+boundary inspection or boundary validation. Its Reads name the source
 defects, covering implementation Evidence, prepared surface, and applicable
 goals and working hints.
 
@@ -319,6 +319,12 @@ Once the product check is `passed` or `inconclusive` and boundary validation
 has no issue requiring remediation, set the defect to
 `awaiting user review`. Keep its boundary-inspection Discuss ticket
 `presentation: upcoming` until that point.
+
+A fixed defect's reported scenario is product-facing, so its implementation
+always has a human boundary inspection for that scenario. The ask presents the
+scenario and its observable result, never code or docs outside the product;
+other parts of the implementation follow orchestrated-run's agent boundary
+inspection rule.
 
 Apply orchestrated-run's prepared-human-environment gate before the inspection
 becomes ready. The implementation or automated product-check Agent Task may

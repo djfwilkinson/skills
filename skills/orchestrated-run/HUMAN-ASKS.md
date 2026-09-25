@@ -124,6 +124,13 @@ evidence file or a change plan. When a document, report, design, or prepared env
 itself the deliverable, ask about what it gives the user: say what it holds, why
 it exists, and when it will matter.
 
+Put a result to the user only when it is product-facing, as defined under
+Reconciliation in SKILL.md. Do not present code, tests, configuration, or docs
+outside the product as items to review or judge, and do not offer a diff as an
+inspection method; an agent boundary inspection accepts them. When a batch has
+no product-facing result, it has no human ask. `Nothing visible changes, so the
+judgement is on the code and docs` fails for that reason.
+
 A Human and Agent Task turn after the first is the current observation or step,
 what to look at, and the expected reply. It does not restate the task.
 
@@ -233,9 +240,11 @@ below; each list is the extra payload that type carries, not a substitute:
 - Acceptance: exact result or path, inspection method, successful and
   change-needed observations, acceptance basis, request to accept or describe
   changes, and ticket path.
-- Grouped acceptance: group each result and its recorded evidence under its
-  covered ticket IDs, then request one reply accepting all or naming IDs
-  needing changes. Do not list checks for the user to perform.
+- Grouped acceptance: group each product-facing result and its recorded
+  evidence under its covered ticket IDs, then request one reply accepting all
+  or naming IDs needing changes. Do not list checks a subagent can run for the
+  user to perform; a product workflow the user runs to judge behaviour is the
+  inspection method, not such a check.
 - Human and Agent Task: only the current ask from its latest Interaction log
   entry under that type's contract.
 

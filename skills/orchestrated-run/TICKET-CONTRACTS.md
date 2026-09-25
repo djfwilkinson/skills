@@ -215,6 +215,15 @@ A boundary validation ticket is its own Agent Task. It checks goal-level,
 repo-wide, or cross-area requirements for the implementation tickets it names.
 Do not fold wider validation into those implementation tickets.
 
+An agent boundary inspection is its own Agent Task, separate from boundary
+validation. It is not `ready` until every covered implementation ticket is
+reconciled `resolved`, Objective names each covered ID and the parts of its
+result it covers, Completion requires a verdict for each, and Objective and
+Completion prohibit changes to project files, external state, and prepared
+human environments. Reads name the covered tickets, the changed paths their
+Evidence records, the goals and acceptance criteria they serve, applicable
+working hints and confirmed decisions, and any governing change plan.
+
 ## Shared agent rules
 
 Copy this block into every agent-ticket assignment prompt, followed by the
@@ -323,6 +332,33 @@ Return on the ticket:
 - checks against this ticket's Completion
 - blockers
 - possible follow-up work
+```
+
+For an agent boundary inspection, add this after the Agent Task prompt:
+
+```text
+This ticket is an agent boundary inspection. It gives the acceptance judgement
+for results the user is not asked to review: code, tests, configuration, and
+docs outside the product.
+
+For each covered implementation ticket, judge whether the parts of its result
+named in Objective deliver what the governing goals and acceptance criteria,
+the user request, confirmed decisions, and any accepted change plan require,
+and nothing outside them. When Objective links fix tickets to an ID, judge the
+current result they form together. Inspect the changed paths and the tickets'
+Evidence. Treat recorded check outcomes as evidence; do not repeat boundary
+validation.
+
+Do not change project files, external state, or prepared human environments. Do
+not fix findings. Classify each choice you find by the product-decision test and
+continue instead of stopping.
+
+Record one verdict for each covered ID, with its evidence:
+- accepted: the result meets that basis and no finding for it remains open;
+- changes needed: name each required change;
+- decision needed: name the choice for the user, its options, and a
+  recommendation.
+Set execution_result to completed when every covered ID has a verdict.
 ```
 
 ## Explore Options (subagent)
@@ -507,10 +543,15 @@ form or multiple-choice prompt for acceptance.
 Ask only for judgement a subagent cannot make. The planning-depth offer is the
 one Discuss whose subject is process: it asks for a preference no subagent can
 supply. Never ask the user to perform or
-confirm a check a subagent can run, under any label, including inspection
-method or expected result; report it as a recorded outcome from its ticket
-instead. Point the user at a file, page, or preview only when the judgement
-needs eyes on it, and give a command only as optional reproduction.
+confirm a check a subagent can run, such as tests, builds, lint, searches, or
+doc checks, under any label, including inspection method or expected result;
+report it as a recorded outcome from its ticket instead. Asking the user to run
+a product workflow and judge whether it still behaves as expected is inspection,
+not such a check. Point the user at a file, page, or preview only when the
+judgement needs eyes on it, and give a command only as optional reproduction.
+
+Review and acceptance asks present only product-facing results, as defined
+under Reconciliation in SKILL.md; an agent boundary inspection accepts the rest.
 
 One Discuss may inspect or accept several named implementation tickets when
 their results form one usable review. Group each result with its recorded

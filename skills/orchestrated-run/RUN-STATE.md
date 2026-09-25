@@ -117,6 +117,9 @@ script; a defined scenario; artifact inspection; a metric; comparison with a
 baseline; an external system; agent review; Adversarial Review; human
 acceptance; or `not required`.
 
+Use human acceptance only for product-facing results, as defined under
+Reconciliation in SKILL.md; other results use agent review.
+
 Use `not required` only when the user or a ticket said completion itself proves
 the outcome. Do not waive verification because the work looks done.
 

@@ -376,37 +376,62 @@ orchestrator thread. If evidence is missing or the result is unacceptable,
 create or reassign tickets.
 
 Every completed implementation ticket, including a Human and Agent Task that
-performed implementation, needs implementation coverage: a boundary inspection
-Discuss and a boundary validation Agent Task that both name its ID and both
-resolve before its module or the run completes. The inspection must not be
-superseded, and validation Evidence must meet its success conditions.
+performed implementation, needs implementation coverage before its module or
+the run completes: the boundary inspections its result needs and a boundary
+validation Agent Task, each naming its ID and resolved. The inspections must
+not be superseded, and validation Evidence must meet its success conditions.
 
-When an implementation ticket completes, attach it to an open non-active
-boundary-inspection and boundary-validation pair for a coherent inspection
-batch, or create the pair immediately. One user amendment set is one batch by
-default: record all covered IDs on both tickets and keep them blocked on its
-known active or ready implementation tickets. Present one grouped inspection
-after the batch returns. Split only when results cannot be inspected coherently
-or delay would stall the run; never split merely because the batch has several
-tickets, modules, or check sets, and do not wait for unknown future work.
+A boundary inspection is human or agent. A human boundary inspection is a
+Discuss covering product-facing results: user-observable behaviour, interaction,
+or delivered content, including docs that are part of the product. A workflow
+the user runs to confirm it still behaves as expected qualifies only when the
+ticket changes how that workflow runs and the ask names the scenario and the
+expected observation. Code, contracts, and tests are not product-facing because
+a workflow later uses them. An agent boundary inspection, the Agent Task defined
+in `TICKET-CONTRACTS.md`, covers everything else: code, tests, configuration,
+and docs outside the product, such as contributor docs, canonical specs, change
+plans, and agent-facing files. Never ask the user to review or accept those
+unless the user asked to; record that request, with the results it covers, as a
+working hint.
 
-Run boundary inspection and boundary validation in parallel; neither depends on the other.
-A grouped ask maps results to covered IDs, says what each result now does for the user,
-reports each check a subagent already ran as a recorded outcome with its source ticket, and
-asks for one reply accepting all or naming IDs needing changes; use the same Discuss for acceptance. Take those outcomes from covered
-implementation Evidence, and from validation Evidence once it returns. Never wait for
-validation or re-run a check in the orchestrator thread to build the ask.
+Name a ticket on the human inspection when its result has product-facing parts,
+on the agent inspection when it has other parts, and on both when it has both.
+Each inspection's Objective names the parts it covers for each ID, so every
+part has exactly one current inspection. Choose from the ticket's Objective and
+changed surfaces, and correct the assignment before an inspection starts when
+Evidence shows otherwise.
 
-Immediately before presenting a boundary inspection, rebuild its ask from the
-current covered-ticket record and establish its inspection freeze in
+When an implementation ticket completes, attach it to the open non-active
+boundary inspections it needs and the boundary validation for a coherent
+inspection batch, or create them immediately. A batch has one boundary
+validation covering every ID in its inspections. One user amendment set is one
+batch by default: record covered IDs in each ticket's Objective and keep them
+blocked on their known active or ready implementation tickets. Present one
+grouped human inspection after the batch returns. Split only when results
+cannot be inspected coherently or delay would stall the run; never split merely
+because the batch has several tickets, modules, or check sets, and do not wait
+for unknown future work.
+
+Run boundary inspections and boundary validation in parallel; none depends on
+another. A grouped human ask maps results to covered IDs, says what each result
+now does for the user, reports each check a subagent already ran as a recorded
+outcome with its source ticket, and asks for one reply accepting all or naming
+IDs needing changes; use the same Discuss for acceptance. Take those outcomes
+from covered implementation Evidence, and from validation Evidence once it
+returns. Never wait for validation or re-run a check in the orchestrator thread
+to build the ask.
+
+Immediately before presenting a human boundary inspection, rebuild its ask from
+the current covered-ticket record and establish its inspection freeze in
 Presentation. The freeze includes changed paths from every covered
 implementation, shared dependents that can change the inspected result, and
 every prepared environment that could restart, rebuild, or reload. Until the
 inspection returns or is withdrawn, do not patch or ready a ticket that would
-change that scope. Findings outside it may become ready immediately.
+change that scope. Findings outside it may become ready immediately. An agent
+boundary inspection gets the same stability from assignment conflict checks.
 
 If boundary validation finds issues, record them and let the orchestrator
-decide which become tickets. If an issue invalidates an upcoming inspection,
+decide which become tickets. If an issue invalidates an upcoming human inspection,
 keep it blocked, create the chosen fix tickets, and add them to `depends_on`;
 do not present it before fixes and a new boundary validation start. If an issue
 invalidates a presented inspection, first set the inspection ticket
@@ -417,6 +442,18 @@ tickets and add them to `depends_on`. After fixes return for an upcoming or
 withdrawn inspection, create or ready a new boundary validation ticket, set the
 existing inspection `ready` with presentation `upcoming`, and present a new
 complete ask under the normal parallel rule.
+
+An agent boundary inspection records `accepted`, `changes needed`, or
+`decision needed` for each covered ID. Resolve it only when every ID is
+`accepted`; that resolution is the orchestrator's acceptance. Otherwise create
+the fix tickets its findings support and a Discuss for each `decision needed`,
+block it on them, add fix IDs to its covered IDs, and after they return reassign
+it with Reads naming the fixes and decisions. The reassignment judges each ID
+against its current result including linked fixes, and rechecks an accepted ID
+only when remediation touches its result or shared dependencies. When an issue
+invalidates an agent inspection that has not started, block it on the fixes;
+when it is active or has returned, let it return, record in `LOG.md` that its
+verdicts apply to the superseded result, then handle it the same way.
 
 If invalidation arrives after inspection was answered or resolved, mark that
 inspection and any acceptance evidence superseded, move any affected goal out
@@ -607,8 +644,9 @@ The run is complete when:
 - achieved goals contain verification evidence;
 - no required verification is deferred;
 - no unresolved ticket is required for an achieved goal;
-- every resolved implementation ticket has implementation coverage from a
-  resolved boundary inspection and resolved boundary validation ticket;
+- every resolved implementation ticket has implementation coverage from the
+  resolved boundary inspections it needs and a resolved boundary validation
+  ticket;
 - under reviewed planning, every change plan whose change set is still in the
   run is `resolved` and accepted with every ID in its `reviews` resolved or
   cancelled, and every implementation ticket it governs names it in `plans`; a
