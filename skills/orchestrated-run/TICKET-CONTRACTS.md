@@ -635,16 +635,16 @@ the result in `LOG.md`.
 
 If work reaches a product decision, stop short of the choice, record options
 and a recommendation, set presentation to `withdrawn` and execution result to
-`blocked`, update its ask page and index under `HUMAN-ASKS.md`, then reconcile.
+`blocked`, update its ask page and ledger record under `HUMAN-ASKS.md`, then reconcile.
 Open Discuss and make this ticket depend on it. After Discuss resolves, restore
 Exclusive scope, set this ticket `ready` with presentation `upcoming`, and
 present its next ask as a new complete presentation.
 
 When Completion is met, set presentation to `answered` and execution result to
-`completed`, update its ask page and index, then reconcile. If work cannot
-continue, set presentation to `withdrawn`, update its ask page and index, set
+`completed`, update its ask page and ledger record, then reconcile. If work cannot
+continue, set presentation to `withdrawn`, update its ask page and ledger record, set
 execution result to `blocked` or `failed`, then reconcile. If the user stops the
-task, record that result, withdraw it, update its ask page and index, set
+task, record that result, withdraw it, update its ask page and ledger record, set
 execution result to `blocked`, and reconcile it to `cancelled`. This is the only
 case where the orchestrator performs production work and then reconciles it.
 

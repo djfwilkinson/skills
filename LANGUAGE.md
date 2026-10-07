@@ -448,7 +448,7 @@ Avoid:
 
 ### Run file
 
-A run-level state document the orchestrator writes, except that an active agent ticket file is owned by its subagent. Kinds: goals, non-goals, unknowns, working hints, log, pillars, modules and tickets. Ask pages and the ask index are derived artifacts stored under the run, not run files or recovery sources. A change plan is persistent memory stored under the run and owned by its Plan ticket's active worker; it is not a run file. Current filenames are the layout, not the concepts.
+A run-level state document the orchestrator writes, except that an active agent ticket file is owned by its subagent. Kinds: goals, non-goals, unknowns, working hints, log, pillars, modules and tickets. Ask pages, stored under the run, and the run's ledger file, stored in the device action ledger, are derived artifacts, not run files or recovery sources. A change plan is persistent memory stored under the run and owned by its Plan ticket's active worker; it is not a run file. Current filenames are the layout, not the concepts.
 
 Avoid:
 - treating a ticket's Unknowns or Findings as a second copy of the unknowns run file
@@ -792,11 +792,22 @@ An orchestrator-written, self-contained HTML copy of one current return-to-user 
 
 ### Ask index
 
-The orchestrator-written `asks/index.html` action ledger instantiated from the bundled index template and updated through its single structured data object. Each live row names the requested action and why it exists and links the ticket and ask page. It is a derived artifact, not a run file, presentation state or a source for compaction recovery. Withdrawn, answered and upcoming asks are not live rows; upcoming involvement may appear separately without presenting its ask.
+The device-level action ledger page shared by every orchestrated run on the machine. The bundled ledger script copies it from the index template into the action ledger directory when it is missing or its `ledger-version` is older, and serves it from a local ledger server. It polls every open run's ledger file and, when the user opts in, sends a browser notification for each new presented ask found while it is in the background. Each live row names the requested action and why it exists and links the ticket and ask page. It is a derived artifact, not a run file, presentation state or a source for compaction recovery. Withdrawn, answered and upcoming asks are not live rows; upcoming involvement may appear separately without presenting its ask.
+
+### Ledger file
+
+One open run's JSON record of its human asks in the action ledger directory, named from the project and run folder names. The orchestrator writes it, the ask index reads it, and the orchestrator deletes it when the run completes. It is a derived artifact, not a run file or presentation state.
+
+### Ledger server
+
+The local web server the bundled ledger script starts in the background to serve the ask index, the merged ledger files and each open run's ask pages and tickets. It listens on the loopback address only, keeps the port it last used, and moves to another free port in its range when that port is taken by another program.
+
+Avoid:
+- treating the ledger server as a prepared human environment
 
 ### Ask template
 
-One of the self-contained HTML skeletons stored under the orchestrated-run skill's `templates/` directory. The index and detail templates each keep mutable presentation data in one `ORCHESTRATOR DATA` object and keep layout and rendering code stable. Run pages are copies populated from authoritative tickets and Presentation, not references to the library files.
+One of the HTML skeletons stored under the orchestrated-run skill's `templates/` directory. The detail template keeps mutable presentation data in one `ORCHESTRATOR DATA` object and keeps layout and rendering code stable; run pages are copies populated from authoritative tickets and Presentation, not references to the library files. The index template holds no run data and is copied to each device as the ask index; raising its `ledger-version` makes the ledger script replace older copies.
 
 Avoid:
 - **reports folder** or **reviews folder** for `asks/`

@@ -312,7 +312,7 @@ Follow the complete first-presentation and condensed-repeat chat contract in
 Task current asks live in the latest Interaction log entry.
 
 Create human tickets with `presentation: upcoming`. Immediately before first
-presentation, follow the liveness, page, index, launch, ticket-state, complete
+presentation, follow the liveness, page, ledger, launch, ticket-state, complete
 chat ask, and later-repeat lifecycle in `HUMAN-ASKS.md`. Set a presented ticket
 `active` with owner `orchestrator`; a link alone is not presentation.
 
@@ -435,8 +435,8 @@ decide which become tickets. If an issue invalidates an upcoming human inspectio
 keep it blocked, create the chosen fix tickets, and add them to `depends_on`;
 do not present it before fixes and a new boundary validation start. If an issue
 invalidates a presented inspection, first set the inspection ticket
-`status: blocked`, clear owner, set presentation to `withdrawn`, remove its live
-index row, mark its page withdrawn, record the reason and times in Presentation
+`status: blocked`, clear owner, set presentation to `withdrawn` on the ticket
+and its ledger record, mark its page withdrawn, record the reason and times in Presentation
 and `LOG.md`, and tell the user the ask is withdrawn. Then create the chosen fix
 tickets and add them to `depends_on`. After fixes return for an upcoming or
 withdrawn inspection, create or ready a new boundary validation ticket, set the
@@ -611,7 +611,7 @@ exact type contract in `TICKET-CONTRACTS.md`.
 
 Reload every presented human ticket from Objective or its latest Interaction
 log entry and Presentation. Read `HUMAN-ASKS.md`, then rebuild missing or stale
-ask pages and the index from those tickets and the bundled templates before
+ask pages and the run's ledger file from those tickets and the bundled template before
 another user-visible message. Tickets, not HTML, determine current presentation
 state and ask content.
 
@@ -661,9 +661,8 @@ The run is complete when:
 
 An empty ticket queue does not mean the run is complete.
 
-When the run is complete, set `run.complete` in the index template data if that
-index exists, then
-return to the user with a message that opens with the bold line
+When the run is complete, delete its ledger file under `HUMAN-ASKS.md` if it
+exists, then return to the user with a message that opens with the bold line
 `**This orchestrated run is complete.**` and a concise summary under it. Use
 only what is already in the run files:
 

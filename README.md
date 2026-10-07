@@ -11,7 +11,7 @@ Cursor agent skills I keep here so I can install them on another machine.
 - [ux-ui-reviewer](skills/ux-ui-reviewer/SKILL.md): Review an implemented interface and optionally capture selected findings as defects.
 - [git-stage-commit](skills/git-stage-commit/SKILL.md): Analyze git changes, group them, and stage and commit.
 
-project-alignment depends on orchestrated-run. orchestrated-defect-run depends on orchestrated-run and the defect-ticket contract bundled with defect-capture. ux-ui-reviewer depends on defect-capture and orchestrated-defect-run for its optional finding capture and resolution handoff. A UX/UI review inside an orchestrated-run is an Agent Task that reads ux-ui-reviewer. Adversarial Review of completed UI work may also read that skill.
+orchestrated-run needs Python 3.9 or later for its action ledger, a local web page that lists the open asks from every run on the machine. It keeps its files in `~/.agent-runs/action-ledger/`. project-alignment depends on orchestrated-run. orchestrated-defect-run depends on orchestrated-run and the defect-ticket contract bundled with defect-capture. ux-ui-reviewer depends on defect-capture and orchestrated-defect-run for its optional finding capture and resolution handoff. A UX/UI review inside an orchestrated-run is an Agent Task that reads ux-ui-reviewer. Adversarial Review of completed UI work may also read that skill.
 
 ## Repo management
 
