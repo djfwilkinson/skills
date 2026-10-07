@@ -909,7 +909,7 @@ An orchestrator-written, self-contained HTML copy of one current return-to-user 
 
 ### Ask index
 
-The device-level action ledger page shared by every orchestrated run on the machine. The bundled ledger script copies it from the index template into the action ledger directory when it is missing or its `ledger-version` is older, and serves it from a local ledger server. It polls every open run's ledger file and, when the user opts in, sends a browser notification for each new presented ask found while it is in the background. Each live row names the requested action and why it exists and links the ticket and ask page. It is a derived artifact, not a run file, presentation state or a source for compaction recovery. Withdrawn, answered and upcoming asks are not live rows; upcoming involvement may appear separately without presenting its ask.
+The device-level action ledger page shared by every orchestrated run on the machine. The bundled ledger script copies it from the index template into the action ledger directory when it is missing or its `ledger-version` is older, and serves it from a local ledger server. It polls every open run's ledger file, lists each run in its own section and, when the user opts in, sends a browser notification for each new presented ask found while it is in the background. Each live row names the requested action and why it exists and links the ticket and ask page. It is a derived artifact, not a run file, presentation state or a source for compaction recovery. Withdrawn, answered and upcoming asks are not live rows; upcoming involvement may appear separately without presenting its ask.
 
 ### Ledger file
 

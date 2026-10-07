@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <meta name="ledger-version" content="2">
+  <meta name="ledger-version" content="3">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'">
   <title>Action ledger</title>
   <!--
@@ -51,7 +51,10 @@
     a { color: var(--accent); font-weight: 650; text-decoration: none; }
     .open { padding: 7px 10px; border-radius: 8px; background: var(--accent-soft); white-space: nowrap; }
     .empty { padding: 28px; color: var(--muted); text-align: center; }
-    #upcoming-section { margin-top: 24px; }
+    .run { margin-top: 32px; }
+    .run-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 12px; }
+    .run-head h2 { margin: 0; font-size: 18px; }
+    h3 { margin: 20px 0 10px; font-size: 13px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
     .item { padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; color: var(--muted); }
     .item strong { display: block; color: var(--text); }
@@ -70,14 +73,8 @@
       <div><strong id="oldest-age">-</strong><span class="muted">Oldest current ask</span></div>
     </section>
     <p class="error" id="error" hidden>The ledger server is not answering. Asks are still complete in chat and in each run's ticket files.</p>
-    <section class="panel">
-      <table>
-        <thead><tr><th>Action</th><th>Why it is needed</th><th>Run</th><th>Ticket</th><th>Presented</th><th></th></tr></thead>
-        <tbody id="current"></tbody>
-      </table>
-      <div class="empty" id="empty">No asks need a response right now.</div>
-    </section>
-    <section id="upcoming-section" hidden><h2>Upcoming involvement</h2><div class="grid" id="upcoming"></div></section>
+    <div id="runs"></div>
+    <p class="empty" id="no-runs" hidden>No orchestrated runs are open on this device.</p>
     <p class="muted">Tickets remain the source of truth. This index shows derived presentation data only.</p>
   </main>
   <script>
@@ -106,25 +103,38 @@
       const row = (ask) => node("tr", [
         node("td", text(ask.action, "Action required")),
         node("td", text(ask.reason, "See the ticket for context."), { className: "muted" }),
-        node("td", [runLabel(ask), node("br"), node("small", text(ask.run.id))]),
         node("td", [node("a", text(ask.id, "Ticket"), { href: `${href(ask, "tickets")}.md` }), node("br"), node("small", text(ask.type, "Human involvement"))]),
         node("td", node("time", date(ask.presentedAt))),
         node("td", node("a", "Open ask →", { className: "open", href: `${href(ask, "asks")}.html` }))
       ]);
       const item = (ask) => node("article", [
         node("strong", text(ask.action, "Upcoming involvement")),
-        `${text(ask.type, "Human involvement")} · ${text(ask.id)} · ${runLabel(ask)}`,
+        `${text(ask.type, "Human involvement")} · ${text(ask.id)}`,
         ask.availability ? node("small", text(ask.availability)) : ""
       ], { className: "item" });
+      const section = ({ run, current, upcoming }) => node("section", [
+        node("div", [
+          node("h2", runLabel({ run, key: run.key })),
+          node("small", `${text(run.id)} · ${current.length} now · ${upcoming.length} later${run.updatedAt ? ` · Updated ${date(run.updatedAt)}` : ""}`)
+        ], { className: "run-head" }),
+        node("div", current.length ? node("table", [
+          node("thead", node("tr", ["Action", "Why it is needed", "Ticket", "Presented", ""].map((h) => node("th", h)))),
+          node("tbody", current.map(row))
+        ]) : node("div", "No asks need a response right now.", { className: "empty" }), { className: "panel" }),
+        upcoming.length ? node("div", [node("h3", "Upcoming involvement"), node("div", upcoming.map(item), { className: "grid" })]) : ""
+      ], { className: "run" });
 
       const render = (runs) => {
-        const asks = runs.flatMap((r) => (Array.isArray(r.asks) ? r.asks : []).map((a) => ({ ...a, key: r.key, run: r.run || {} })));
-        const current = asks.filter((a) => a.presentation === "presented").sort((a, b) => text(a.presentedAt).localeCompare(text(b.presentedAt)));
-        const upcoming = asks.filter((a) => a.presentation === "upcoming");
-        $("current").replaceChildren(...current.map(row));
-        $("upcoming").replaceChildren(...upcoming.map(item));
-        $("upcoming-section").hidden = !upcoming.length;
-        $("empty").hidden = current.length > 0;
+        const groups = runs.map((r) => {
+          const run = { ...(r.run || {}), key: r.key };
+          const asks = (Array.isArray(r.asks) ? r.asks : []).map((a) => ({ ...a, key: r.key, run }));
+          const current = asks.filter((a) => a.presentation === "presented").sort((a, b) => text(a.presentedAt).localeCompare(text(b.presentedAt)));
+          return { run, current, upcoming: asks.filter((a) => a.presentation === "upcoming") };
+        }).sort((a, b) => (b.current.length > 0) - (a.current.length > 0) || text(a.current[0]?.presentedAt).localeCompare(text(b.current[0]?.presentedAt)));
+        const current = groups.flatMap((g) => g.current);
+        const upcoming = groups.flatMap((g) => g.upcoming);
+        $("runs").replaceChildren(...groups.map(section));
+        $("no-runs").hidden = groups.length > 0;
         $("current-count").textContent = current.length;
         $("upcoming-count").textContent = upcoming.length;
         $("oldest-age").textContent = age(current);

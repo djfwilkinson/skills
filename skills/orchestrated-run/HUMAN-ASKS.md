@@ -190,8 +190,9 @@ Interaction log entry, not previous turns.
 
 ## Index
 
-The ask index has one live table row per ledger record with
-`presentation: presented`, across every open run. Each record holds:
+The ask index has one section per open run, each with its own live table and
+upcoming list. A live row is a ledger record with `presentation: presented`.
+Each record holds:
 
 - `action`, holding a presented ask page's summary sentence verbatim, or a
   short involvement label for an upcoming record;
