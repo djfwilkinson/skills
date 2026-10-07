@@ -15,7 +15,8 @@ an explicit invocation.
 It requires `/orchestrated-run` and the defect-ticket contract bundled with
 `defect-capture`. Start one orchestrated run and apply this skill as its
 defect-specific process. The orchestrated-run skill and its required references
-remain authoritative for ticket types, ticket status, assignment, ownership,
+remain authoritative for ticket types, personas, the roster, grouping, work
+units, ticket inboxes, ticket status, assignment, ownership,
 planning depth, reconciliation, implementation coverage, review, human asks,
 and run completion, except for the confirmed-outcome specialization named
 below.
@@ -55,7 +56,8 @@ Record these user-confirmed working hints:
   orchestrated-run ticket status;
 - confirmed outcomes under `DEFECT-TICKETS.md`, including confirmed Additional
   context, must not be put back to the user as decisions;
-- only an active implementation Agent Task moves a defect to `in progress`;
+- a defect moves to `in progress` only when an implementation unit covering it
+  starts;
 - a dedicated automated product check must run against the actual product or
   prepared artifact before the defect is presented for user review;
 - the product check does not replace boundary validation, Adversarial Review,
@@ -82,7 +84,8 @@ to:
 
 - inventory defects with `capture_state: ready`;
 - treat `backlog` and `failed review` as triage-eligible only when
-  `capture_owner: null` and the current cycle has no unresolved triage Research;
+  `capture_owner: null` and the current cycle has no triage unit without a
+  `done` checkpoint;
 - propose one goal per defect that faithfully carries its confirmed outcome;
   when no outcome is confirmed, propose Research to establish it before
   deciding implementation or disposition;
@@ -91,7 +94,7 @@ to:
   causes;
 - identify the end user, canonical docs or specification, likely project
   paths, and useful verification surfaces;
-- draft the per-defect triage Research tickets.
+- draft one triage unit per defect.
 
 Do not treat drafting or failed captures as run goals. If a ready defect is
 already `done`, include it only when evidence indicates its resolution has
@@ -121,8 +124,9 @@ rewrite Captured context for that ask without changing the source Report.
 
 ## Assignment extensions
 
-For every agent ticket, copy the shared agent rules and exact type prompt from
-orchestrated-run's `TICKET-CONTRACTS.md`. Then add the applicable extension
+For every agent ticket, copy the persona brief from orchestrated-run's
+`PERSONAS.md` and the shared agent rules and exact type prompt from its
+`TICKET-CONTRACTS.md`. Then add the applicable extension
 below. Also copy the Confirmed-outcome assignment extension from
 `DEFECT-TICKETS.md` into every agent ticket in this run, including bootstrap,
 Plan, Plan Review, boundary validation, Adversarial Review, and tickets created
@@ -133,28 +137,32 @@ tickets.
 
 ### Defect triage Research
 
-Create one Research ticket per eligible defect. Related defects may be
-dispatched in parallel when their work is read-only. Its Reads include:
+Create one triage unit per eligible defect and group them on Research tickets
+under orchestrated-run's Grouping, so one persona session works through them in
+order. Add defects that become eligible later to the active triage ticket
+through its inbox. The ticket's Reads include:
 
-- the source defect ticket;
-- every other ready defect ticket in the list for duplicate and relationship
-  comparison;
-- prior triage, implementation, product-check, validation, inspection, and
-  review tickets for the current defect when they exist;
+- every ready defect ticket in the list, for the defects under triage and for
+  duplicate and relationship comparison;
 - likely project paths from bootstrap;
 - applicable goals, unknowns, and working hints.
 
-The Objective and Completion say Research depth `surface` with deep escalation
-pre-authorised when meeting Completion requires codebase hunting. Never use
-Research depth `triage` for this work. Before dispatch, record the new Research
-ticket under Orchestrated-run links for the defect's current cycle. Prepare all
-such source updates before activating a parallel dispatch wave.
+Each unit's Reads add its source defect ticket and the prior triage,
+implementation, product-check, validation, inspection, and review tickets for
+that defect when they exist.
+
+Each unit's Objective and Completion say Research depth `surface` with deep
+escalation pre-authorised when meeting Completion requires codebase hunting,
+so the ticket goes to the `investigator`. Never use Research depth `triage` for
+this work. Before dispatching the ticket or sending a unit through its inbox,
+record the ticket and unit ID under Orchestrated-run links for the defect's
+current cycle.
 
 Add this assignment extension:
 
 ```text
-This Research ticket triages one source defect for an orchestrated defect run.
-Do not edit the source defect ticket.
+Each unit of this Research ticket triages one source defect for an orchestrated
+defect run. Do not edit the source defect tickets.
 
 Establish what is observed, what remains unknown, likely reproduction and
 affected paths, the likely cause boundary, and the evidence for any duplicate
@@ -166,7 +174,8 @@ Apply the Confirmed-outcome run rules and assignment extension from
 `DEFECT-TICKETS.md`. Resolve implementation details from project evidence
 before proposing a human decision.
 
-Return a concise defect-ticket update proposal for the orchestrator, including
+Record in each unit's checkpoint a concise defect-ticket update proposal for
+the orchestrator, including
 Triage content, duplicate_of, canonical duplicates, symmetric related_defects,
 and evidence pointers. Draft and classify the next implementation work under
 the normal Research contract. When review previously failed, explain what the
@@ -174,10 +183,10 @@ new evidence changes and do not repeat investigation already supported by
 prior tickets.
 ```
 
-On reconciliation, the orchestrator writes the supported proposal into the
-source defect's Triage, relationship metadata, Orchestrated-run links, and
-History. It updates both sides of a supported relationship. The source moves
-to `triaged` when the triage Completion is met.
+On reconciling each triage checkpoint, the orchestrator writes the supported
+proposal into the source defect's Triage, relationship metadata,
+Orchestrated-run links, and History. It updates both sides of a supported
+relationship. The source moves to `triaged` when its unit's Completion is met.
 
 A supported duplicate records `duplicate_of` and the canonical inverse but
 stays `triaged` until the canonical defect is done and its goal verification
@@ -206,15 +215,15 @@ choices, and post-implementation inspection still follow orchestrated-run.
 Implementation follows the run's confirmed planning depth. Keep the source
 defect `triaged` during Plan, Plan Review, Research, and Explore Options.
 
-An implementation Agent Task names every defect ID it covers. Add this
+Each implementation unit names every defect ID it covers. Add this
 assignment extension:
 
 ```text
-This implementation resolves the named source defects. Do not edit their
-source defect tickets.
+This implementation resolves the source defects its units name. Do not edit
+their source defect tickets.
 
-Implement from this ticket's Objective, Completion, and Reads. Map work and
-local checks back to each covered defect ID in Evidence. Leave the actual
+Implement from each unit's Objective, Completion, and Reads. Map work and
+local checks back to each covered defect ID in that unit's checkpoint. Leave the actual
 product or artifact in the prepared state named by Completion when a later
 automated product check or user inspection requires it. When this ticket is
 also preparation work, Completion requires the resource to remain available
@@ -224,20 +233,22 @@ Do not claim the user-visible scenario passed unless this ticket actually
 exercised it.
 ```
 
-When the task becomes active, move each covered defect to `in progress`. When
-several implementation tickets cover one defect, keep it there until all work
-for the current cycle resolves. If no ready or active path can advance it, move
+When a unit covering a defect starts, under the `in progress` rule in
+`DEFECT-TICKETS.md`, move the defect to `in progress`. When several units cover
+one defect, keep it there until all work for the current cycle reaches `done`
+checkpoints. If no ready or active path can advance it, move
 it to `blocked`, record `resume_status`, and point to the blocking run ticket.
 
-After implementation reconciliation, summarize changed paths and local checks
-under Resolution and link the implementation tickets. Do not mark the defect
-done.
+After reconciling each implementation checkpoint, summarize changed paths and
+local checks under Resolution and link the ticket and unit. Do not mark the
+defect done.
 
 ### Automated product check
 
-After all current-cycle implementation for a defect or coherent group
-resolves, create a dedicated Agent Task. Create it in addition to normal
-implementation coverage and review tickets. Move covered defects to
+After all current-cycle implementation for a defect or coherent group reaches
+`done` checkpoints on ended tickets, create a dedicated Agent Task unit for
+the `scenario-tester`, on its active ticket through the inbox when it has one.
+Create it in addition to normal implementation coverage and review work. Move covered defects to
 `awaiting automated review` while the check or boundary validation is
 queued, and to `automated reviewing` while either is active.
 
@@ -248,9 +259,9 @@ duplicate ID and its reported scenario. If no usable surface is established,
 the ticket is still ready when Completion explicitly allows an `inconclusive`
 result.
 
-This is a check-producing Agent Task, like an Agent Task whose result is a
-UX/UI review; it need not change project files. It is not an implementation
-ticket, is not a covered implementation ID, and does not require its own
+This is check-producing Agent Task work, like an Agent Task whose result is a
+UX/UI review; it need not change project files. It is not implementation
+work, is not a covered implementation ID, and does not require its own
 boundary inspection or boundary validation. Its Reads name the source
 defects, covering implementation Evidence, prepared surface, and applicable
 goals and working hints.
@@ -300,9 +311,9 @@ returns. If the defect is already marked failed for that cycle, append further
 findings without incrementing its cycle or creating another triage ticket.
 
 A boundary-validation issue that requires remediation but is not material does
-not start a new cycle. Create the bounded fix ticket, project the defect to
-`in progress` only when that implementation becomes active, and run the
-automated gate again afterward.
+not start a new cycle. Route the bounded fix under orchestrated-run's
+Checkpoints, project the defect to `in progress` only when the work carrying
+that fix starts, and run the automated gate again afterward.
 
 `passed` or `inconclusive` may proceed after boundary validation returns
 without an issue requiring remediation. Include every inconclusive gap in the
@@ -360,7 +371,7 @@ and the failed-cycle rules instead.
 
 User-requested changes move the named defects to `failed review`. For a grouped
 reply that accepts some defects and rejects others, do not resolve the
-inspection or give any covered implementation ticket inspection coverage.
+inspection or give any covered implementation unit inspection coverage.
 Record the accepted IDs as evidence, move them back to
 `awaiting user review`, remediate the rejected IDs, rebuild the grouped result,
 and present one current non-superseded inspection again. Move fixed defects to
@@ -384,14 +395,17 @@ For each failed defect:
    inspection blocked on remediation, or withdraw a presented inspection;
 3. wait for every in-flight product check and boundary validation for this
    cycle to return, appending their evidence to the same failure record;
-4. when no unresolved triage Research already exists for the failed cycle,
-   increment `cycle` once and create one new defect-triage Research ticket whose
-   Reads include all failed evidence and the prior cycle;
-5. record that ticket under Orchestrated-run links before dispatch;
+4. when no triage unit without a `done` checkpoint already exists for the
+   failed cycle,
+   increment `cycle` once and create one new defect-triage unit whose Reads
+   include all failed evidence and the prior cycle, grouped under Defect
+   triage Research;
+5. record that ticket and unit under Orchestrated-run links before dispatch;
 6. add the new-cycle remediation tickets to the blocked inspection's
    dependencies and follow the base rules for new boundary validation and
    re-presentation after fixes;
-7. move to `triaged` only after the new triage resolves.
+7. move to `triaged` only after the new triage unit reaches a `done`
+   checkpoint.
 
 Do not reopen a resolved implementation ticket.
 
@@ -402,15 +416,18 @@ contract, then update each affected source defect from that persistent
 evidence. Append concise pointers rather than copying full ticket findings.
 
 Before a source update, conflict-check `capture_owner` and every active agent
-ticket whose Reads include that defect or its evidence. If a capture writer or
+ticket whose Reads include that defect or its evidence. On a triage ticket,
+only units without a `done` checkpoint read their own defect as a source;
+other defects on its Reads are comparison reads and do not block the update.
+If a capture writer or
 active reader owns the path, record the pending projection and evidence pointer
 in `LOG.md`, leave the source unchanged, and apply it after the conflict
 returns. This deferral changes only the source projection; reconcile the
 orchestrated-run ticket immediately under the base contract.
 
-Before dispatching a run ticket whose Reads include source defect files,
-conflict-check every non-null `capture_owner`. Do not dispatch against a file
-being captured or amended.
+Before dispatching a run ticket, or sending a unit, whose Reads include source
+defect files, conflict-check every non-null `capture_owner`. Do not dispatch or
+send against a file being captured or amended.
 
 When capture adds a ready defect to this list during the run, treat it as
 steering:

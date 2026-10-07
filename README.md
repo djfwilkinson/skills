@@ -4,14 +4,14 @@ Cursor agent skills I keep here so I can install them on another machine.
 
 - [public-docs](skills/public-docs/SKILL.md): Write public-facing docs and copy without AI tells.
 - [user-response](skills/user-response/SKILL.md): Shape chat replies and temporary response artifacts without a heavy rewrite pass.
-- [orchestrated-run](skills/orchestrated-run/SKILL.md): Run a project through one orchestrator, shared run files, and ticketed subagents.
+- [orchestrated-run](skills/orchestrated-run/SKILL.md): Run a project through one orchestrator, shared run files, and large tickets worked by personas on models you choose.
 - [defect-capture](skills/defect-capture/SKILL.md): Capture defect reports in parallel as durable defect tickets.
 - [orchestrated-defect-run](skills/orchestrated-defect-run/SKILL.md): Triage, resolve, check, and review a captured defect list through orchestrated-run.
 - [project-alignment](skills/project-alignment/SKILL.md): Establish a project's shared language and write an alignment plan or implement the alignment changes.
 - [ux-ui-reviewer](skills/ux-ui-reviewer/SKILL.md): Review an implemented interface and optionally capture selected findings as defects.
 - [git-stage-commit](skills/git-stage-commit/SKILL.md): Analyze git changes, group them, and stage and commit.
 
-orchestrated-run needs Python 3.9 or later for its action ledger, a local web page that lists the open asks from every run on the machine. It keeps its files in `~/.agent-runs/action-ledger/`. project-alignment depends on orchestrated-run. orchestrated-defect-run depends on orchestrated-run and the defect-ticket contract bundled with defect-capture. ux-ui-reviewer depends on defect-capture and orchestrated-defect-run for its optional finding capture and resolution handoff. A UX/UI review inside an orchestrated-run is an Agent Task that reads ux-ui-reviewer. Adversarial Review of completed UI work may also read that skill.
+orchestrated-run needs Python 3.9 or later for its action ledger, a local web page that lists the open asks from every run on the machine, and for the snapshot script reviewers use to read a finished unit of work while the next one is being written. Snapshots need git; without it, reviewers read the live files. It keeps its files in `~/.agent-runs/`, including the last model roster you confirmed. project-alignment depends on orchestrated-run. orchestrated-defect-run depends on orchestrated-run and the defect-ticket contract bundled with defect-capture. ux-ui-reviewer depends on defect-capture and orchestrated-defect-run for its optional finding capture and resolution handoff. A UX/UI review inside an orchestrated-run is an Agent Task that reads ux-ui-reviewer. Adversarial Review of completed UI work may also read that skill.
 
 ## Repo management
 

@@ -4,8 +4,9 @@ This file is part of the `orchestrated-run` contract. Read it before creating or
 updating run files and after compaction. It is not a skill and must not be
 invoked.
 
-Conversation context is temporary. Run files, tickets, change plans, and
-project files are persistent memory. The orchestrator owns every run file.
+Conversation context is temporary. Run files, tickets, ticket inboxes, change
+plans, and project files are persistent memory. The orchestrator owns every run
+file and inbox.
 Subagents may identify changes on their tickets but must not write run files. A
 change plan is written only by its Plan ticket's active worker.
 
@@ -147,8 +148,7 @@ multiple tickets. It starts empty. Update it from reconciled ticket results and
 user answers. New hints that need a product decision stay `proposed` until the
 user confirms them.
 
-Use the same model as the orchestrator for subagents by default. Record a user
-override in `WORKINGHINTS.md`.
+Persona models live in `ROSTER.md`, not in working hints.
 
 Record confirmed planning depth as a working hint, with the end user and
 canonical docs or spec when known. A proposed or recommended depth is not
@@ -161,6 +161,48 @@ change.
 Put `WORKINGHINTS.md` on Reads when it has entries that apply. Do not paste it
 as the ticket's main context. Name exact hint, goal, and unknown IDs or headings
 when only those entries apply. Do not add growing run files by default.
+
+## Roster
+
+`ROSTER.md` records which model each persona uses and the state of each
+persona session. `PERSONAS.md` owns how the roster is suggested, asked for, and
+changed.
+
+```md
+# Roster
+
+Status: provisional | confirmed
+Source: <roster ask ticket ID, user invocation, or no per-subagent model choice>
+Confirmed: <ISO time>
+Default fallback: suggest | ask | <model> <effort range>
+
+| Persona | Model | Preferred effort | Effort range | Fallback | Tier | Basis |
+| --- | --- | --- | --- | --- | --- | --- |
+| senior-engineer | <model or inherit> | high | medium-xhigh | default | frontier | recommended / user / roster change |
+
+## Sessions
+
+### builder
+Session: <client agent ID, or none>
+State: running | parked | idle | closed
+Ticket: <active ticket ID, or none>
+Model: <model and effort the session started with>
+Resolved by: preferred | in range | fallback | suggest | roster change
+Tickets carried: <count>
+```
+
+Keep one Sessions entry per persona that has had a session. Update it on every
+dispatch, resume, checkpoint return, and ticket return. A resolution that
+departs from the preferred model or effort, a roster change, or a user change
+adds a row note with its time and reason, and a `LOG.md` entry.
+
+## Ticket inboxes
+
+`inbox/<full-id>.md` holds what the orchestrator sent an active agent ticket
+after assignment. Its format and the worker's responses are in
+`TICKET-CONTRACTS.md`. It is persistent memory: units added through it count as
+the ticket's units, and recovery reads it with the ticket. Keep it after the
+ticket ends.
 
 ## Change plans
 
@@ -189,8 +231,8 @@ related goals and pillars, known dependencies, and status:
 `proposed | active | complete | blocked | retired`
 
 Modules may be added, split, merged, or retired when reconciliation says the
-run needs that. Set a module `complete` only when every completed
-implementation ticket in it has implementation coverage, planning depth is
+run needs that. Set a module `complete` only when every covered implementation
+unit and fix in it has implementation coverage, planning depth is
 recorded, planning coverage is satisfied when that depth is reviewed planning,
 and required module review is resolved.
 
@@ -206,6 +248,11 @@ and required module review is resolved.
 - unknown IDs opened or closed;
 - blockers;
 - ticket ID.
+
+For each reconciled checkpoint, record the unit or fix ID, its outcome, the
+review or inbox items it led to, and whether the session was resumed or held
+and why. Record roster confirmation, substitutions, and changes, and each
+inbox item sent with its kind and source.
 
 For planning, also record the depth choice or no-offer basis; plan acceptance;
 choice reclassifications; declined findings and reasons; revision-round ticket

@@ -370,7 +370,7 @@ User or project copy, tone, format, and terminology rules win where they conflic
 
 ### Orchestrator
 
-The one user-facing agent that owns the process of a run: run state, ticket creation and assignment, user interaction, steering, reconciliation, next work, and goal verification. It does not execute agent tickets or rewrite worker-maintained ticket sections. It may record the user response in Evidence for Discuss or Human Task. The narrow production-work exception is Human and Agent Task, which it executes and records itself.
+The one user-facing agent that owns the process of a run: run state, the roster, ticket creation and assignment, user interaction, steering, reconciliation, next work, and goal verification. It does not execute agent tickets or rewrite worker-maintained ticket sections, and it never edits an active agent ticket; it writes that ticket's inbox instead. It may record the user response in Evidence for Discuss or Human Task. The narrow production-work exception is Human and Agent Task, which it executes and records itself.
 
 Related:
 - subagent
@@ -383,9 +383,11 @@ Avoid:
 
 ### Subagent
 
-The agent assigned to execute one agent ticket. It owns that ticket file while the ticket is active, does only the bounded Objective, and must not edit run files or create tickets. A Plan ticket's subagent also owns and writes its change plan file.
+The agent that executes an agent ticket, as a persona session. It owns that ticket file while the ticket is active, works through its work units, reads but never writes the ticket inbox, and must not edit run files or create tickets. A Plan ticket's subagent also owns and writes its change plan file.
 
 Related:
+- persona (the role it plays)
+- persona session (the conversation it runs in)
 - worker (adjective for ticket sections that this agent may write, not a third role)
 - agent ticket
 - assignment
@@ -394,13 +396,104 @@ Avoid:
 - using subagent for Discuss/Gather Inputs, Human Task, or Human and Agent Task (those stay in the orchestrator thread)
 - treating **worker** as a synonym that replaces this role name
 
+### Persona
+
+A standing role that executes agent tickets of exactly one ticket type, with a model tier, a model confirmed in the roster, and a brief copied into its assignment prompt. A ticket type may have several personas of different complexity, such as `fixer`, `builder`, and `senior-engineer` for Agent Task. At most one ticket per persona is active at a time; parallelism comes from different personas. Human tickets have no persona.
+
+Related:
+- roster
+- persona session
+- model tier
+
+Avoid:
+- running two tickets for one persona at once
+- giving one ticket units that need different personas
+
+### Roster
+
+The run's confirmed mapping from each persona to a roster row, recorded in `ROSTER.md` with the state of each persona session. The orchestrator recommends it from the models the client offers, by tier, and the user confirms it once, early in the run. It is one of the two process decisions put to the user; a roster-change ask reopens one row when it cannot be resolved and its fallback is `ask`. A confirmed roster is also saved as the device default for the next run's recommendation.
+
+Avoid:
+- treating the roster as choosing the orchestrator's own model
+- substituting a lower-tier model, or an effort below the range, without the user
+
+### Roster row
+
+One persona's entry in the roster: a model, a preferred effort, an effort range such as `medium-xhigh`, and a fallback. It is resolved each time a session starts, from what the client offers then: the preferred effort, else the nearest level in range with ties going higher, else the fallback.
+
+### Effort range
+
+The reasoning-effort levels a roster row accepts, from `low`, `medium`, `high`, and `xhigh`, or the client's own names in its order. A model with no effort choice satisfies any range at its default.
+
+### Roster fallback
+
+What a roster row does when nothing in its range is available: a named fallback model and range, `suggest` (the best same-tier or higher match, reported to the user), or `ask` (hold that persona's work and present a roster-change ask). The roster has one default fallback; a row may override it.
+
+### Model tier
+
+The capability a persona needs, independent of model names: `economy`, `balanced`, or `frontier`. The orchestrator places each available model in a tier from what the client says about it and recommends the cheapest model in each persona's tier.
+
+Avoid:
+- naming specific models in persona definitions
+
+### Persona session
+
+One subagent conversation for one persona, started on the model and effort its roster row resolves to. It is `running`, `parked` after a checkpoint return, `idle` with no active ticket and available to resume for that persona's next ticket, or `closed`. Resuming a session keeps its context and model, which costs far less than starting a new one.
+
+### Work unit
+
+One ordered piece of an agent ticket, with its own Objective and Completion, sized like one coherent change or one research question. Its ID is scoped to the ticket, such as `T-004-AGT/W1`. Units are fixed while the ticket is active; more arrive through the inbox after passing the same gates as a new ticket. A unit carries its own goal, unknown, and Plan links. It is finished when it has a `done` checkpoint or was dropped; a `blocked` checkpoint does not finish it. Plan and Plan Review tickets have exactly one; human tickets have none.
+
+Avoid:
+- unqualified **unit**
+- calling a work unit a module; a unit usually serves one run module
+
+### Checkpoint
+
+The worker's record that a work unit, or a separately placed fix, has ended: its outcome (`done`, `blocked`, or `failed`), snapshot, changed paths, checks, the inbox items it carries, and what it will do next. The worker then returns; the orchestrator reconciles the checkpoint, resumes the session at once, and routes the unit to review while later units proceed.
+
+Related:
+- checkpoint return
+- snapshot
+
+### Checkpoint return
+
+A return with a new checkpoint and `execution_result: null`. The ticket stays active and its session is parked. It is not a ticket return.
+
+### Snapshot
+
+A git tree hash of the worktree at a checkpoint, made by the orchestrated-run snapshot script without changing the index, refs, stash, or files. Reviewers read a checkpoint through snapshots so later units do not move what they judge.
+
+### Ticket inbox
+
+The orchestrator-written file `inbox/<full-id>.md` for an active agent ticket: the only channel for added units, dropped units, fix requests, decisions, holds, stops, and closing after assignment. The orchestrator appends and never edits an item it has sent; the worker reads it at every step and records each item in Inbox responses. Item IDs are scoped to the inbox, such as `T-004-AGT/I-001`.
+
+Avoid:
+- editing an active ticket instead of writing its inbox
+
+### Streaming ticket
+
+An agent ticket whose Objective says further units will arrive through its inbox, such as an agent boundary inspection following implementation checkpoints or an Adversarial Review following module boundaries. Its session parks with an empty queue instead of completing, and completes only after a `closing` item. An inspection gets `closing` once the tickets it follows have ended and every covered ID's current verdict is `accepted`.
+
+### Fix request
+
+An inbox item asking the worker to change work it already checkpointed, carrying the finding it answers. `blocking` means later work builds on what it changes.
+
+### Fix placement
+
+The worker's choice of where a fix request lands: `now`, stopping the current step at a safe point; `with-current`, carried in the current unit's checkpoint; or `after-current`, straight after the current unit with its own checkpoint. A blocking fix is always `now`.
+
+### Grouping
+
+The orchestrator's process of putting every ready unit for one persona that shares Reads or run modules onto one ticket, and adding fitting new work to a persona's active ticket through its inbox, so each persona takes few, large tickets.
+
 ### Worker
 
-Adjective for ticket ownership of sections: `execution_result` is worker-owned; Unknowns, Findings, Work performed, Evidence, Interaction log, and Blockers / follow-ups are worker-maintained. A subagent is the worker for an agent ticket. The orchestrator may record `execution_result` and the user response in Evidence for Discuss or Human Task, and is the worker for a Human and Agent Task. A Plan ticket's worker also writes the change plan file its Completion names; no other type writes a file under the run directory. Worker is not a third role.
+Adjective for ticket ownership of sections: `execution_result` is worker-owned; Unknowns, Findings, Work performed, Evidence, Checkpoints, Inbox responses, Interaction log, and Blockers / follow-ups are worker-maintained. A subagent is the worker for an agent ticket. The orchestrator may record `execution_result` and the user response in Evidence for Discuss or Human Task, and is the worker for a Human and Agent Task. A Plan ticket's worker also writes the change plan file its Completion names; no other type writes a file under the run directory. Worker is not a third role.
 
 ### Agent ticket
 
-A ticket executed by a subagent after assignment: Research, Agent Task, Explore Options, Plan, Plan Review, or Adversarial Review. The only way those tickets get done.
+A ticket executed by a persona session after assignment: Research, Agent Task, Explore Options, Plan, Plan Review, or Adversarial Review. The only way those tickets get done. It names its persona and holds one or more work units.
 
 Related:
 - human ticket
@@ -415,7 +508,7 @@ A ticket the orchestrator handles in its own thread because it needs the user: D
 
 ### Ticket
 
-A bounded piece of work for a run, stored as Markdown with ticket YAML. Its full ID and filename include its globally sequenced ticket number and ticket type suffix, such as `T-001-RES`. It defines Objective, Reads, and Completion, and keeps the detailed result. Follow-ups on a ticket are proposals, not a whitelist.
+A bounded piece of work for a run, stored as Markdown with ticket YAML. Its full ID and filename include its globally sequenced ticket number and ticket type suffix, such as `T-001-RES`. It defines Objective, Reads, and Completion, holds work units when it is an agent ticket, and keeps the detailed result. Agent tickets are deliberately large: one persona's grouped work. Follow-ups on a ticket are proposals, not a whitelist.
 
 - **Objective**: the bounded result this ticket should produce.
 - **Reads**: the list of paths the ticket worker must read.
@@ -441,21 +534,21 @@ Related:
 
 ### Run
 
-One orchestrated-run instance: a coordinated body of work with shared run files, tickets, and an orchestrator. Persistent memory is run files, ticket files, change plans, and project files. Conversation context is temporary. Completing the run is a process decision of the orchestrator, not an empty ticket queue.
+One orchestrated-run instance: a coordinated body of work with shared run files, tickets, and an orchestrator. Persistent memory is run files, ticket files, ticket inboxes, change plans, and project files. Conversation context is temporary. Completing the run is a process decision of the orchestrator, not an empty ticket queue.
 
 Avoid:
 - using **run** for a ticket execution or a shell command when the process instance is meant
 
 ### Run file
 
-A run-level state document the orchestrator writes, except that an active agent ticket file is owned by its subagent. Kinds: goals, non-goals, unknowns, working hints, log, pillars, modules and tickets. Ask pages, stored under the run, and the run's ledger file, stored in the device action ledger, are derived artifacts, not run files or recovery sources. A change plan is persistent memory stored under the run and owned by its Plan ticket's active worker; it is not a run file. Current filenames are the layout, not the concepts.
+A run-level state document the orchestrator writes, except that an active agent ticket file is owned by its subagent. Kinds: goals, non-goals, unknowns, working hints, log, pillars, modules, roster, tickets and ticket inboxes. Ask pages, stored under the run, and the run's ledger file, stored in the device action ledger, are derived artifacts, not run files or recovery sources. A change plan is persistent memory stored under the run and owned by its Plan ticket's active worker; it is not a run file. Current filenames are the layout, not the concepts.
 
 Avoid:
 - treating a ticket's Unknowns or Findings as a second copy of the unknowns run file
 
 ### Planning depth
 
-A confirmed run-level choice between `standard`, where Research feeds Agent Tasks directly, and `reviewed planning`. It is the only process decision the skill puts to the user, is offered at most once after goals become active, and is recorded as a working hint; a proposal or recommendation is not confirmed.
+A confirmed run-level choice between `standard`, where Research feeds Agent Tasks directly, and `reviewed planning`. With the roster, it is one of the two process decisions the skill puts to the user. It is offered at most once after goals become active and is recorded as a working hint; a proposal or recommendation is not confirmed.
 
 Related:
 - reviewed planning
@@ -540,7 +633,7 @@ Related:
 - product decision
 
 Avoid:
-- using Discuss for process decisions the orchestrator owns, other than the planning-depth offer
+- using Discuss for process decisions the orchestrator owns, other than the roster and roster-change asks and the planning-depth offer
 
 ### Human Task
 
@@ -592,7 +685,7 @@ Avoid:
 
 ### Process decision
 
-A choice that stays with the orchestrator: which ticket to create, whom to assign, whether to accept an execution result, whether a goal is verified, whether adversarial review is due, whether the run is complete, next work, review scheduling. Local implementation that follows established project patterns is process. Accepting a reviewed change plan is process. Planning depth is the single process decision this skill requires to be put to the user, and that exception does not extend to any other process decision.
+A choice that stays with the orchestrator: which ticket to create, whom to assign, whether to accept an execution result, whether a goal is verified, whether adversarial review is due, whether the run is complete, next work, review scheduling. Local implementation that follows established project patterns is process. Accepting a reviewed change plan is process. Grouping, persona choice, and moving a unit between personas are process. The roster and planning depth are the only process decisions this skill requires to be put to the user, and that exception does not extend to any other process decision.
 
 ### Goal
 
@@ -636,11 +729,11 @@ Avoid:
 
 ### Assignment
 
-The act of giving one ready agent ticket to one subagent before work starts: confirm dependencies, check conflicts against active tickets and other tickets in the dispatch wave, fill Reads, set status `active` and owner, dispatch with the type prompt and paths. Selecting a ready Human and Agent Task permits only tickets that pass the explicit read-only, disjoint concurrency test; allow no concurrent agent ticket when uncertain.
+The act of giving one ready agent ticket to its persona's session before work starts: confirm dependencies, check every unit for conflicts against active tickets, including parked sessions' remaining units, and other tickets in the dispatch wave, fill Reads and Work units, create the ticket inbox, set status `active` and owner, then resume the persona's idle session or start one on the model and effort its roster row resolves to. Selecting a ready Human and Agent Task permits only tickets that pass the explicit read-only, disjoint concurrency test; allow no concurrent agent ticket when uncertain.
 
 ### Reconciliation
 
-What the orchestrator does when a ticket returns or a Human and Agent Task ends: read execution result, leave worker sections as written, clear owner, set persistent status, update run files only where the wider run changed, decide next work from follow-ups as proposals, decide whether verification or review is still required. Every ticket already returned at the start of the pass is reconciled together, and persistent state is written before new dispatch. Must not re-do the ticket in the orchestrator thread.
+What the orchestrator does when a ticket returns or a Human and Agent Task ends. A checkpoint return has its own shorter order: resume the session first, then log, update run files, and route review. On a ticket return: read execution result, leave worker sections as written, clear owner, set persistent status, update run files only where the wider run changed, decide next work from follow-ups as proposals, decide whether verification or review is still required. Every ticket already returned at the start of the pass is reconciled together, and persistent state is written before new dispatch. Must not re-do the ticket in the orchestrator thread.
 
 ### Boundary inspection
 
@@ -655,7 +748,7 @@ Avoid:
 
 ### Agent boundary inspection
 
-An Agent Task boundary inspection that judges whether the parts of each covered result that are not product-facing deliver what their goals, acceptance criteria, user request, confirmed decisions, and accepted change plan require. It records `accepted`, `changes needed`, or `decision needed` per covered ID, changes nothing, and does not repeat boundary validation. The orchestrator accepts by resolving it once every ID is `accepted`.
+An Agent Task boundary inspection, run by the `inspector`, that judges whether the parts of each covered result that are not product-facing deliver what their goals, acceptance criteria, user request, confirmed decisions, and accepted change plan require. It streams: each `done` implementation checkpoint gets an inspection unit while the implementer continues, judged through snapshots. It records `accepted`, `changes needed`, or `decision needed` per covered ID, changes nothing, and does not repeat boundary validation. An ID's latest non-superseded verdict is current; a current `accepted` verdict is the orchestrator's acceptance of those parts.
 
 Related:
 - boundary validation ticket (runs the goal-level checks; a separate ticket)
@@ -672,11 +765,11 @@ Avoid:
 
 ### Boundary validation ticket
 
-An Agent Task that checks goal-level, repo-wide or cross-area requirements for every implementation ticket named by the boundary inspections of one batch. It runs independently of those inspections and is not folded into an implementation ticket.
+An Agent Task, run by the `validator`, that checks goal-level, repo-wide or cross-area requirements for every implementation ticket in one batch, once that batch has ended, on a stable tree. Its Evidence records the tree it checked, and it becomes stale when a later `done` checkpoint changes a path its checks cover. It runs independently of the boundary inspections and is not folded into an implementation ticket.
 
 ### Implementation coverage
 
-The requirement that every completed implementation ticket is named by the non-superseded resolved boundary inspections its result needs, human, agent, or both, and one resolved boundary validation ticket whose Evidence meets its success conditions before its module or the run completes.
+The requirement that every implementation unit or placed fix with a `done` checkpoint, and every Human and Agent Task that performed implementation, has a current `accepted` agent verdict or a resolved human boundary inspection for each part of its result, and one resolved boundary validation ticket whose Evidence meets its success conditions, before its module or the run completes.
 
 ### Plan acceptance
 
@@ -752,7 +845,7 @@ The first Research ticket or tickets of a run. Inspect enough to propose goals a
 
 ### Steering
 
-A user prompt while other work is still going. Act immediately. A prompt that only asks for information already explicit in the run record gets a direct reply and no ticket, state or log change; it is not a ticket return. Change requests become tickets. Do not edit an active subagent's ticket file.
+A user prompt while other work is still going. Act immediately. A prompt that only asks for information already explicit in the run record gets a direct reply and no ticket, state or log change; it is not a ticket return. Change requests become added units or fix requests on the matching persona's active ticket, through its inbox, or new tickets. Do not edit an active subagent's ticket file.
 
 ### Context compaction
 
@@ -760,15 +853,15 @@ Recovering the run from the skill plus run files, tickets and relevant change pl
 
 ### Dispatch
 
-Start the subagent with ticket path, type prompt, and Reads.
+Start a persona session with the persona brief, shared rules, type prompt, ticket, inbox and snapshot-script paths, and Reads, or resume the persona's idle session with only the new ticket's paths and Reads.
 
 ### Return
 
-The subagent finishing the ticket record, or the user answering a presented Discuss or Human Task. A response to a withdrawn ask is not a ticket return. A user turn in an active Human and Agent Task is an interaction, not a ticket return. Distinct from returning to the user when a human ticket needs a response.
+The subagent finishing the ticket record and setting its execution result, or the user answering a presented Discuss or Human Task. A checkpoint return is not a ticket return. A response to a withdrawn ask is not a ticket return. A user turn in an active Human and Agent Task is an interaction, not a ticket return. Distinct from returning to the user when a human ticket needs a response.
 
 ### Owner
 
-Ticket YAML field for who currently executes an active ticket. Orchestrator-owned. Cleared on reconciliation.
+Ticket YAML field for who currently executes an active ticket: its persona, or `orchestrator` for a human ticket. Orchestrator-owned. Cleared on reconciliation of a ticket return, not of a checkpoint return.
 
 ### Follow-up
 
@@ -780,7 +873,7 @@ Concise run history of attempts, execution results, status, decisions, evidence 
 
 ### Stable ID
 
-IDs such as `G-001`, `NG-001`, `U-001`, `P-001`, `M-001`, and the full ticket ID `T-001-RES` remain for the lifetime of the run and are not reused. A ticket's suffix records its type at creation; replacing it with another type requires a new ticket.
+IDs such as `G-001`, `NG-001`, `U-001`, `P-001`, `M-001`, the full ticket ID `T-001-RES`, work units such as `T-004-AGT/W1`, and inbox items such as `T-004-AGT/I-001` remain for the lifetime of the run and are not reused. A ticket's suffix records its type at creation; replacing it with another type requires a new ticket.
 
 ### Ticket number
 

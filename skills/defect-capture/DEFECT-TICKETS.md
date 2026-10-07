@@ -360,15 +360,17 @@ another ticket or inspect the project.
 
 `backlog` means the defect has not been triaged. It is triage-eligible only
 while `capture_state: ready`, `capture_owner: null`, and no unresolved Research
-ticket already owns triage for its current cycle.
+unit already owns triage for its current cycle.
 
 `triaged` means Research has established an actionable understanding or a
 supported non-fix disposition, recorded `duplicate_of`, `duplicates`, and
 related-defect evidence where applicable, identified likely project areas, and
 drafted and classified the next work.
 
-`in progress` starts only when an implementation Agent Task becomes active.
-Plan, Plan Review, Research, and Explore Options do not cause this transition.
+`in progress` starts only when an implementation Agent Task unit covering the
+defect starts: when its ticket is dispatched with that unit first, or when the
+previous checkpoint names it as next and the session resumes. Plan, Plan
+Review, Research, and Explore Options do not cause this transition.
 
 `blocked` is a detour, not a required sequential phase. Use it only when no
 ready or active path can advance the defect. Record the prior state in
@@ -377,7 +379,8 @@ resolution. Recompute the appropriate projection from current run tickets and
 clear `resume_status` when the blocker closes.
 
 `awaiting automated review` means all implementation work for the current
-cycle has resolved and the dedicated automated product check or boundary
+cycle has reached `done` checkpoints on ended tickets and the dedicated
+automated product check or boundary
 validation is queued.
 
 `automated reviewing` means the dedicated product check or boundary validation
@@ -396,7 +399,7 @@ surfaced.
 `failed review` means an automated check observed that the result is absent or
 incorrect, boundary validation found a material issue, or the user requested
 changes. Keep this status while scheduling it like backlog. After every
-in-flight check for the prior cycle returns, start one new Research ticket
+in-flight check for the prior cycle returns, start one new Research unit
 using all review evidence and increment `cycle` once. Preserve earlier ticket
 evidence and apply orchestrated-run's inspection-invalidation lifecycle to
 upcoming or presented inspection.

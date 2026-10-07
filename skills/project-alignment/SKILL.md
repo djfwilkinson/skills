@@ -80,7 +80,7 @@ Inspect enough of the project to understand:
 - documentation that duplicates context instead of pointing to a canonical source;
 - recent change hotspots when git history is available.
 
-For a large project, split research by domain or concern. Keep terminology findings comparable across those tickets so the orchestrator can reconcile them into one language.
+For a large project, split research by domain or concern, as units of one Research ticket where the depth allows. Keep terminology findings comparable across those units so the orchestrator can reconcile them into one language.
 
 Research tickets should separate:
 

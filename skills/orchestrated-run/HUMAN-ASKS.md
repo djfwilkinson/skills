@@ -95,7 +95,7 @@ For a finite choice, include one complete reply example per option.
 For Human and Agent Task, replace the current ask data rather than appending
 earlier turns.
 
-For a grouped inspection, put every covered implementation ticket in
+For a grouped inspection, put every covered implementation ticket or unit in
 `ticket.covered`, group each result with its recorded outcomes into ordered
 sections, and put useful complete replies in `expectedReply.examples`. The
 template makes the ask ID, covered IDs, and each example response individually
@@ -173,8 +173,8 @@ One page represents one human ticket. It contains:
 - the one-sentence summary of the ask;
 - the complete current return-to-user ask for that type;
 - why the ask matters to the user, from the ticket's Objective, never the
-  process or Interactive reason, except the planning-depth offer, whose subject
-  is how the run works;
+  process or Interactive reason, except the roster and roster-change asks and
+  the planning-depth offer, whose subject is how the run works;
 - what to inspect or compare and which results distinguish the available
   replies;
 - any prepared resource path or URL and its current state;
@@ -267,6 +267,13 @@ below; each list is the extra payload that type carries, not a substitute:
   and recommendation when present, each option's observable behavior, known
   knock-on effects and deferral point or reason it must be decided now,
   expected reply, and ticket path.
+- Roster ask: the payload under The roster ask in `PERSONAS.md`, with the
+  persona rows as one ordered section and one complete reply example each for
+  accepting, `lean`, `quality`, changing a row's model or effort range, and
+  setting the default fallback, and the ticket path.
+- Roster-change ask: the persona and what it is used for, its row, what the
+  client offers now, the recommended replacement, whether the answer should
+  also update the device default, and the ticket path.
 - Planning depth offer: what reviewed planning changes about how the run
   reaches the user's result, the recorded conditions this run met, the cost as
   the planning and review work it adds before implementation, that change
@@ -276,16 +283,20 @@ below; each list is the extra payload that type carries, not a substitute:
   change-needed observations, acceptance basis, request to accept or describe
   changes, and ticket path.
 - Grouped acceptance: group each product-facing result and its recorded
-  evidence under its covered ticket IDs, then request one reply accepting all
-  or naming IDs needing changes. Do not list checks a subagent can run for the
+  evidence under its covered ticket or unit IDs, then request one reply
+  accepting all or naming IDs needing changes.
+- Grouped decisions: number each decision, give each its own options,
+  observable behaviour, knock-on effects, and recommendation, then request one
+  reply answering each by number. Do not list checks a subagent can run for the
   user to perform; a product workflow the user runs to judge behaviour is the
   inspection method, not such a check.
 - Human and Agent Task: only the current ask from its latest Interaction log
   entry under that type's contract.
 
 Do not add unsupported hints. Do not paste ticket metadata, Reads, related run
-IDs, or the process reason. The planning-depth offer is the single exception. Acceptance is not an options question; present it
-directly and wait for the user's reply.
+IDs, or the process reason. The roster and roster-change asks and the
+planning-depth offer are the only exceptions. Acceptance is not an options question; present it directly and
+wait for the user's reply.
 
 After that same ask has been presented once, later user-visible messages may
 replace the full repeat only when Presentation records that the orchestrator
