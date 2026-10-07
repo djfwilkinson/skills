@@ -4,25 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <meta name="ledger-version" content="3">
+  <meta name="ledger-version" content="4">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'">
   <title>Action ledger</title>
   <!--
     Device-level ask index, served by scripts/ledger.py. Do not edit per run.
     Raise ledger-version with every change; ledger.py replaces older copies.
-    It reads every runs/<key>.json through /runs. One run file:
-    {
-      "run": { "id": "RUN-ID", "name": "Run name", "project": "Project",
-               "dir": "/absolute/path/to/run", "updatedAt": "2026-09-02T12:02:00+01:00" },
-      "asks": [{
-        "id": "T-014-DIS", "type": "Discuss",
-        "presentation": "presented",            // presented | upcoming | answered | withdrawn
-        "action": "Confirm double bookings are blocked", // the ask page summary, verbatim
-        "reason": "Why this matters to the user, not the process reason.",
-        "presentedAt": "2026-09-02T12:02:00+01:00",
-        "availability": "Available after deployment completes." // upcoming only
-      }]
-    }
+    /runs returns one entry per registered run, derived by the server from
+    ticket YAML and ask pages:
+    [{ "key": "project--run",
+       "run": { "id": "run", "name": "Run name", "project": "project", "dir": "/run", "updatedAt": "<ISO>" },
+       "asks": [{ "id": "T-014-DIS", "type": "Discuss/Gather Inputs", "presentation": "presented",
+                  "action": "<ask page summary, or ticket title>", "reason": "<ask page why>",
+                  "presentedAt": "<ISO>" }] }]
     Links resolve under the run directory: asks/<id>.html and tickets/<id>.md.
   -->
   <style>
@@ -57,9 +51,7 @@
     h3 { margin: 20px 0 10px; font-size: 13px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
     .item { padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; color: var(--muted); }
-    .item strong { display: block; color: var(--text); }
-    .item small { display: block; margin-top: 8px; color: var(--warning); }
-  </style>
+    .item strong { display: block; color: var(--text); }  </style>
 </head>
 <body>
   <main>
@@ -109,8 +101,7 @@
       ]);
       const item = (ask) => node("article", [
         node("strong", text(ask.action, "Upcoming involvement")),
-        `${text(ask.type, "Human involvement")} · ${text(ask.id)}`,
-        ask.availability ? node("small", text(ask.availability)) : ""
+        `${text(ask.type, "Human involvement")} · ${text(ask.id)}`
       ], { className: "item" });
       const section = ({ run, current, upcoming }) => node("section", [
         node("div", [

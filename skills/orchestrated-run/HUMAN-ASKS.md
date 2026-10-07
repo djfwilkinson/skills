@@ -16,8 +16,8 @@ the source of truth.
 
 ## Layout and ownership
 
-Store ask pages under the run, and one ledger file per open run in the
-device-level action ledger:
+Store ask pages under the run. Each open run is registered in the device-level
+action ledger:
 
 ```text
 <run>/asks/
@@ -25,27 +25,34 @@ device-level action ledger:
   T-006-HUM.html
 ~/.agent-runs/action-ledger/
   index.html          ask index, copied from templates/ask-index.html
-  port                port the ledger server last used
-  runs/<key>.json     one ledger file per open run
+  port, pid           the ledger server's last port and process
+  runs/<key>.json     one registration per open run
 ```
 
 `<key>` is `<project folder name>--<run folder name>`.
 
-The orchestrator writes `asks/` and its run's ledger file as process work, like
-`LOG.md`. A subagent must never create, edit, or delete these files.
+The orchestrator writes `asks/` as process work, like `LOG.md`. A subagent must
+never create, edit, or delete these files or a registration.
 
 Copy `templates/ask-detail.html` to `asks/<ticket-id>.html` for each human
 ticket. Ask pages are static, self-contained HTML with an inline renderer.
 
-The ask index is shared by every run on the device. Run this skill's
-`scripts/ledger.py` with Python 3.9 or later. It creates the ledger directory
-and index when missing, replaces the index when the template's `ledger-version`
-is higher than the installed one, starts the ledger server in the background
-unless it is already running, and prints the index URL. The server listens on
+The ask index is shared by every run on the device. Use this skill's
+`scripts/ledger.py` with Python 3.9 or later:
+
+- `python3 <skill>/scripts/ledger.py register <run-dir>` registers the run,
+  then starts the ledger and prints the index URL. It is safe to repeat.
+- `python3 <skill>/scripts/ledger.py complete <run-dir>` removes the
+  registration.
+
+Starting the ledger creates its directory and index when missing, replaces the
+index when the template's `ledger-version` is higher than the installed one,
+and starts the ledger server in the background unless the same or a newer
+server is running. It replaces an older server. The server listens on
 `127.0.0.1` only, keeps using the port in `port`, and moves to the next free
 port in its range when another program holds it. Never edit the device
-`index.html` for a run. Do not add any other script, network request, build
-step, server, dependency, or install.
+`index.html` or a registration by hand. Do not add any other script, network
+request, build step, server, dependency, or install.
 
 Ask pages and the ledger are not a prepared human environment. A preview,
 service, artifact, or other resource the ask refers to still follows
@@ -57,28 +64,19 @@ prepared-human-environment rules.
 template, then edit only that object. Do not regenerate the styles, markup, or
 renderer for routine ask changes.
 
-The ledger file is JSON:
+The ledger server derives every registered run's asks from its files; the
+orchestrator writes no ask records for it. It reads ticket YAML `presentation`,
+`status`, `type`, and `title` from `tickets/`, and `ask.summary`, `ask.why`, and
+`presentation.presentedAt` from the ticket's ask page. The index polls every 5
+seconds and on Refresh. It:
 
-```json
-{
-  "run": { "id": "<run id>", "name": "<run name>", "project": "<project>",
-           "dir": "<absolute run directory>", "updatedAt": "<ISO time>" },
-  "asks": [{ "id": "T-014-DIS", "type": "Discuss", "presentation": "presented",
-             "action": "<ask page summary, verbatim>", "reason": "<why it matters to the user>",
-             "presentedAt": "<ISO time>", "availability": "<upcoming only>" }]
-}
-```
-
-Keep one record per relevant human ticket and change its `presentation` value
-as the ticket moves through `presented`, `upcoming`, `answered`, or
-`withdrawn`. The index polls every ledger file every 5 seconds and on Refresh.
-It:
-
-- makes only `presented` records live table rows;
-- lists `upcoming` records separately without presenting their full ask;
-- omits `answered` and `withdrawn` records;
+- makes a live row of each ticket with `presentation: presented` that is not
+  `resolved` or `cancelled`;
+- lists `upcoming` tickets separately by summary, or title before a page
+  exists, without presenting their full ask;
+- omits every other ticket;
 - derives counts, the oldest-ask age, and links to `asks/<id>.html` and
-  `tickets/<id>.md` under `run.dir`;
+  `tickets/<id>.md`;
 - when the user opts in, raises a browser notification for each newly
   presented ask found while the page is in the background.
 
@@ -102,7 +100,9 @@ template makes the ask ID, covered IDs, and each example response individually
 copyable.
 
 Keep data as plain text. Do not add HTML, executable values, secret values, or
-unsupported information to the detail object or the ledger file. If a template
+unsupported information to the detail object. Keep its `ask.summary`, `ask.why`,
+and `presentation.presentedAt` values double-quoted strings on one line so the
+index can read them. If a template
 or renderer itself needs changing, fix the bundled template first, then replace
 affected run pages from ticket state. A change to `ask-index.html` also raises
 its `ledger-version` so the next `scripts/ledger.py` run replaces the device
@@ -122,7 +122,7 @@ already on tickets or run files. If an ask page and its ticket disagree, the
 ticket is correct. Update its template data before the next user-visible
 message.
 
-The secret-values ban applies to the ledger file and every ask page.
+The secret-values ban applies to every ask page and ticket title.
 
 ## Writing the ask
 
@@ -190,16 +190,14 @@ Interaction log entry, not previous turns.
 
 ## Index
 
-The ask index has one section per open run, each with its own live table and
-upcoming list. A live row is a ledger record with `presentation: presented`.
-Each record holds:
+The ask index has one section per registered run, each with its own live table
+and upcoming list. Each live row shows:
 
-- `action`, holding a presented ask page's summary sentence verbatim, or a
-  short involvement label for an upcoming record;
-- `reason`, why the ask matters to the user;
-- ticket ID, from which the index derives the ticket and ask-page links;
-- type;
-- presentation time.
+- the ask page's summary sentence;
+- why the ask matters to the user;
+- ticket ID, linked to the ticket, and type;
+- presentation time;
+- a link to the ask page.
 
 Do not describe `upcoming` tickets as waiting. The index may list upcoming
 human involvement in a separate section, but it must not present the ask or
@@ -214,11 +212,10 @@ Immediately before first presentation:
    Presentation;
 3. copy the bundled template only when the page file is missing, then populate
    or replace its `ORCHESTRATOR DATA` object;
-4. set `presentation: presented`;
-5. add or update its record in the run's ledger file, creating the file when
-   missing, so it becomes a live row;
-6. run `scripts/ledger.py` and best-effort launch `<index URL>r/<key>/asks/<ticket-id>.html`,
-   or the index URL when presenting several asks at once, in the default
+4. set `presentation: presented`, which makes it a live row;
+5. run `scripts/ledger.py register <run-dir>` and best-effort launch
+   `<index URL>r/<key>/asks/<ticket-id>.html`, or the index URL when
+   presenting several asks at once, in the default
    external browser with `open` on macOS, `Start-Process` on Windows, or
    `xdg-open` on Linux. If the script fails, launch the absolute
    `asks/<ticket-id>.html` path instead. Do not use Cursor's file opener for
@@ -226,32 +223,31 @@ Immediately before first presentation:
    Launch again when a withdrawn ask is re-presented. Do not record this
    external launch as a successful open in the current client. Do not launch
    again for each Human and Agent Task turn;
-7. send the complete first ask in chat with links to the page and index, using
+6. send the complete first ask in chat with links to the page and index, using
    the served URLs when the script succeeded and the absolute page path
    otherwise.
 
-When a Human and Agent Task produces a new current ask, update its page and
-ledger record before presenting that ask.
+When a Human and Agent Task produces a new current ask, update its page before
+presenting that ask.
 
-Whenever presentation leaves `presented`, change the ledger record's
-`presentation`; the index removes its live row. When a Human and Agent Task
+Whenever presentation leaves `presented`, the index drops the live row on its
+own; the ask page still needs updating. When a Human and Agent Task
 changes to `upcoming` while the orchestrator works, update the detail data so
 the page says it is not awaiting a reply. When presentation becomes `answered`,
 mark the detail data answered and record the answer time in Presentation. When
 it becomes `withdrawn`, mark the detail data withdrawn with its time and reason
 and record both in Presentation. Keep those pages as presentation history; a
 late response to a withdrawn page cannot complete the ticket.
-Re-presentation replaces the detail data with the new current ask and changes
-the ledger record to `presented`.
+Re-presentation replaces the detail data with the new current ask.
 
 Every withdrawal of a presented ask sets ticket YAML presentation to
-`withdrawn`, removes the live row, marks the page withdrawn, records the reason
+`withdrawn`, marks the page withdrawn, records the reason
 and time in Presentation and `LOG.md`, and tells the user that the previous ask
 is no longer actionable. The cause-specific process also sets ticket status,
 owner, and dependencies before new work starts.
 
-Keep the ledger file while the run is open, even when it has no live rows.
-Delete it when the run completes.
+Keep the run registered while it is open, even when it has no live rows. Run
+`scripts/ledger.py complete <run-dir>` when the run completes.
 
 ## Chat contract
 
@@ -332,7 +328,6 @@ the condensed line only when that exact ask has already been presented.
 ## Recovery
 
 After compaction, reload every presented human ticket first. Rebuild or repair
-the run's ledger file, and its pages from the bundled template, using
-Objective, the latest Interaction log entry, and Presentation before another
-user-visible message. Never infer presentation state or the current ask from
-HTML or the ledger file alone.
+its pages from the bundled template using Objective, the latest Interaction log
+entry, and Presentation before another user-visible message. Never infer
+presentation state or the current ask from HTML or the index alone.

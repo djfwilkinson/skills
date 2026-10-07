@@ -541,7 +541,7 @@ Avoid:
 
 ### Run file
 
-A run-level state document the orchestrator writes, except that an active agent ticket file is owned by its subagent. Kinds: goals, non-goals, unknowns, working hints, log, pillars, modules, roster, tickets and ticket inboxes. Ask pages, stored under the run, and the run's ledger file, stored in the device action ledger, are derived artifacts, not run files or recovery sources. A change plan is persistent memory stored under the run and owned by its Plan ticket's active worker; it is not a run file. Current filenames are the layout, not the concepts.
+A run-level state document the orchestrator writes, except that an active agent ticket file is owned by its subagent. Kinds: goals, non-goals, unknowns, working hints, log, pillars, modules, roster, tickets and ticket inboxes. Ask pages, stored under the run, are derived artifacts, not run files or recovery sources; the run's ledger registration only points the device action ledger at the run. A change plan is persistent memory stored under the run and owned by its Plan ticket's active worker; it is not a run file. Current filenames are the layout, not the concepts.
 
 Avoid:
 - treating a ticket's Unknowns or Findings as a second copy of the unknowns run file
@@ -909,15 +909,18 @@ An orchestrator-written, self-contained HTML copy of one current return-to-user 
 
 ### Ask index
 
-The device-level action ledger page shared by every orchestrated run on the machine. The bundled ledger script copies it from the index template into the action ledger directory when it is missing or its `ledger-version` is older, and serves it from a local ledger server. It polls every open run's ledger file, lists each run in its own section and, when the user opts in, sends a browser notification for each new presented ask found while it is in the background. Each live row names the requested action and why it exists and links the ticket and ask page. It is a derived artifact, not a run file, presentation state or a source for compaction recovery. Withdrawn, answered and upcoming asks are not live rows; upcoming involvement may appear separately without presenting its ask.
+The device-level action ledger page shared by every orchestrated run on the machine. The bundled ledger script copies it from the index template into the action ledger directory when it is missing or its `ledger-version` is older, and serves it from a local ledger server. It polls the ledger server, which derives each registered run's asks from its ticket YAML and ask pages, lists each run in its own section and, when the user opts in, sends a browser notification for each new presented ask found while it is in the background. Each live row names the requested action and why it exists and links the ticket and ask page. It is a derived artifact, not a run file, presentation state or a source for compaction recovery. Withdrawn, answered and upcoming asks are not live rows; upcoming involvement may appear separately without presenting its ask.
 
-### Ledger file
+### Ledger registration
 
-One open run's JSON record of its human asks in the action ledger directory, named from the project and run folder names. The orchestrator writes it, the ask index reads it, and the orchestrator deletes it when the run completes. It is a derived artifact, not a run file or presentation state.
+One open run's JSON file in the action ledger directory, named from the project and run folder names and pointing at the run directory. The ledger script's `register` command writes it when the run starts or resumes and its `complete` command removes it when the run completes. It holds no ask state; the ledger server reads that from the run's tickets and ask pages.
+
+Avoid:
+- **ledger file** or **ledger record** for per-ask state the orchestrator maintains; that copy no longer exists
 
 ### Ledger server
 
-The local web server the bundled ledger script starts in the background to serve the ask index, the merged ledger files and each open run's ask pages and tickets. It listens on the loopback address only, keeps the port it last used, and moves to another free port in its range when that port is taken by another program.
+The local web server the bundled ledger script starts in the background to serve the ask index, the asks it derives for each registered run, and that run's ask pages and tickets. It listens on the loopback address only, keeps the port it last used, and moves to another free port in its range when that port is taken by another program. Starting the ledger replaces an older server version.
 
 Avoid:
 - treating the ledger server as a prepared human environment

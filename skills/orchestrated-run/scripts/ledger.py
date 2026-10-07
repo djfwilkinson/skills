@@ -1,24 +1,28 @@
 #!/usr/bin/env python3
 """Device-level action ledger for orchestrated runs. Python 3.9+, stdlib only.
 
-  python3 ledger.py        create the ledger if missing, replace its index when
-                           the template's ledger-version is newer, start the
-                           server if it is not running, and print the index URL
-  python3 ledger.py serve  run the server in the foreground
+  python3 ledger.py                          start the ledger and print its URL
+  python3 ledger.py register <run-dir> [name]  list a run, then start the ledger
+  python3 ledger.py complete <run-dir>       stop listing a run
+  python3 ledger.py serve                    run the server in the foreground
 
-Each run writes runs/<key>.json under the ledger directory and deletes it on
-completion. The server serves the index, merges runs/*.json at /runs, and
-serves files under each run's directory at /r/<key>/<path>.
+Starting creates the ledger directory, replaces its index when the template's
+ledger-version is newer, and starts the server unless the same or a newer
+version is running. A registered run is runs/<key>.json holding run.dir. The
+server derives each run's asks from ticket YAML and ask pages under run.dir,
+returns them at /runs, and serves files under run.dir at /r/<key>/<path>.
 """
-import json, mimetypes, os, re, shutil, socket, subprocess, sys, time, urllib.request
+import json, mimetypes, os, re, shutil, signal, socket, subprocess, sys, time, urllib.request
+from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 HOME = Path(os.environ.get("ACTION_LEDGER_HOME") or Path.home() / ".agent-runs" / "action-ledger")
-RUNS, PORT_FILE, INDEX = HOME / "runs", HOME / "port", HOME / "index.html"
+RUNS, PORT_FILE, PID_FILE, INDEX = HOME / "runs", HOME / "port", HOME / "pid", HOME / "index.html"
 TEMPLATE = Path(__file__).resolve().parent.parent / "templates" / "ask-index.html"
-FIRST_PORT, PORT_TRIES, NAME = 47391, 20, "action-ledger/1"
+FIRST_PORT, PORT_TRIES, VERSION = 47391, 20, 2
+NAME = f"action-ledger/{VERSION}"
 
 
 def read_json(path):
@@ -28,13 +32,46 @@ def read_json(path):
         return None
 
 
-def runs():
-    found = []
-    for path in sorted(RUNS.glob("*.json")):
-        data = read_json(path)
-        if isinstance(data, dict):
-            found.append({**data, "key": path.stem})
-    return found
+def ticket_yaml(path):
+    try:
+        with path.open(encoding="utf-8") as file:
+            head = file.read(2000).split("---", 2)
+    except OSError:
+        return {}
+    if len(head) < 3 or head[0].strip():
+        return {}
+    return {key: value.strip().strip("\"'") for key, value in re.findall(r"(?m)^(\w+):[ \t]*(.*)$", head[1])}
+
+
+def page_value(page, key):
+    found = re.search(rf'(?<![\w.])["\']?{key}["\']?\s*:\s*("(?:[^"\\\n]|\\.)*")', page)
+    try:
+        return json.loads(found[1]) if found else ""
+    except ValueError:
+        return ""
+
+
+def run_view(key, data):
+    run = dict(data.get("run") or {}) if isinstance(data, dict) else {}
+    base, asks, updated = Path(run.get("dir") or "/nonexistent"), [], 0
+    for path in sorted((base / "tickets").glob("*.md")):
+        try:
+            updated = max(updated, path.stat().st_mtime)
+        except OSError:
+            continue
+        meta = ticket_yaml(path)
+        if meta.get("presentation") not in ("presented", "upcoming") or meta.get("status") in ("resolved", "cancelled"):
+            continue
+        try:
+            page = (base / "asks" / f"{path.stem}.html").read_text(encoding="utf-8")
+        except OSError:
+            page = ""
+        asks.append({"id": path.stem, "type": meta.get("type"), "presentation": meta["presentation"],
+                     "action": page_value(page, "summary") or meta.get("title"),
+                     "reason": page_value(page, "why"), "presentedAt": page_value(page, "presentedAt")})
+    if updated:
+        run["updatedAt"] = datetime.fromtimestamp(updated).astimezone().isoformat()
+    return {"key": key, "run": run, "asks": asks}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -47,7 +84,8 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/":
             return self.send(INDEX.read_bytes(), "text/html")
         if path == "/runs":
-            return self.send(json.dumps(runs()).encode(), "application/json")
+            views = [run_view(file.stem, read_json(file)) for file in sorted(RUNS.glob("*.json"))]
+            return self.send(json.dumps(views).encode(), "application/json")
         parts = path.split("/", 3)
         if len(parts) == 4 and parts[1] == "r":
             run = read_json(RUNS / f"{parts[2]}.json") or {}
@@ -89,12 +127,21 @@ def saved_port():
         return None
 
 
-def is_ledger(port):
+def running_version():
     try:
-        with urllib.request.urlopen(f"http://127.0.0.1:{port}/runs", timeout=1) as reply:
-            return reply.headers.get("Server", "").startswith(NAME)
+        with urllib.request.urlopen(f"http://127.0.0.1:{saved_port()}/runs", timeout=1) as reply:
+            found = re.match(r"action-ledger/(\d+)", reply.headers.get("Server", ""))
+            return int(found[1]) if found else None
     except Exception:
-        return False
+        return None
+
+
+def wait_for(ready):
+    for _ in range(50):
+        if ready():
+            return True
+        time.sleep(0.1)
+    return False
 
 
 def serve():
@@ -106,6 +153,7 @@ def serve():
         except OSError:
             continue
         PORT_FILE.write_text(str(port))
+        PID_FILE.write_text(str(os.getpid()))
         server.serve_forever()
     sys.exit(f"{NAME}: no free port from {FIRST_PORT} to {FIRST_PORT + PORT_TRIES - 1}")
 
@@ -122,18 +170,40 @@ def start():
     RUNS.mkdir(parents=True, exist_ok=True)
     if page_version(TEMPLATE) > page_version(INDEX):
         shutil.copyfile(TEMPLATE, INDEX)
-    if not is_ledger(saved_port()):
+    running = running_version()
+    if running is not None and running < VERSION:
+        try:
+            os.kill(int(PID_FILE.read_text()), signal.SIGTERM)
+        except (OSError, ValueError):
+            pass
+        running = None if wait_for(lambda: running_version() is None) else running
+    if running is None:
         flags = getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
         subprocess.Popen([sys.executable, __file__, "serve"], start_new_session=True, creationflags=flags,
                          stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        for _ in range(50):
-            time.sleep(0.1)
-            if is_ledger(saved_port()):
-                break
-        else:
+        if not wait_for(lambda: running_version() is not None):
             sys.exit(f"{NAME}: server did not start")
     print(f"http://127.0.0.1:{saved_port()}/")
 
 
+def run_file(run_dir):
+    run_dir = Path(run_dir).resolve()
+    project = next((p.parent.name for p in run_dir.parents if p.name == ".agent-runs"), run_dir.parent.name)
+    return run_dir, project, RUNS / f"{project}--{run_dir.name}.json"
+
+
+def register(run_dir, name=None):
+    run_dir, project, path = run_file(run_dir)
+    RUNS.mkdir(parents=True, exist_ok=True)
+    run = {"id": run_dir.name, "name": run_dir.name, "project": project, **((read_json(path) or {}).get("run") or {})}
+    path.write_text(json.dumps({"run": {**run, **({"name": name} if name else {}), "dir": str(run_dir)}}), encoding="utf-8")
+    start()
+
+
+def complete(run_dir):
+    run_file(run_dir)[2].unlink(missing_ok=True)
+
+
 if __name__ == "__main__":
-    serve() if sys.argv[1:] == ["serve"] else start()
+    command, *args = sys.argv[1:] or ["start"]
+    {"start": start, "serve": serve, "register": register, "complete": complete}[command](*args)

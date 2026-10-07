@@ -103,6 +103,8 @@ change-plan ownership.
 ## Start the run
 
 1. Create the placeholder files. Apply the `.agent-runs/` gitignore rule above.
+   Register the run in the action ledger under `HUMAN-ASKS.md`; a failure does
+   not block the run. When resuming a run, register it again.
 2. Build the recommended roster under Suggesting models in `PERSONAS.md`.
 3. Create one bootstrap Research ticket with one unit per separable area. Use
    two tickets, one for the `scout` and one for the `investigator`, only when
@@ -435,7 +437,7 @@ Follow the complete first-presentation and condensed-repeat chat contract in
 Task current asks live in the latest Interaction log entry.
 
 Create human tickets with `presentation: upcoming`. Immediately before first
-presentation, follow the liveness, page, ledger, launch, ticket-state, complete
+presentation, follow the liveness, page, ticket-state, launch, complete
 chat ask, and later-repeat lifecycle in `HUMAN-ASKS.md`. Set a presented ticket
 `active` with owner `orchestrator`; a link alone is not presentation.
 
@@ -585,8 +587,8 @@ inspection, keep it blocked, add the tickets or inbox items carrying the chosen
 fixes to `depends_on`, and do not present it before fixes and a new boundary
 validation start. If an issue
 invalidates a presented inspection, first set the inspection ticket
-`status: blocked`, clear owner, set presentation to `withdrawn` on the ticket
-and its ledger record, mark its page withdrawn, record the reason and times in Presentation
+`status: blocked`, clear owner, set presentation to `withdrawn`, mark its page
+withdrawn, record the reason and times in Presentation
 and `LOG.md`, and tell the user the ask is withdrawn. Then route the chosen
 fixes and add the tickets or inbox items carrying them to `depends_on`. After
 the fixes reach `done` checkpoints for an upcoming or withdrawn inspection,
@@ -783,7 +785,7 @@ exact type contract in `TICKET-CONTRACTS.md`.
 
 Reload every presented human ticket from Objective or its latest Interaction
 log entry and Presentation. Read `HUMAN-ASKS.md`, then rebuild missing or stale
-ask pages and the run's ledger file from those tickets and the bundled template before
+ask pages from those tickets and the bundled template before
 another user-visible message. Tickets, not HTML, determine current presentation
 state and ask content.
 
@@ -835,8 +837,8 @@ The run is complete when:
 
 An empty ticket queue does not mean the run is complete.
 
-When the run is complete, delete its ledger file under `HUMAN-ASKS.md` if it
-exists, then return to the user with a message that opens with the bold line
+When the run is complete, remove its ledger registration under `HUMAN-ASKS.md`,
+then return to the user with a message that opens with the bold line
 `**This orchestrated run is complete.**` and a concise summary under it. Use
 only what is already in the run files:
 

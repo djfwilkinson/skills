@@ -845,8 +845,8 @@ While active:
   external state, and before execution ends;
 - set presentation to `presented` immediately before returning with the ask;
   when the user replies, set it to `upcoming` while the orchestrator works;
-- on `presented` to `upcoming`, remove the live ask-index row and mark the ask
-  page not awaiting a reply; before the next ask, replace the page and row;
+- on `presented` to `upcoming`, mark the ask page not awaiting a reply; before
+  the next ask, replace the page;
 - keep the ticket active across user turns;
 - do not present another human ticket;
 - dispatch or leave active only agent tickets that pass the exact
@@ -859,16 +859,16 @@ the result in `LOG.md`.
 
 If work reaches a product decision, stop short of the choice, record options
 and a recommendation, set presentation to `withdrawn` and execution result to
-`blocked`, update its ask page and ledger record under `HUMAN-ASKS.md`, then reconcile.
+`blocked`, update its ask page under `HUMAN-ASKS.md`, then reconcile.
 Open Discuss and make this ticket depend on it. After Discuss resolves, restore
 Exclusive scope, set this ticket `ready` with presentation `upcoming`, and
 present its next ask as a new complete presentation.
 
 When Completion is met, set presentation to `answered` and execution result to
-`completed`, update its ask page and ledger record, then reconcile. If work cannot
-continue, set presentation to `withdrawn`, update its ask page and ledger record, set
+`completed`, update its ask page, then reconcile. If work cannot
+continue, set presentation to `withdrawn`, update its ask page, set
 execution result to `blocked` or `failed`, then reconcile. If the user stops the
-task, record that result, withdraw it, update its ask page and ledger record, set
+task, record that result, withdraw it, update its ask page, set
 execution result to `blocked`, and reconcile it to `cancelled`. This is the only
 case where the orchestrator performs production work and then reconciles it.
 
