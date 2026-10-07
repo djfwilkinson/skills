@@ -455,7 +455,7 @@ Avoid:
 
 ### Planning depth
 
-A run-level setting for how work reaches implementation: `standard`, where Research feeds implementation Agent Tasks directly, or `reviewed planning`. It is a process decision, and the only one this skill requires to be put to the user. Offered once, after goals are active, and only when a reconciled bootstrap ticket recorded one of the named offer conditions. Recorded as a working hint.
+A confirmed run-level choice between `standard`, where Research feeds Agent Tasks directly, and `reviewed planning`. It is the only process decision the skill puts to the user, is offered at most once after goals become active, and is recorded as a working hint; a proposal or recommendation is not confirmed.
 
 Related:
 - reviewed planning
@@ -468,7 +468,7 @@ Avoid:
 
 ### Reviewed planning
 
-The planning depth in which a change set the proposing ticket classified as moderately complex or higher, or as changing a schema, persistence layer, public API, protocol, data migration, or canonical doc, gets a Plan ticket, two Plan Review tickets, and implementation tickets created from the accepted change plan. Most work is not in that class and still goes straight to an Agent Task.
+The planning depth that routes a change set qualifying under the skill's planning-depth test through a Plan and two Plan Reviews before creating its implementation tickets. Other work still goes straight to Agent Task.
 
 ### Ticket type
 
@@ -484,7 +484,7 @@ Ticket type that closes a knowledge gap. Depth is effort on surrounding context 
 
 Bootstrap is surface when the invocation already states the outcome, acceptance basis and useful paths; deep when discovery is needed.
 
-Its Agent Task drafts carry the classification every agent ticket gives the work it proposes. Under reviewed planning that classification decides which change sets get a change plan.
+Research classifies implementation work it proposes; under reviewed planning that classification determines which change sets need a change plan.
 
 ### Agent Task
 
@@ -502,11 +502,11 @@ The work one change plan governs: one classified draft on its own, or the drafts
 
 ### Plan
 
-Ticket type that writes one change plan for one coherent change set under reviewed planning. Its prompt replaces the shared product-decision rule and carries the full test, its examples, and the local-pattern sentence, so the worker classifies every choice it commits. It is the only type that writes a file under the run directory.
+Ticket type used only under reviewed planning to write one change plan for one change set. It classifies its choices, recording product decisions as open rather than committing them. The change plan is the only worker-written file under the run directory.
 
 ### Change plan
 
-The document a Plan ticket produces at `plans/<plan-ticket-id>.md`, written for the subagent that will implement it and the two reviewers that will attack it. Engine text: it holds no user-facing copy and is never presented for user acceptance. Persistent memory, but not a run file and not a source of run state. Only ever revised, so its path is stable for the life of the change set.
+The persistent, agent-facing document a Plan produces at `plans/<plan-ticket-id>.md` for implementers and reviewers. It is not a run file or user-acceptance artifact. Revision preserves its path for the change set.
 
 Related:
 - plan acceptance
@@ -519,7 +519,7 @@ Avoid:
 
 ### Plan Review
 
-Ticket type that tries to show a change plan will not work or will not deliver what it claims. Exactly two review lenses exist. The orchestrator must not be the reviewer, reviewers never write the plan, and Adversarial Review is not used on a change plan. A Plan Review does not satisfy a required Adversarial Review, and an Adversarial Review does not satisfy plan review.
+Ticket type used only under reviewed planning to attack a change plan through one of exactly two review lenses. The orchestrator does not review, reviewers do not write the plan, and Plan Review and Adversarial Review do not substitute for each other.
 
 ### Review lens
 
@@ -533,7 +533,7 @@ When the completed work is UI, the ticket may put the ux-ui-reviewer skill file 
 
 ### Discuss/Gather Inputs
 
-Ticket type for information, preference, product decision, review, judgement, or acceptance from the user. Orchestrator-handled. A check a subagent can run belongs on an Agent Task, not in the ask. **Discuss** is the shorthand. Its current ask lives in Objective. An acceptance request is returned directly in chat with the result, inspection path and acceptance basis, not presented through a structured questions form.
+Ticket type for information, preference, product decision, review, judgement, or acceptance from the user. Orchestrator-handled. A check a subagent can run belongs on an Agent Task, not in the ask. Review or acceptance covers only product-facing results; an agent boundary inspection accepts the rest. **Discuss** is the shorthand. Its current ask lives in Objective. An acceptance request is returned directly in chat with the result, inspection path and acceptance basis, not presented through a structured questions form.
 
 Related:
 - Human Task
@@ -624,7 +624,7 @@ Related:
 
 ### Module (run)
 
-A grouping of related run work into a manageable part. Status `proposed | active | complete | blocked | retired`. It becomes complete only after its implementation coverage, planning coverage, and required module review resolve. This is not a source-code module and not a UI module.
+A grouping of related run work into a manageable part. Status `proposed | active | complete | blocked | retired`. It becomes complete only after its implementation coverage, planning coverage when reviewed planning applies, and required module review resolve. This is not a source-code module and not a UI module.
 
 Related:
 - project module (a target project's code or directory module)
@@ -644,15 +644,39 @@ What the orchestrator does when a ticket returns or a Human and Agent Task ends:
 
 ### Boundary inspection
 
-A Discuss/Gather Inputs ticket through which the user inspects one coherent batch of results produced by one or more named implementation tickets. It groups each result with the evidence already recorded for it, asks only for judgement a subagent cannot make, and may also be the human-acceptance ticket when acceptance concerns that same batch.
+The acceptance inspection of one coherent batch of results produced by one or more named implementation tickets. It is a human boundary inspection or an agent boundary inspection. Each part of a covered ticket's result has exactly one current boundary inspection, so a ticket with both product-facing and other parts is named by both kinds.
+
+### Human boundary inspection
+
+A Discuss/Gather Inputs boundary inspection through which the user inspects the product-facing results of its covered tickets. It groups each result with the evidence already recorded for it, asks only for judgement a subagent cannot make, and may also be the human-acceptance ticket when acceptance concerns that same batch.
+
+Avoid:
+- presenting code, tests, configuration, or docs outside the product for the user to review
+
+### Agent boundary inspection
+
+An Agent Task boundary inspection that judges whether the parts of each covered result that are not product-facing deliver what their goals, acceptance criteria, user request, confirmed decisions, and accepted change plan require. It records `accepted`, `changes needed`, or `decision needed` per covered ID, changes nothing, and does not repeat boundary validation. The orchestrator accepts by resolving it once every ID is `accepted`.
+
+Related:
+- boundary validation ticket (runs the goal-level checks; a separate ticket)
+- Adversarial Review (tries to break completed work; a different job)
+
+### Product-facing result
+
+User-observable behaviour, interaction, or delivered content, including docs that are part of the product. A workflow the user runs to confirm it still behaves as expected counts only when the ticket changes how that workflow runs and the ask names the scenario and expected observation. Only product-facing results are put to the user for inspection or acceptance, unless the user asked to review something else.
+
+Avoid:
+- treating contributor docs, canonical specs, change plans, evidence files, or other agent-facing files as product docs
+- calling code or a diff a product-facing result
+- treating code, contracts, or tests as product-facing because a workflow later uses them
 
 ### Boundary validation ticket
 
-An Agent Task that checks goal-level, repo-wide or cross-area requirements for the same named implementation tickets as a boundary inspection. It runs independently of the boundary inspection and is not folded into an implementation ticket.
+An Agent Task that checks goal-level, repo-wide or cross-area requirements for every implementation ticket named by the boundary inspections of one batch. It runs independently of those inspections and is not folded into an implementation ticket.
 
 ### Implementation coverage
 
-The requirement that every completed implementation ticket is named by one non-superseded resolved boundary inspection and one resolved boundary validation ticket whose Evidence meets its success conditions before its module or the run completes.
+The requirement that every completed implementation ticket is named by the non-superseded resolved boundary inspections its result needs, human, agent, or both, and one resolved boundary validation ticket whose Evidence meets its success conditions before its module or the run completes.
 
 ### Plan acceptance
 
@@ -660,7 +684,7 @@ The orchestrator's process decision that a reviewed change plan may be implement
 
 ### Planning coverage
 
-The requirement that every change plan whose change set is still in the run is `resolved` and accepted, with its `reviews` resolved or cancelled and every implementation ticket it governs naming it in `plans`, and that no work classified as needing a plan was implemented without one outside a logged departure.
+Under reviewed planning, the requirement that every current change plan is accepted with its reviews closed and governed tickets naming it, and that no work classified as needing one was implemented without it outside a logged departure.
 
 ### Inspection freeze
 
@@ -768,7 +792,7 @@ The orchestrator's user-facing handling of Discuss, Human Task, and Human and Ag
 
 ### Return-to-user ask
 
-The current action, decision, review or acceptance requested from the user. Every ask stands alone for a reader who has only that ask: it opens with one sentence naming what is being decided and what the thing now does for the user, then gives the detail. An artifact that exists only for agents is not put to the user for acceptance. A Human Task includes the applicable procedure, commands, URLs, paths, expected result and evidence to return. Discuss includes the question, essential context, options and expected reply. Acceptance includes the exact result or path, inspection method, acceptance basis and request to accept or describe changes. Human and Agent Task uses only its latest Interaction log ask. Include evidence-backed hints and known recovery steps only when they apply. Every first presentation includes the ticket path, has a derived ask page, and never includes secret values.
+The current action, decision, review or acceptance requested from the user. Every ask stands alone for a reader who has only that ask: it opens with one sentence naming what is being decided and what the thing now does for the user, then gives the detail. An artifact that exists only for agents is not put to the user for acceptance, and neither are code, tests, configuration, or docs outside the product. A Human Task includes the applicable procedure, commands, URLs, paths, expected result and evidence to return. Discuss includes the question, essential context, options and expected reply. Acceptance includes the exact result or path, inspection method, acceptance basis and request to accept or describe changes. Human and Agent Task uses only its latest Interaction log ask. Include evidence-backed hints and known recovery steps only when they apply. Every first presentation includes the ticket path, has a derived ask page, and never includes secret values.
 
 ### Prepared human environment
 
@@ -854,9 +878,11 @@ Avoid:
 ### Defect ticket
 
 One captured defect report and its defect-level lifecycle record, stored as
-`D-<number>.md` in a defect list. It preserves the user's context, copied
-evidence, triage, resolution, review outcomes, and links to orchestrated-run
-tickets. Its stable `D-` ID is not an orchestrated-run ticket ID.
+`D-<number>.md` in a defect list. Its Report preserves the supplied prompt
+verbatim in Captured context and carries a lightly rewritten, user-facing
+version in Summary for later defect-related asks. It also keeps copied evidence,
+triage, resolution, review outcomes, and orchestrated-run links. Its stable
+`D-` ID is not an orchestrated-run ticket ID.
 
 Related:
 - ticket (the bounded work item inside an orchestrated run)
