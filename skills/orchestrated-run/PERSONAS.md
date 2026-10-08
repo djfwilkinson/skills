@@ -69,12 +69,17 @@ A tier describes the capability a persona needs, not a model name. Model names
 change; tiers do not.
 
 - `economy`: the cheapest models that still use tools reliably and follow a
-  structured prompt. Small, fast, or speed-tuned models, or a mid-size model
-  at low reasoning.
+  structured prompt. Small models, or a mid-size model at low reasoning.
 - `balanced`: strong general coding and reasoning at moderate cost. A
   family's mid-size model, or its flagship at default reasoning.
 - `frontier`: the strongest reasoning available. A family's flagship at high
   reasoning.
+
+Never recommend, resolve to, or start a subagent on fast mode or a fast
+variant, meaning a mode or model the client marks as fast or whose name ends
+in `-fast`, unless the user explicitly asks for it for that persona or the
+whole run. Confirming a roster the orchestrator suggested is not that request.
+A small or cheap model that is not a fast variant is allowed.
 
 ## Roster rows
 
@@ -130,13 +135,14 @@ Build the recommended roster mechanically:
 1. List the models the client lets the orchestrator choose for a subagent. If
    the client cannot choose a model per subagent, record every persona as
    `inherit` in `ROSTER.md`, note it in `LOG.md`, and skip the roster ask.
-2. Remove models and modes the user's rules or the invocation exclude, such as
-   modes the user has forbidden. Keep the latest version of each family unless
-   the user named an older one.
+2. Remove fast modes and fast variants unless the user asked for them under
+   Model tiers, and any other model or mode the user's rules or the invocation
+   exclude. Keep the latest version of each family unless the user named an
+   older one.
 3. Place each remaining model in a tier using what the client says about it:
    its description, its position in its family, and its reasoning level. When
    the client gives only names, place each by its family's naming (flagship,
-   mid-size, small, or speed-tuned) and its reasoning suffix, and mark every
+   mid-size, or small) and its reasoning suffix, and mark every
    such placement as inferred in the ask. Do not invent capabilities. When the
    placement is uncertain, say so in the ask.
 4. For each persona, recommend the cheapest model in its tier that meets its

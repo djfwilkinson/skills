@@ -436,6 +436,13 @@ The capability a persona needs, independent of model names: `economy`, `balanced
 Avoid:
 - naming specific models in persona definitions
 
+### Fast variant
+
+A mode or model the client marks as fast, or whose name ends in `-fast`, that trades quality for speed. No subagent starts on one unless the user explicitly asks for it; confirming a suggested roster is not that request. A small or cheap model that is not a fast variant is allowed.
+
+Avoid:
+- treating `economy` tier as permission to use a fast variant
+
 ### Persona session
 
 One subagent conversation for one persona, started on the model and effort its roster row resolves to. It is `running`, `parked` after a checkpoint return, `idle` with no active ticket and available to resume for that persona's next ticket, or `closed`. Resuming a session keeps its context and model, which costs far less than starting a new one.

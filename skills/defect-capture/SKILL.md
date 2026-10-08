@@ -53,7 +53,9 @@ For each submitted defect:
 3. Dispatch one background subagent with the initial ticket-writer prompt from
    `DEFECT-TICKETS.md`, the defect path, the user's context, and the copied
    attachments. Pass the same assignment identifier. Give attachments to the
-   subagent as images when the client supports it.
+   subagent as images when the client supports it. Do not start it in fast
+   mode or on a fast variant, one the client marks as fast or whose name ends
+   in `-fast`, unless the user explicitly asks.
 4. Return to the user after dispatch with the allocated ID and list path. Do
    not wait for other ticket writers before accepting the next defect.
 
