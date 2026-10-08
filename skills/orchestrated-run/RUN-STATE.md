@@ -181,7 +181,7 @@ Model choices: <machine model choices path, or none>
 
 | Persona | Work | Complexity | Model | Effort | Cost | Basis |
 | --- | --- | --- | --- | --- | --- | --- |
-| senior-engineer | coding | highest | <model or inherit> | <effort or default> | <cost per task> | pin / model database / below target / working hint / stand-in |
+| senior-engineer | coding | highest | <model or inherit> | <effort or default> | <cost per task> | pin / model database / near target / below target / working hint / stand-in |
 
 ## Sessions
 
@@ -190,7 +190,7 @@ Session: <client agent ID, or none>
 State: running | parked | idle | closed
 Ticket: <active ticket ID, or none>
 Model: <model and effort the session started with>
-Chosen by: pin | model database | below target | working hint | stand-in
+Chosen by: pin | model database | near target | below target | working hint | stand-in
 Tickets carried: <count>
 ```
 

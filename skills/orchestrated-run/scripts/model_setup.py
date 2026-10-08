@@ -11,8 +11,11 @@ frontier, prices it under the database's cost plan, then finds the best setup:
 each model at one effort, or at any set of efforts for a model named with
 --multi. Each persona takes the cheapest offered row whose score for its work
 type reaches its complexity's target, or the highest-scoring row when none
-does, as under Choosing a model in PERSONAS.md. Setups rank by total shortfall
-below target, then by mean cost per task, weighted by --weight, default 1.
+does, as under Choosing a model in PERSONAS.md. A row within two points below
+the target counts as meeting it when it costs at most two-thirds of the
+cheapest row that does; it is marked near target. Setups rank by total
+shortfall below target, then by mean cost per task, weighted by --weight,
+default 1.
 
 --client takes the client's model names as it lists them, such as
 claude-haiku-5-5-thinking-high or grok-4.7-high, and skips fast variants;
@@ -55,6 +58,8 @@ TARGETS = {"lowest": 0.0, "low": 0.50, "medium": 0.65, "high": 0.80, "highest": 
 EFFORTS = ["non-reasoning", "low", "medium", "high", "xhigh", "max"]
 Z90 = 1.645
 MARGIN = 0.03
+# A row this far below target ranks as meeting it at this multiple of its cost.
+NEAR, NEAR_PRICE = 0.02, 1.5
 
 
 def win(elo, median):
@@ -233,7 +238,16 @@ def key(row, person):
     s = row["score"][person["work"]]
     if s is None or not row["usd"]:
         return math.inf, math.inf
-    return max(0.0, person["target"] - s), row["usd"]
+    short = max(0.0, person["target"] - s)
+    if 0 < short <= NEAR:
+        return 0.0, row["usd"] * NEAR_PRICE
+    return short, row["usd"]
+
+
+def standing(score, person):
+    if score is None or score >= person["target"]:
+        return ""
+    return " near target" if person["target"] - score <= NEAR else " below target"
 
 
 def ranked(offer, person):
@@ -319,14 +333,16 @@ def used_rows(offer, people, pins=None):
 
 def summary(offer, people, weights, pins=None):
     picks = assign(offer, people, pins)
-    vector = [key(pick, p) if pick else (math.inf, math.inf) for p, pick, _ in picks]
+    vector = [(key(pick, p)[0], pick["usd"]) if pick else (math.inf, math.inf) for p, pick, _ in picks]
     short, mean = score(vector, weights)
-    below = sum(s > 0 for s, _ in vector)
+    marks = [standing(pick["score"][p["work"]], p) if pick else " below target" for p, pick, _ in picks]
+    below, near = marks.count(" below target"), marks.count(" near target")
     by_model = {}
     for r in used_rows(offer, people, pins):
         by_model.setdefault(r["model"], []).append(r["effort"])
     text = ", ".join(f"{m} {' and '.join(e)}" for m, e in by_model.items())
-    return f"${mean:.2f} mean cost per task" + (f", {below} personas below target" if below else "") + f": {text}"
+    return (f"${mean:.2f} mean cost per task" + (f", {below} personas below target" if below else "")
+            + (f", {near} near target" if near else "") + f": {text}")
 
 
 def show(title, offer, people, weights, pins=None):
@@ -338,7 +354,7 @@ def show(title, offer, people, weights, pins=None):
         if pick:
             s = pick["score"][p["work"]]
             mark = " (pinned)" if pick.get("pinned") else ""
-            got = "-" if s is None else f"{s:.0%}" + (" below target" if s < p["target"] else "")
+            got = "-" if s is None else f"{s:.0%}" + standing(s, p)
             chosen = f"{pick['model']} | {pick['effort']}{mark} | {got} | ${pick['usd']:.2f}"
         else:
             chosen = "none | - | - | -"

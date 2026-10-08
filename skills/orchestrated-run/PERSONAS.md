@@ -21,19 +21,21 @@ Human tickets have no persona; the orchestrator handles them.
 | `scout` | Research | `triage` and `surface` units that do not pre-authorise deep escalation: lookups across known paths, inventories, bootstrap when the request already states its outcome, acceptance basis, and paths | research | low |
 | `investigator` | Research | `deep` units and `surface` units that pre-authorise deep escalation: unclear project structure, cross-cutting hunts, sources that conflict, gaps a scout returned | research | high |
 | `options-analyst` | Explore Options | alternatives, prototypes, reproductions, and debugging experiments whose result is a recommendation | coding | medium |
-| `architect` | Plan | change plans under reviewed planning | coding | highest |
+| `architect` | Plan | change plans under reviewed planning whose change set touches no high-risk surface and is not cross-cutting | coding | medium |
+| `principal-architect` | Plan | change plans whose change set touches a high-risk surface or is cross-cutting, and plans an `architect` escalated | coding | high |
 | `frontend-planner` | Plan | change plans whose change set only changes what users see: layouts, flows, components, and interface states | visual | high |
-| `consequences-critic` | Plan Review, `consequences` lens | whether a change plan's choices hold, what else must change, ordering, compatibility, and migration risk | review | highest |
+| `consequences-critic` | Plan Review, `consequences` lens | plans that touch no high-risk surface and are not cross-cutting: whether a change plan's choices hold, what else must change, ordering, and compatibility | review | medium |
+| `principal-critic` | Plan Review, `consequences` lens | plans that touch a high-risk surface or are cross-cutting, and plans a `consequences-critic` escalated: the same questions, plus migration risk | review | highest |
 | `product-critic` | Plan Review, `product` lens | whether a change plan reaches the cited goals, acceptance criteria, and canonical sections | review | medium |
-| `fixer` | Agent Task | work classified `trivial`: copy, config values, a rename in one area, an already-specified small fix, and environment preparation | coding | low |
-| `builder` | Agent Task | implementation classified `following an established project pattern` | coding | medium |
-| `senior-engineer` | Agent Task | implementation classified `moderately complex or higher`, or naming a schema, persistence layer, public API, protocol, data migration, or canonical doc; units a builder escalated | coding | highest |
+| `fixer` | Agent Task | work classified `trivial`: copy, config values, a rename in one area, an already-specified small fix, environment preparation, and mechanical repository work such as git commits and separating a run's changes for them | coding | low |
+| `builder` | Agent Task | implementation classified `following an established project pattern`, and `moderately complex or higher` units that touch no high-risk surface and follow an accepted change plan or a named existing example | coding | medium |
+| `senior-engineer` | Agent Task | implementation that touches a high-risk surface; `moderately complex or higher` units with no accepted change plan or named example to follow; units a builder escalated | coding | highest |
 | `inspector` | Agent Task, agent boundary inspection | per-unit acceptance of code, tests, configuration, and docs outside the product while implementation continues | review | medium |
 | `validator` | Agent Task, boundary validation | goal-level, repo-wide, and cross-area checks: tests, builds, lint, typecheck, scripted scenarios | tooling | low |
 | `scenario-tester` | Agent Task | check-producing work that exercises the actual product through a browser, CLI, preview, or prepared artifact, including a defect run's automated product check | tooling | medium |
 | `ux-reviewer` | Agent Task | an Agent Task whose result is a UX/UI review, following the `ux-ui-reviewer` skill | visual | medium |
-| `reviewer` | Adversarial Review | completed work of ordinary risk at a run module boundary | review | medium |
-| `principal-reviewer` | Adversarial Review | the pre-completion review; high-impact or cross-cutting work; review after unexpected test or debugging results or uncertain evidence | review | highest |
+| `reviewer` | Adversarial Review | completed work at a run module boundary, unless the module touched a high-risk surface | review | medium |
+| `principal-reviewer` | Adversarial Review | the pre-completion review, always; modules that touched a high-risk surface; units a `reviewer` escalated | review | highest |
 
 `Work` is the kind of work the persona does:
 
@@ -43,6 +45,10 @@ Human tickets have no persona; the orchestrator handles them.
 - `review`: judges work or plans against requirements; changes nothing.
 - `visual`: judges or plans what users see: screenshots, layouts, flows, and
   interface quality. Implementing an interface is `coding`.
+
+A high-risk surface is a schema, persistence layer, public API, protocol, data
+migration, or security, authentication, or secrets handling. Work touches one
+when its proposing ticket, change plan, or worker names it.
 
 `Complexity` is how hard that work is, from `lowest`, `low`, `medium`, `high`,
 and `highest`. Each maps to a target score for the persona's work type, as a
@@ -58,28 +64,63 @@ proposing ticket. Do not re-investigate to choose.
   escalation; `investigator` otherwise. A scout that cannot meet a unit's
   Completion records the gap and requests deep; add that gap as an
   investigator unit.
-- Agent Task implementation: `trivial` to `fixer`, `following an established
-  project pattern` to `builder`, `moderately complex or higher` or a named
-  schema, persistence layer, public API, protocol, data migration, or canonical
-  doc to `senior-engineer`. A missing label goes to `builder` and is logged.
+- Agent Task implementation: `trivial` to `fixer`; `following an established
+  project pattern` to `builder`; anything that touches a high-risk surface to
+  `senior-engineer`. `moderately complex or higher` goes to `builder` when an
+  accepted change plan governs it or its proposing ticket names an existing
+  example to follow, and to `senior-engineer` otherwise. A named canonical doc
+  alone does not raise the persona. A missing label goes to `builder` and is
+  logged.
+- A fix placed after its implementation ticket has ended: the persona the
+  fix's own classification gives, not the persona of the unit it corrects.
 - Agent Task check or review work: `inspector` for agent boundary inspection,
   `validator` for boundary validation, `scenario-tester` for exercising the
   actual product, `ux-reviewer` for a UX/UI review result, `fixer` for a
   separate environment-preparation ticket. Preparation folded into an
   implementation, validation, or product-check ticket stays with that
   ticket's persona.
+- Mechanical repository work, such as git commits and separating a run's
+  changes for them: `fixer`.
 - Plan: `frontend-planner` when the change set only changes what users see and
-  names no schema, persistence layer, public API, protocol, or data
-  migration; `architect` otherwise, including change sets that mix both.
-- Plan Review: the persona that matches the lens.
-- Adversarial Review: `principal-reviewer` for the pre-completion review and
-  for the escalation cases in the table; `reviewer` otherwise.
+  touches no high-risk surface; `principal-architect` when it touches a
+  high-risk surface or is cross-cutting; `architect` otherwise, including
+  change sets that mix interface and other work.
+- Plan Review: `product-critic` for the product lens. For the consequences
+  lens, `principal-critic` when the plan touches a high-risk surface, is
+  cross-cutting, or a `consequences-critic` escalated it; `consequences-critic`
+  otherwise.
+- Adversarial Review: `principal-reviewer` for the pre-completion review, for
+  a module that touched a high-risk surface, and for a unit a `reviewer`
+  escalated; `reviewer` otherwise.
 
-Every unit on one ticket needs the same persona. When a worker reclassifies a
-unit above its persona, it records the new label and blocks that unit; move the
-unit to a ticket for the matching persona. Moving work between personas is a
-process decision. Never move work to a lower-complexity persona to save cost
-after a worker recorded that it needs a higher one.
+Every unit on one ticket needs the same persona. Moving work between personas
+is a process decision. Never move work to a lower-complexity persona to save
+cost after a worker recorded that it needs a higher one.
+
+## Escalation
+
+Cheaper personas take work first; higher ones take it on evidence. A worker
+that finds a unit needs more than its brief covers records an `Escalate` line
+on that unit's checkpoint, under the checkpoint format in
+`TICKET-CONTRACTS.md`, naming the persona and the evidence:
+
+- an implementer that finds a high-risk surface the proposing ticket did not
+  name, or a design decision no plan or existing example covers, checkpoints
+  the unit `blocked` and escalates;
+- an `architect` or `frontend-planner` that finds its change set touches a
+  high-risk surface or is cross-cutting checkpoints the unit `blocked` and
+  escalates to `principal-architect`;
+- a `reviewer` or `consequences-critic` that finds an unnamed high-risk
+  surface, cross-cutting impact, unexpected test or debugging results, or
+  evidence it cannot settle records its findings, checkpoints the unit `done`,
+  and escalates the same scope.
+
+Log each escalation in `LOG.md`. Move a blocked unit to a ticket for the named
+persona, with the worker's checkpoints on Reads so it does not repeat them.
+For a `done` review unit, add a unit for the named persona covering the same
+scope, with the earlier findings on Reads. Two failed re-inspections also
+escalate a fix, under Checkpoints in `SKILL.md`. The pre-completion review
+needs no escalation; it is always `principal-reviewer`'s.
 
 ## Model database and choices
 
@@ -107,9 +148,9 @@ or chooses it in the models question or a model ask, with
 `scripts/model_setup.py --pin <persona>=<model>@<effort>`, `--unpin
 <persona>`, or `--write target`.
 
-To rate or re-rate models, or to find which models and efforts the client
-should offer, follow [RATING-MODELS.md](RATING-MODELS.md), and only when the
-user asks for it.
+To rate or re-rate models, to find which models and efforts the client should
+offer, or to report which personas and models past runs used, follow
+[RATING-MODELS.md](RATING-MODELS.md), and only when the user asks for it.
 
 Match a client's model to a row by model and effort. A client name that
 combines both, such as `grok-4.7-high`, matches that row. When a row's effort is
@@ -144,6 +185,8 @@ started with.
    persona's pin when the client offers it, otherwise the cheapest row whose
    score for the persona's work type meets the persona's target, and otherwise,
    when no offered row meets it, the highest-scoring row, marked below target.
+   A row up to two points below the target counts as meeting it, marked near
+   target, when it costs at most two-thirds of the cheapest row that meets it.
    It skips fast variants, unscored models, and excluded rows; leave out of
    `--client` whatever working hints or the user's rules exclude. Run it once
    per run and again whenever the client's models change, such as when a
@@ -165,8 +208,8 @@ started with.
 6. When nothing is usable, keep that persona's tickets `ready` and open a model
    ask for that persona. Other personas continue.
 
-Report every persona whose model is below its target in the models question
-and the next progress update.
+Report every persona whose model is below or near its target in the models
+question and the next progress update.
 
 If the client cannot choose a model per subagent, record every persona as
 `inherit` in `ROSTER.md`, note it in `LOG.md`, and skip the models question.
@@ -193,7 +236,7 @@ The question:
   not the cheapest candidate;
 - names the machine database path and version, the machine model choices path
   and its pins when it exists, any pin the client does not offer, every
-  persona whose model is below its target, and the client's models that the
+  persona whose model is below or near its target, and the client's models that the
   database does not score;
 - says which persona and model bootstrap uses;
 - says when the client cannot run subagents in the background or resume them,
@@ -290,7 +333,18 @@ temporary artifact temporary, and recommend only what the evidence supports.
 ```text
 architect: You write change plans that an implementer can follow mechanically
 and two critics will attack. Commit only local choices, record product
-decisions as open, and state the observable effect of every change.
+decisions as open, and state the observable effect of every change. When the
+change set turns out to touch a schema, persistence layer, public API,
+protocol, data migration, or security, authentication, or secrets handling, or
+to reach across modules, escalate it to principal-architect.
+```
+
+```text
+principal-architect: You write change plans for high-risk or cross-cutting
+change sets that an implementer can follow mechanically and a principal critic
+will attack. Commit only local choices, record product decisions as open, and
+state the observable effect of every change. Give every data, contract, and
+security change its ordering, compatibility, and rollback.
 ```
 
 ```text
@@ -304,8 +358,18 @@ choices the goals do not settle as open.
 
 ```text
 consequences-critic: You try to show a change plan will break something or
-cannot work as ordered. Trace callers, data, migrations, and compatibility.
-Report only findings with evidence.
+cannot work as ordered. Trace callers, data, and compatibility. Report only
+findings with evidence. When the plan touches a schema, persistence layer,
+public API, protocol, data migration, or security, authentication, or secrets
+handling it did not name, or reaches further than you can trace, escalate to
+principal-critic.
+```
+
+```text
+principal-critic: You try to show a high-risk or cross-cutting change plan
+will break something or cannot work as ordered. Trace callers, data,
+migrations, security, and compatibility across every area it touches, and look
+for what a lighter review would miss. Report only findings with evidence.
 ```
 
 ```text
@@ -317,13 +381,16 @@ canonical sections, and report where they diverge.
 ```text
 fixer: You make small, fully specified changes quickly and exactly. Change
 nothing beyond the unit. If a unit turns out to need design decisions or wider
-changes, reclassify it and block it rather than stretching.
+changes, reclassify it, escalate it, and block it rather than stretching.
 ```
 
 ```text
-builder: You implement by following the project's established patterns. Find
-the nearest existing example and match it. If a unit needs decisions beyond an
-existing pattern, reclassify it as moderately complex or higher and block it.
+builder: You implement by following an accepted change plan or the project's
+established patterns. Follow the plan step by step, or find the nearest
+existing example and match it. If a unit needs a design decision neither
+covers, or touches a schema, persistence layer, public API, protocol, data
+migration, or security, authentication, or secrets handling, escalate it to
+senior-engineer and block it.
 ```
 
 ```text
@@ -361,7 +428,9 @@ following the ux-ui-reviewer skill file on Reads.
 ```text
 reviewer: You try to show completed work is wrong, incomplete, or inconsistent
 with the run. Check it against its goals, acceptance criteria, non-goals, and
-working hints, and report evidence for each finding.
+working hints, and report evidence for each finding. When you find
+cross-cutting impact, unexpected test or debugging results, or evidence you
+cannot settle, escalate the scope to principal-reviewer.
 ```
 
 ```text

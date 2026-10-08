@@ -83,9 +83,10 @@ database, reads the persona table in `PERSONAS.md`, and reports:
 
 Options:
 
-- `--multi <model>` lets a model be offered at several efforts at once, such
-  as Grok when the client offers more than one of its efforts; the report
-  names the efforts chosen.
+- `--multi <model>` lets a model be offered at several efforts at once, only
+  for a client that offers more than one effort of that model. Clients
+  usually offer one effort per model, Grok included. The report names the
+  efforts chosen.
 - `--weight <persona>=<n>` sets how often a persona works relative to the
   others; personas weigh equally otherwise.
 - `--write target` saves the best setup as the target in the machine model
@@ -99,6 +100,17 @@ which the script lists, on an interpolated row, or on an estimated cost. The
 analysis ignores provider diversity, vision, and long context, which Choosing a
 model weighs per ticket; its table shows the cheapest other-provider row for
 each persona so the user can judge review independence.
+
+## Usage across runs
+
+`scripts/run_usage.py` shows how runs used personas and models, to check
+whether targets and routing send work where they should. It reads every run
+registered in the device action ledger, or the runs and projects given as
+paths, and reports per run its tickets, human tickets, fix tickets, and units
+per agent ticket; and per persona and per model, tickets and share of cost.
+Each persona's model comes from the run's `ROSTER.md`, or, with `--client` or
+`--available`, from what Choosing a model gives for the client's models now.
+Only personas recorded in ticket YAML count; it lists the rest by ticket type.
 
 ## Scoring
 
@@ -152,6 +164,13 @@ A persona's complexity maps to a target score, set in `scripts/model_setup.py`:
 meets it cannot be told apart from the frontier. Each lower step is at least
 that wide, so neighbouring targets are separable; the lower steps are wider so
 cheaper models can meet them.
+
+A row up to two points below a target counts as meeting it, marked near
+target, when it costs at most two-thirds of the cheapest offered row that meets
+the target. Two points is well inside every score's interval, so paying half as
+much again or more for that difference is not worth it. The script ranks such a
+row as meeting the target at one and a half times its cost, so it wins only
+under that condition.
 
 Cost is the Artificial Analysis cost per Intelligence Index task, in US
 dollars. It measures tokens used as well as price, so a cheap-per-token model

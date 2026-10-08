@@ -210,6 +210,7 @@ Changed paths:
 Checks: <this unit's Completion checks and results>
 Includes: <inbox item IDs this checkpoint carries, or none>
 For review: <what an inspector or reviewer needs, or none>
+Escalate: <persona this unit needs, and the evidence, or none>
 Next: <next unit or fix, or none>
 ```
 
@@ -240,9 +241,10 @@ units build on what the fix changes; the worker must place it `now`.
 
 A streaming ticket is one whose Objective says further units will arrive
 through its inbox, such as an inspection or review that follows other
-tickets' checkpoints. Its session parks with an empty queue rather than
-completing. `closing` tells it no further units will arrive: finish the queue,
-then complete.
+tickets' checkpoints, or an implementation ticket awaiting fix requests for
+its units. Its session parks with an empty queue rather than completing.
+`closing` tells it no further units will arrive: finish the queue, then
+complete.
 
 The worker records each item it has read in `## Inbox responses`, with what it
 did and, for a fix request, its placement and reason:
@@ -328,6 +330,17 @@ and Reads to name the plan, governing goals and acceptance criteria, non-goals
 and working hints. Product-lens Reads also name the end user and cited
 canonical sections or their recorded gaps.
 
+An implementation ticket is a streaming ticket. Its Objective says fix
+requests and added units may arrive through its inbox after its last unit, so
+its session parks instead of completing. Its work has finished when every unit
+and placed fix has a `done` or `blocked` checkpoint and every inbox item has a
+response. Send `closing` once every covered ID on it with non-product parts has
+a current `accepted` agent inspection verdict, and its batch's boundary
+validation has returned with every issue routed. When another ticket for the
+same persona is `ready` and its units cannot join this one under Grouping in
+`SKILL.md`, send `closing` as soon as no fix request is pending, and place later
+fixes as for an ended ticket.
+
 A boundary validation ticket is its own Agent Task for the `validator`. It
 checks goal-level, repo-wide, or cross-area requirements for the
 implementation tickets it names, on a stable tree. Do not fold wider
@@ -339,8 +352,10 @@ unit or separately placed fix, and its `Covers` line names that ID. It is a
 streaming ticket that follows the implementation tickets its units cover.
 A unit is ready once the checkpoint it covers is reconciled `done` with a
 snapshot or a recorded reason for none; the ticket is `ready` once its first
-unit is. Send `closing` once every implementation ticket it follows has ended
-and every covered ID's current verdict is `accepted`. Each
+unit is. Keep it open while any implementation ticket in the run is active or
+`ready`, and send new inspection units to it rather than creating another
+inspection ticket. Send `closing` once no implementation ticket is active or
+`ready` and every covered ID's current verdict is `accepted`. Each
 unit's Objective names the parts of the covered result it judges. Completion
 requires a verdict for each covered ID. Objective and Completion prohibit
 changes to project files, external state, and prepared human environments.
@@ -439,8 +454,10 @@ severable work that stays correct under every option. Record the smallest
 decision, options, recommendation, completed work, and withheld boundary in
 Blockers / follow-ups and checkpoint that unit blocked.
 
-If a unit needs a higher classification than your persona brief covers,
-record the label and why, and checkpoint it blocked.
+If a unit needs more than your persona brief covers, record the label and
+why, name the persona it needs and the evidence on the checkpoint's Escalate
+line, and checkpoint it blocked. A review unit records its findings first and
+escalates a done unit when its brief says to.
 ```
 
 When resuming a parked or idle session, send only what changed: for a parked
@@ -507,6 +524,9 @@ Meet each unit's Completion. Check that, and nothing wider. Wider tests, lint,
 typecheck, or cross-area review are not this ticket's job unless a unit's
 Objective and Completion expressly make them so. An inspector reviews each
 checkpoint while you continue, and its findings reach you as fix requests.
+When this ticket implements, fix requests may still arrive after your last
+unit's checkpoint: keep execution_result null and return, until a closing
+item arrives.
 
 Record on the ticket, per unit:
 - work performed
@@ -597,9 +617,9 @@ Record on the ticket, per unit:
 Under reviewed planning, write one agent-facing change plan for one change set at
 `plans/<plan-ticket-id>.md`. Its path is stable. The active Plan worker owns its
 content; otherwise only the orchestrator may change its Status and revisions
-banner. A Plan ticket has one unit. The `architect` or `frontend-planner`
-session takes the next Plan ticket for that persona while critics review the
-last one.
+banner. A Plan ticket has one unit. The `architect`, `principal-architect`, or
+`frontend-planner` session takes the next Plan ticket for that persona while
+critics review the last one.
 
 Assignment prompt, after the shared agent rules:
 
@@ -656,9 +676,10 @@ Under reviewed planning, try to show that a change plan will not work or will
 not deliver what it claims. One lens per ticket, named in Objective. Exactly
 two lenses exist: `consequences` and `product`.
 
-Neither lens depends on the other. Once both are `ready`, dispatch them
-together; their shared read is not a conflict. The `consequences-critic` and
-`product-critic` personas own the two lenses. A Plan Review ticket has one
+Neither lens depends on the other. When a round has both and both are
+`ready`, dispatch them together; their shared read is not a conflict. The
+`consequences-critic` or `principal-critic` owns the consequences lens, and
+the `product-critic` owns the product lens. A Plan Review ticket has one
 unit. The orchestrator does not review, reviewers do not write the plan, and
 Adversarial Review does not replace this type.
 

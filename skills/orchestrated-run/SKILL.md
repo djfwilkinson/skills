@@ -61,8 +61,8 @@ subagent's Reads; copy its persona brief from `PERSONAS.md` and its shared
 rules and type prompt from `TICKET-CONTRACTS.md`.
 
 Read [RATING-MODELS.md](RATING-MODELS.md) only when the user asks to rate
-models, re-rate the model database, or find which models and efforts to offer;
-runs never need it.
+models, re-rate the model database, find which models and efforts to offer, or
+report which personas and models past runs used; runs never need it.
 
 ## Run files
 
@@ -380,16 +380,21 @@ this order:
    ticket that settles it, or move the unit to a ticket for the persona its
    worker named. Send the result through the inbox as a decision or added unit
    when it lands.
+6. For a checkpoint with an `Escalate` line, follow Escalation in
+   `PERSONAS.md`.
 
 Route findings to the persona that owns the work. When a review finds changes
-needed in a unit whose ticket is still active, decide which findings become
-work, then send each as a fix request through that ticket's inbox. Mark it
-`blocking` when later units build on what it changes; otherwise leave placement
-to the worker. When the ticket has ended, add the fix as a unit with its own
-Reads to the same persona's active ticket, or create a ticket for that persona
-when it has none. A finding that meets the product-decision test goes to
-Discuss first; send a `hold` naming the paths or choices to leave alone until
-the decision arrives.
+needed in a unit whose ticket is still active, including one parked after its
+last unit, decide which findings become work, then send each as a fix request
+through that ticket's inbox. Mark it `blocking` when later units build on what
+it changes; otherwise leave placement to the worker. When the ticket has ended,
+classify the fixes themselves and choose their persona under Choosing a persona
+in `PERSONAS.md`. Put the fixes one review or inspection found for one persona
+in one unit with its own Reads, never a unit or ticket per finding. Add it to
+that persona's active ticket, or create one ticket for it when the persona has
+none. A finding that meets the product-decision test goes to Discuss first;
+send a `hold` naming the paths or choices to leave alone until the decision
+arrives.
 
 Every fix a worker places reaches a checkpoint. Re-inspect it by adding an
 inspection unit whose `Covers` line names the original unit and the fix. When
@@ -498,7 +503,7 @@ Task ends:
    Leave worker-maintained sections as the worker wrote them. Units added
    through the inbox count as the ticket's units; do not copy them into Work
    units. Handle each checkpoint not yet reconciled under Checkpoints steps 3
-   to 5, so the last unit is routed to review like the others. Route every
+   to 6, so the last unit is routed to review like the others. Route every
    inbox item without a response as new work under Grouping.
 2. Clear `owner`, and mark the session `idle` or `closed` in `ROSTER.md`.
 3. Decide the persistent ticket `status`. `completed` is not automatically `resolved`. After return, set `ready` (reassign the same ticket), `blocked`, `resolved`, or `cancelled`. Keeping it for further work means `ready` and `owner` cleared. When reassigning a blocked ticket, state what its checkpoints already cover so the next worker does not repeat it.
@@ -545,17 +550,23 @@ starts when Evidence shows otherwise.
 
 Agent boundary inspection streams. Each `done` checkpoint gets an inspection
 unit under Checkpoints while its implementer continues, and its findings reach
-the implementer as fix requests.
+the implementer as fix requests. One inspection ticket stays open while any
+implementation ticket is active or `ready`. Implementation tickets stream too:
+each stays parked after its last unit until its inspection accepts it, under
+the implementation-ticket rule in `TICKET-CONTRACTS.md`.
 
 Human boundary inspection and boundary validation wait for the batch. A batch
-is one implementation ticket by default, or several that complete together
-for one user amendment set. When the first ticket of a batch becomes active,
-create its human inspection, when it has product-facing parts, and its
-boundary validation, record covered tickets in their Objectives, and keep
-them blocked on those tickets. Present one grouped human inspection after the
-batch ends. Split only when results cannot be inspected coherently or delay
-would stall the run; never split merely because the batch has several units,
-modules, or check sets, and do not wait for unknown future work.
+is, by default, the implementation tickets of one run module, or several that
+finish together for one user amendment set. It holds the tickets that exist
+when its first becomes active and any created for it before their work
+finishes; do not wait for unknown future work. When the first ticket of a
+batch becomes active, create its human inspection, when it has product-facing
+parts, and its boundary validation, record covered tickets in their
+Objectives, and keep them `blocked` until those tickets' work has finished,
+not until the tickets resolve. Present one grouped human
+inspection once the batch's work has finished. Split only when results cannot
+be inspected coherently or delay would stall the run; never split merely
+because the batch has several tickets, units, or check sets.
 
 Boundary validation checks a stable tree. Dispatch it when no running session
 has uncheckpointed changes on the paths its checks exercise. When repo-wide
@@ -626,8 +637,9 @@ assignment, or dispatch actions.
 
 Reconcile a Plan return by result:
 
-- `completed`: create the round's Plan Review tickets, replace `reviews` and
-  `depends_on` with their IDs, and set the Plan `blocked`;
+- `completed`: create the round's Plan Review tickets, one per lens the round
+  needs, replace `reviews` and `depends_on` with their IDs, and set the Plan
+  `blocked`. A first draft needs both lenses;
 - `blocked` on a choice or required investigation: block it on the Discuss,
   Research, or Explore Options ticket that settles it; create no review;
 - first `failed`: reassign it; second `failed`: block it on Discuss asking
@@ -650,12 +662,14 @@ If the user asks to see plans, record that working hint and give the path in
 that pass's progress update; the plan is reading material, not an ask.
 
 Review only revised parts unless the revision is high-impact or cross-cutting.
-Settle contradictory findings through Discuss when they require a product
-decision. Cap each finding at two revision-and-review rounds against the same
+Send a revision only to the lenses whose findings or settled Discuss choices it
+answers; send it to both when it answers both, changes the Approach, or is
+high-impact or cross-cutting. Settle contradictory findings through Discuss
+when they require a product decision. Cap each finding at two revision-and-review rounds against the same
 plan part. After round two, use Discuss for an approach rejection or product
 decision; apply or decline a process finding with a reason. Review the resulting
-revision through both lenses only for faithful application, reopening the
-finding only on new evidence.
+revision through the lenses whose findings it answers, only for faithful
+application, reopening the finding only on new evidence.
 
 Never cancel a change plan because of a review. A review that rejects the
 approach itself is evidence of an unresolved unknown or an undecided choice:
@@ -690,15 +704,15 @@ propose newly classified work.
 The orchestrator must not be the reviewer. Default to one Adversarial Review
 unit at each module boundary, batching several small related modules when
 useful, and one before completing the run. A module boundary is reached when
-the implementation work for that module has ended. Add each boundary's unit to
+the implementation work for that module has finished. Add each boundary's unit to
 the `reviewer`'s active Adversarial Review ticket through its inbox, so review
 of one module runs while later modules are built. Name the covered work's
 latest snapshots on each unit's Reads. That ticket is a streaming
 ticket; send `closing` when no further module boundary is expected before the
 pre-completion review. Use the
-`principal-reviewer` for the pre-completion review and for earlier review
-after high-impact or cross-cutting changes, unexpected test or debugging
-results, or uncertain evidence. After remediation, review the changed surface;
+`principal-reviewer` for the pre-completion review, always; earlier, only for a
+module that touched a high-risk surface, under Choosing a persona in
+`PERSONAS.md`, or for scope a `reviewer` escalated. After remediation, review the changed surface;
 repeat a full review only when the remediation is itself high-impact or
 cross-cutting. Do not run overlapping reviews of the same completed work. A
 pre-completion review may also satisfy the last module boundary when its Reads

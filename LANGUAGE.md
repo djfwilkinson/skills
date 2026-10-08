@@ -417,7 +417,19 @@ The kind of work a persona does: `coding`, `research`, `tooling`, `review`, or `
 
 ### Complexity
 
-How hard a persona's work is, from `lowest`, `low`, `medium`, `high`, and `highest`. Each maps to a target score for the persona's work type, as a percentage of the frontier: 0%, 50%, 65%, 80%, and 90%. A persona takes the cheapest offered model that meets its target, or the highest-scoring one when none does.
+How hard a persona's work is, from `lowest`, `low`, `medium`, `high`, and `highest`. Each maps to a target score for the persona's work type, as a percentage of the frontier: 0%, 50%, 65%, 80%, and 90%. A persona takes the cheapest offered model that meets its target, or the highest-scoring one when none does. A model up to two points below the target counts as meeting it, near target, when it costs at most two-thirds of the cheapest model that meets it.
+
+### High-risk surface
+
+A schema, persistence layer, public API, protocol, data migration, or security, authentication, or secrets handling. Work touches one when its proposing ticket, change plan, or worker names it. Touching one sends planning to `principal-architect`, implementation to `senior-engineer`, the consequences lens to `principal-critic`, and module review to `principal-reviewer`.
+
+### Escalation
+
+Moving work to a higher-complexity persona on a worker's evidence, recorded on the unit's checkpoint `Escalate` line. An implementer escalates by blocking the unit; a reviewer or critic records its findings and escalates the same scope for a stronger review. Cheaper personas take work first, and work is never moved back down after a worker recorded that it needs more.
+
+Avoid:
+- escalating to save effort rather than on evidence
+- escalating the pre-completion review, which is always `principal-reviewer`'s
 
 ### Model database
 
@@ -505,7 +517,7 @@ Avoid:
 
 ### Streaming ticket
 
-An agent ticket whose Objective says further units will arrive through its inbox, such as an agent boundary inspection following implementation checkpoints or an Adversarial Review following module boundaries. Its session parks with an empty queue instead of completing, and completes only after a `closing` item. An inspection gets `closing` once the tickets it follows have ended and every covered ID's current verdict is `accepted`.
+An agent ticket whose Objective says further units will arrive through its inbox, such as an agent boundary inspection following implementation checkpoints, an Adversarial Review following module boundaries, or an implementation ticket awaiting fix requests for its units. Its session parks with an empty queue instead of completing, and completes only after a `closing` item. An inspection gets `closing` once no implementation ticket is active or ready and every covered ID's current verdict is `accepted`. An implementation ticket gets it once its inspection has accepted its units and its batch's boundary validation has returned, or earlier when a ready ticket for the same persona cannot join it. Its work has finished, for batches and module boundaries, when every unit and placed fix has a `done` or `blocked` checkpoint.
 
 ### Fix request
 
@@ -797,7 +809,7 @@ Avoid:
 
 ### Boundary validation ticket
 
-An Agent Task, run by the `validator`, that checks goal-level, repo-wide or cross-area requirements for every implementation ticket in one batch, once that batch has ended, on a stable tree. Its Evidence records the tree it checked, and it becomes stale when a later `done` checkpoint changes a path its checks cover. It runs independently of the boundary inspections and is not folded into an implementation ticket.
+An Agent Task, run by the `validator`, that checks goal-level, repo-wide or cross-area requirements for every implementation ticket in one batch, by default one run module's, once that batch's work has finished, on a stable tree. Its Evidence records the tree it checked, and it becomes stale when a later `done` checkpoint changes a path its checks cover. It runs independently of the boundary inspections and is not folded into an implementation ticket.
 
 ### Implementation coverage
 
