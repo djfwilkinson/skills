@@ -398,54 +398,79 @@ Avoid:
 
 ### Persona
 
-A standing role that executes agent tickets of exactly one ticket type, with a model tier, a model confirmed in the roster, and a brief copied into its assignment prompt. A ticket type may have several personas of different complexity, such as `fixer`, `builder`, and `senior-engineer` for Agent Task. At most one ticket per persona is active at a time; parallelism comes from different personas. Human tickets have no persona.
+A standing role that executes agent tickets of exactly one ticket type, with a work type, a complexity, and a brief copied into its assignment prompt. Its model is chosen from the model choices or model database each time a session starts. A ticket type may have several personas of different complexity, such as `fixer`, `builder`, and `senior-engineer` for Agent Task. At most one ticket per persona is active at a time; parallelism comes from different personas. Human tickets have no persona.
 
 Related:
 - roster
 - persona session
-- model tier
+- work type
+- complexity
 
 Avoid:
 - running two tickets for one persona at once
 - giving one ticket units that need different personas
+- naming specific models in persona definitions
+
+### Work type
+
+The kind of work a persona does: `coding`, `research`, `tooling`, `review`, or `visual`. A model is scored per work type.
+
+### Complexity
+
+How hard a persona's work is, from `lowest`, `low`, `medium`, `high`, and `highest`. Each maps to a target score for the persona's work type, as a percentage of the frontier: 0%, 50%, 65%, 80%, and 90%. A persona takes the cheapest offered model that meets its target, or the highest-scoring one when none does.
+
+### Model database
+
+The JSON record of raw benchmark results for each model at each measured effort level, whether or not the client offers it now, with its provider, list cost and tokens per task, the frontier those results are scored against, the cost plan, and excluded models. `scripts/model_setup.py` scores each row from it: a score per work type, as a percentage of the frontier, and a dollar cost per task. Results are refreshed only when the user asks. The skill publishes the default model database; the machine model database at `~/.agent-runs/models.json` is copied from it when missing and is what runs use.
+
+Related:
+- complexity
+- model choices
+- models question
+
+Avoid:
+- overwriting an edited machine model database without the user
+- storing scores instead of results, since scores move with the frontier
+- using a model the database does not rate
+
+### Model choices
+
+The machine-level file `~/.agent-runs/model-choices.md` with pins and a target. A pin is a model and effort the user chose for one persona; a run uses it when the client offers it and otherwise chooses that persona from the model database. The target is the best setup if the client's efforts could be changed, for reference only. Changed only when the user asks; `Models` working hints override it for one run.
+
+Related:
+- model database
+- roster
+
+Avoid:
+- writing it without the user
+- choosing from the target
 
 ### Roster
 
-The run's confirmed mapping from each persona to a roster row, recorded in `ROSTER.md` with the state of each persona session. The orchestrator recommends it from the models the client offers, by tier, and the user confirms it once, early in the run. It is one of the two process decisions put to the user; a roster-change ask reopens one row when it cannot be resolved and its fallback is `ask`. A confirmed roster is also saved as the device default for the next run's recommendation.
+The run's record, in `ROSTER.md`, of the model chosen for each persona and the state of each persona session. The orchestrator chooses each model from the machine model choices, then the machine model database, preferring the cheapest that meets the persona's complexity, and the user confirms the roster once through the models question.
 
 Avoid:
 - treating the roster as choosing the orchestrator's own model
-- substituting a lower-tier model, or an effort below the range, without the user
+- choosing a model rated below the persona's complexity without the user
 
-### Roster row
+### Models question
 
-One persona's entry in the roster: a model, a preferred effort, an effort range such as `medium-xhigh`, and a fallback. It is resolved each time a session starts, from what the client offers then: the preferred effort, else the nearest level in range with ties going higher, else the fallback.
+The direct yes-or-no question at run start, "Use the machine models?", showing the model each persona would use. It is not a human ticket. `No` opens the model ask.
 
-### Effort range
+### Model ask
 
-The reasoning-effort levels a roster row accepts, from `low`, `medium`, `high`, and `xhigh`, or the client's own names in its order. A model with no effort choice satisfies any range at its default.
-
-### Roster fallback
-
-What a roster row does when nothing in its range is available: a named fallback model and range, `suggest` (the best same-tier or higher match, reported to the user), or `ask` (hold that persona's work and present a roster-change ask). The roster has one default fallback; a row may override it.
-
-### Model tier
-
-The capability a persona needs, independent of model names: `economy`, `balanced`, or `frontier`. The orchestrator places each available model in a tier from what the client says about it and recommends the cheapest model in each persona's tier.
-
-Avoid:
-- naming specific models in persona definitions
+A Discuss ticket where the user states model choices for the run, recorded as `Models` working hints. It covers every persona after `No` to the models question, or one persona when nothing it can use is available.
 
 ### Fast variant
 
-A mode or model the client marks as fast, or whose name ends in `-fast`, that trades quality for speed. No subagent starts on one unless the user explicitly asks for it; confirming a suggested roster is not that request. A small or cheap model that is not a fast variant is allowed.
+A mode or model the client marks as fast, or whose name ends in `-fast`, that trades quality for speed. No subagent starts on one unless the user explicitly asks for it; answering `Yes` to the models question is not that request. A small or cheap model that is not a fast variant is allowed.
 
 Avoid:
-- treating `economy` tier as permission to use a fast variant
+- treating a low cost or low complexity as permission to use a fast variant
 
 ### Persona session
 
-One subagent conversation for one persona, started on the model and effort its roster row resolves to. It is `running`, `parked` after a checkpoint return, `idle` with no active ticket and available to resume for that persona's next ticket, or `closed`. Resuming a session keeps its context and model, which costs far less than starting a new one.
+One subagent conversation for one persona, started on the model and effort chosen for it under Choosing a model. It is `running`, `parked` after a checkpoint return, `idle` with no active ticket and available to resume for that persona's next ticket, or `closed`. Resuming a session keeps its context and model, which costs far less than starting a new one.
 
 ### Work unit
 
@@ -640,7 +665,7 @@ Related:
 - product decision
 
 Avoid:
-- using Discuss for process decisions the orchestrator owns, other than the roster and roster-change asks and the planning-depth offer
+- using Discuss for process decisions the orchestrator owns, other than the model ask and the planning-depth offer
 
 ### Human Task
 
@@ -736,7 +761,7 @@ Avoid:
 
 ### Assignment
 
-The act of giving one ready agent ticket to its persona's session before work starts: confirm dependencies, check every unit for conflicts against active tickets, including parked sessions' remaining units, and other tickets in the dispatch wave, fill Reads and Work units, create the ticket inbox, set status `active` and owner, then resume the persona's idle session or start one on the model and effort its roster row resolves to. Selecting a ready Human and Agent Task permits only tickets that pass the explicit read-only, disjoint concurrency test; allow no concurrent agent ticket when uncertain.
+The act of giving one ready agent ticket to its persona's session before work starts: confirm dependencies, check every unit for conflicts against active tickets, including parked sessions' remaining units, and other tickets in the dispatch wave, fill Reads and Work units, create the ticket inbox, set status `active` and owner, then resume the persona's idle session or start one on the model and effort chosen for it under Choosing a model. Selecting a ready Human and Agent Task permits only tickets that pass the explicit read-only, disjoint concurrency test; allow no concurrent agent ticket when uncertain.
 
 ### Reconciliation
 

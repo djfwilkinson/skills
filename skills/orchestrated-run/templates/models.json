@@ -1,0 +1,1261 @@
+{
+  "version": 1,
+  "rated": "2026-10-08",
+  "source": "Artificial Analysis leaderboard, under RATING-MODELS.md",
+  "plan": {
+    "description": "Cursor Teams and Enterprise: $0.25 per 1M tokens on third-party models, Grok and Composer exempt; Grok at 40% of list cost, a user estimate of the Enterprise rate",
+    "tokenRatePerMillion": 0.25,
+    "exempt": [
+      "grok-",
+      "composer-"
+    ],
+    "discounts": {
+      "grok-": 0.6
+    }
+  },
+  "excluded": [],
+  "rows": [
+    {
+      "model": "claude-haiku-5-5",
+      "effort": "low",
+      "provider": "anthropic",
+      "source": "Claude Haiku 5.5@low",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.126262626262626,
+        "scicode": 0.491898148148148,
+        "lcr": 0.72,
+        "hle": 0.270157553290083,
+        "critpt": 0.0914285714285714,
+        "omniscienceAccuracy": 0.3325,
+        "gdpvalNormalized": 0.31247
+      },
+      "listCostPerTask": 0.02445936101890973,
+      "costEstimated": false,
+      "tokensPerTask": 624885.4302131932,
+      "prices": [
+        0.1,
+        0.5
+      ]
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "effort": "medium",
+      "provider": "anthropic",
+      "source": "Claude Haiku 5.5@medium",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.151515151515152,
+        "scicode": 0.489583333333333,
+        "lcr": 0.773333333333333,
+        "hle": 0.337812789620019,
+        "critpt": 0.128571428571429,
+        "omniscienceAccuracy": 0.3403333333333333,
+        "gdpvalNormalized": 0.38841999999999993
+      },
+      "listCostPerTask": 0.04703084793955566,
+      "costEstimated": false,
+      "tokensPerTask": 1409863.2619878484,
+      "prices": [
+        0.1,
+        0.5
+      ]
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "effort": "high",
+      "provider": "anthropic",
+      "source": "Claude Haiku 5.5@high",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.217171717171717,
+        "scicode": 0.487268518518519,
+        "lcr": 0.773333333333333,
+        "hle": 0.3725671918443,
+        "critpt": 0.185714285714286,
+        "omniscienceAccuracy": 0.3478333333333333,
+        "gdpvalNormalized": 0.460015
+      },
+      "listCostPerTask": 0.07942671568737021,
+      "costEstimated": false,
+      "tokensPerTask": 2460947.059133285,
+      "prices": [
+        0.1,
+        0.5
+      ]
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "effort": "xhigh",
+      "provider": "anthropic",
+      "source": "Claude Haiku 5.5@xhigh",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.292929292929293,
+        "scicode": 0.517361111111111,
+        "lcr": 0.783333333333333,
+        "hle": 0.42678405931418,
+        "critpt": 0.225714285714286,
+        "omniscienceAccuracy": 0.3495,
+        "gdpvalNormalized": 0.5053799999999999
+      },
+      "listCostPerTask": 0.12378561092096102,
+      "costEstimated": false,
+      "tokensPerTask": 3640932.220808009,
+      "prices": [
+        0.1,
+        0.5
+      ]
+    },
+    {
+      "model": "claude-haiku-5-5",
+      "effort": "max",
+      "provider": "anthropic",
+      "source": "Claude Haiku 5.5@max",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.328282828282828,
+        "scicode": 0.549768518518518,
+        "lcr": 0.826666666666667,
+        "hle": 0.443929564411492,
+        "critpt": 0.188571428571429,
+        "omniscienceAccuracy": 0.36383333333333334,
+        "gdpvalNormalized": 0.560025
+      },
+      "listCostPerTask": 0.21276971216992022,
+      "costEstimated": false,
+      "tokensPerTask": 5263054.425683108,
+      "prices": [
+        0.1,
+        0.5
+      ]
+    },
+    {
+      "model": "claude-opus-5-5",
+      "effort": "low",
+      "provider": "anthropic",
+      "source": "Claude Opus 5.5@low",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.313131313131313,
+        "scicode": 0.585648148148148,
+        "lcr": 0.806666666666667,
+        "hle": 0.483317886932345,
+        "critpt": 0.177142857142857,
+        "omniscienceAccuracy": 0.6353333333333333,
+        "gdpvalNormalized": 0.36758500000000005,
+        "mmmuPro": 0.846820809248555,
+        "webdevFrontend": 1552.1111133493957,
+        "webdevFrontendSe": 44.36486448112906,
+        "scaled": 1
+      },
+      "listCostPerTask": 0.551180473909146,
+      "costEstimated": false,
+      "tokensPerTask": 436507.314927081,
+      "prices": [
+        4,
+        20
+      ],
+      "arena": {
+        "name": "claude-opus-5.5-max",
+        "votes": 1637,
+        "scaled": true
+      }
+    },
+    {
+      "model": "claude-opus-5-5",
+      "effort": "medium",
+      "provider": "anthropic",
+      "source": "Claude Opus 5.5@medium",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.525252525252525,
+        "scicode": 0.592592592592593,
+        "lcr": 0.843333333333333,
+        "hle": 0.547265987025023,
+        "critpt": 0.277142857142857,
+        "omniscienceAccuracy": 0.6455,
+        "gdpvalNormalized": 0.543125,
+        "mmmuPro": 0.857225433526012,
+        "webdevFrontend": 1697.3947468890826,
+        "webdevFrontendSe": 74.04182333454003,
+        "scaled": 1
+      },
+      "listCostPerTask": 1.3360093438976588,
+      "costEstimated": false,
+      "tokensPerTask": 1508379.8476297425,
+      "prices": [
+        4,
+        20
+      ],
+      "arena": {
+        "name": "claude-opus-5.5-max",
+        "votes": 1637,
+        "scaled": true
+      }
+    },
+    {
+      "model": "claude-opus-5-5",
+      "effort": "high",
+      "provider": "anthropic",
+      "source": "Claude Opus 5.5@high",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.565656565656566,
+        "scicode": 0.604166666666667,
+        "lcr": 0.826666666666667,
+        "hle": 0.555607043558851,
+        "critpt": 0.308571428571429,
+        "omniscienceAccuracy": 0.6458333333333334,
+        "gdpvalNormalized": 0.6034400000000001,
+        "mmmuPro": 0.858381502890173,
+        "webdevFrontend": 1743.8389983085872,
+        "webdevFrontendSe": 89.68153180676227,
+        "scaled": 1
+      },
+      "listCostPerTask": 1.822504718771704,
+      "costEstimated": false,
+      "tokensPerTask": 2241540.313866846,
+      "prices": [
+        4,
+        20
+      ],
+      "arena": {
+        "name": "claude-opus-5.5-max",
+        "votes": 1637,
+        "scaled": true
+      }
+    },
+    {
+      "model": "claude-opus-5-5",
+      "effort": "xhigh",
+      "provider": "anthropic",
+      "source": "Claude Opus 5.5@xhigh",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.595959595959596,
+        "scicode": 0.650462962962963,
+        "lcr": 0.846666666666667,
+        "hle": 0.575069508804449,
+        "critpt": 0.317142857142857,
+        "omniscienceAccuracy": 0.6538333333333334,
+        "gdpvalNormalized": 0.66853,
+        "mmmuPro": 0.865895953757225,
+        "webdevFrontend": 1831.8008437946462,
+        "webdevFrontendSe": 134.24701288322544,
+        "scaled": 1
+      },
+      "listCostPerTask": 3.459110175822289,
+      "costEstimated": false,
+      "tokensPerTask": 5165522.195526065,
+      "prices": [
+        4,
+        20
+      ],
+      "arena": {
+        "name": "claude-opus-5.5-max",
+        "votes": 1637,
+        "scaled": true
+      }
+    },
+    {
+      "model": "claude-opus-5-5",
+      "effort": "max",
+      "provider": "anthropic",
+      "source": "Claude Opus 5.5@max",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.595959595959596,
+        "scicode": 0.668981481481482,
+        "lcr": 0.846666666666667,
+        "hle": 0.613531047265987,
+        "critpt": 0.317142857142857,
+        "omniscienceAccuracy": 0.6621666666666667,
+        "gdpvalNormalized": 0.68312,
+        "mmmuPro": 0.876878612716763,
+        "webdevFrontend": 1858.922748558086,
+        "webdevFrontendSe": 9.714001011899056
+      },
+      "listCostPerTask": 5.982012019521066,
+      "costEstimated": false,
+      "tokensPerTask": 7719978.638237709,
+      "prices": [
+        4,
+        20
+      ],
+      "arena": {
+        "name": "claude-opus-5.5-max",
+        "votes": 1637
+      }
+    },
+    {
+      "model": "claude-sonnet-5-5",
+      "effort": "low",
+      "provider": "anthropic",
+      "source": "Claude Sonnet 5.5@low",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.207070707070707,
+        "scicode": 0.490740740740741,
+        "lcr": 0.76,
+        "hle": 0.362372567191844,
+        "critpt": 0.114285714285714,
+        "omniscienceAccuracy": 0.463,
+        "gdpvalNormalized": 0.33929999999999993,
+        "webdevFrontend": 1519.1771716087192,
+        "webdevFrontendSe": 48.17482046856246,
+        "scaled": 1
+      },
+      "listCostPerTask": 0.3451610270666562,
+      "costEstimated": false,
+      "tokensPerTask": 529676.5079487828,
+      "prices": [
+        2,
+        10
+      ],
+      "arena": {
+        "name": "claude-sonnet-5.5-high",
+        "votes": 3055,
+        "scaled": true
+      }
+    },
+    {
+      "model": "claude-sonnet-5-5",
+      "effort": "medium",
+      "provider": "anthropic",
+      "source": "Claude Sonnet 5.5@medium",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.297979797979798,
+        "scicode": 0.528935185185185,
+        "lcr": 0.763333333333333,
+        "hle": 0.39805375347544,
+        "critpt": 0.168571428571429,
+        "omniscienceAccuracy": 0.4716666666666667,
+        "gdpvalNormalized": 0.41179999999999994,
+        "webdevFrontend": 1607.3826181473564,
+        "webdevFrontendSe": 64.38097765397598,
+        "scaled": 1
+      },
+      "listCostPerTask": 0.48326378260543096,
+      "costEstimated": false,
+      "tokensPerTask": 780834.7198542776,
+      "prices": [
+        2,
+        10
+      ],
+      "arena": {
+        "name": "claude-sonnet-5.5-high",
+        "votes": 3055,
+        "scaled": true
+      }
+    },
+    {
+      "model": "claude-sonnet-5-5",
+      "effort": "high",
+      "provider": "anthropic",
+      "source": "Claude Sonnet 5.5@high",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.439393939393939,
+        "scicode": 0.537037037037037,
+        "lcr": 0.78,
+        "hle": 0.458294717330862,
+        "critpt": 0.245714285714286,
+        "omniscienceAccuracy": 0.5198333333333334,
+        "gdpvalNormalized": 0.52546,
+        "webdevFrontend": 1746.0293016888436,
+        "webdevFrontendSe": 6.4734164520808575
+      },
+      "listCostPerTask": 0.8844498581005511,
+      "costEstimated": false,
+      "tokensPerTask": 1775841.8254942405,
+      "prices": [
+        2,
+        10
+      ],
+      "arena": {
+        "name": "claude-sonnet-5.5-high",
+        "votes": 3055
+      }
+    },
+    {
+      "model": "claude-sonnet-5-5",
+      "effort": "xhigh",
+      "provider": "anthropic",
+      "source": "Claude Sonnet 5.5@xhigh",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.570707070707071,
+        "scicode": 0.572916666666667,
+        "lcr": 0.796666666666667,
+        "hle": 0.5,
+        "critpt": 0.311428571428571,
+        "omniscienceAccuracy": 0.5303333333333333,
+        "gdpvalNormalized": 0.615275,
+        "webdevFrontend": 1809.9539701236408,
+        "webdevFrontendSe": 9.108031632666316
+      },
+      "listCostPerTask": 2.0120345801545785,
+      "costEstimated": false,
+      "tokensPerTask": 5586986.511754176,
+      "prices": [
+        2,
+        10
+      ],
+      "arena": {
+        "name": "claude-sonnet-5.5-xhigh",
+        "votes": 1703
+      }
+    },
+    {
+      "model": "claude-sonnet-5-5",
+      "effort": "max",
+      "provider": "anthropic",
+      "source": "Claude Sonnet 5.5@max",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.636363636363636,
+        "scicode": 0.609953703703704,
+        "lcr": 0.826666666666667,
+        "hle": 0.549582947173309,
+        "critpt": 0.314285714285714,
+        "omniscienceAccuracy": 0.5395,
+        "gdpvalNormalized": 0.66955
+      },
+      "listCostPerTask": 5.4608525948098325,
+      "costEstimated": false,
+      "tokensPerTask": 14355671.034255091,
+      "prices": [
+        2,
+        10
+      ]
+    },
+    {
+      "model": "gemini-3.8-flash",
+      "effort": "low",
+      "provider": "google",
+      "source": "Gemini 3.8 Flash@low",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.101010101010101,
+        "scicode": 0.549768518518518,
+        "lcr": 0.806666666666667,
+        "hle": 0.370713623725672,
+        "critpt": 0.04,
+        "omniscienceAccuracy": 0.5221666666666667,
+        "gdpvalNormalized": 0.40517499999999995,
+        "mmmuPro": 0.845086705202312,
+        "tauBanking": 0.331958762886598,
+        "terminalBench21": 0.831460674157303,
+        "webdevFrontend": 1508.9676839060612,
+        "webdevFrontendSe": 45.00219370353867,
+        "scaled": 1
+      },
+      "listCostPerTask": 0.44785504111070307,
+      "costEstimated": true,
+      "tokensPerTask": null,
+      "prices": [
+        0.75,
+        3.75
+      ],
+      "arena": {
+        "name": "gemini-3.8-flash-high",
+        "votes": 7044,
+        "scaled": true
+      }
+    },
+    {
+      "model": "gemini-3.8-flash",
+      "effort": "medium",
+      "provider": "google",
+      "source": "Gemini 3.8 Flash@medium",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.196969696969697,
+        "scicode": 0.550925925925926,
+        "lcr": 0.84,
+        "hle": 0.421223354958295,
+        "critpt": 0.122857142857143,
+        "omniscienceAccuracy": 0.5298333333333334,
+        "gdpvalNormalized": 0.46285000000000004,
+        "mmmuPro": 0.842196531791908,
+        "tauBanking": 0.457731958762887,
+        "terminalBench21": 0.838951310861423,
+        "webdevFrontend": 1577.4708862492691,
+        "webdevFrontendSe": 59.19925085130893,
+        "scaled": 1
+      },
+      "listCostPerTask": 0.9310379374376306,
+      "costEstimated": false,
+      "tokensPerTask": 3871480.9940948305,
+      "prices": [
+        0.75,
+        3.75
+      ],
+      "arena": {
+        "name": "gemini-3.8-flash-high",
+        "votes": 7044,
+        "scaled": true
+      }
+    },
+    {
+      "model": "gemini-3.8-flash",
+      "effort": "high",
+      "provider": "google",
+      "source": "Gemini 3.8 Flash@high",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.196969696969697,
+        "scicode": 0.565972222222222,
+        "lcr": 0.813333333333333,
+        "hle": 0.478220574606117,
+        "critpt": 0.182857142857143,
+        "omniscienceAccuracy": 0.546,
+        "gdpvalNormalized": 0.46752,
+        "mmmuPro": 0.85606936416185,
+        "tauBanking": 0.449484536082474,
+        "terminalBench21": 0.876404494382023,
+        "webdevFrontend": 1588.3096592974289,
+        "webdevFrontendSe": 4.392167577351204
+      },
+      "listCostPerTask": 1.2427947606950427,
+      "costEstimated": false,
+      "tokensPerTask": 4706826.868437008,
+      "prices": [
+        0.75,
+        3.75
+      ],
+      "arena": {
+        "name": "gemini-3.8-flash-high",
+        "votes": 7044
+      }
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "effort": "non-reasoning",
+      "provider": "openai",
+      "source": "GPT-5.6 Luna@non-reasoning",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.0101010101010101,
+        "scicode": 0.403935185185185,
+        "lcr": 0.426666666666667,
+        "hle": 0.072289156626506,
+        "critpt": 0.00285714285714286,
+        "omniscienceAccuracy": 0.286,
+        "gdpvalNormalized": 0.21124,
+        "mmmuPro": 0.603468208092486,
+        "tauBanking": 0.0969072164948454,
+        "terminalBench21": 0.389513108614232,
+        "webdevFrontend": 1418.8916295352683,
+        "webdevFrontendSe": 33.34691696291985,
+        "scaled": 1
+      },
+      "listCostPerTask": 0.010091821810180262,
+      "costEstimated": false,
+      "tokensPerTask": 146385.65131757752,
+      "prices": [
+        0.2,
+        1.2
+      ],
+      "arena": {
+        "name": "gpt-5.6-luna-xhigh (codex-harness)",
+        "votes": 9384,
+        "scaled": true
+      }
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "effort": "low",
+      "provider": "openai",
+      "source": "GPT-5.6 Luna@low",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0,
+        "scicode": 0.460648148148148,
+        "lcr": 0.7,
+        "hle": 0.198331788693234,
+        "critpt": 0.0257142857142857,
+        "omniscienceAccuracy": 0.39616666666666667,
+        "gdpvalNormalized": 0.248485,
+        "mmmuPro": 0.739884393063584,
+        "tauBanking": 0.127835051546392,
+        "terminalBench21": 0.434456928838951,
+        "webdevFrontend": 1454.3674223033156,
+        "webdevFrontendSe": 33.65592508311808,
+        "scaled": 1
+      },
+      "listCostPerTask": 0.009827249754655997,
+      "costEstimated": false,
+      "tokensPerTask": 86655.91883534362,
+      "prices": [
+        0.2,
+        1.2
+      ],
+      "arena": {
+        "name": "gpt-5.6-luna-xhigh (codex-harness)",
+        "votes": 9384,
+        "scaled": true
+      }
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "effort": "medium",
+      "provider": "openai",
+      "source": "GPT-5.6 Luna@medium",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.00505050505050505,
+        "scicode": 0.467592592592593,
+        "lcr": 0.75,
+        "hle": 0.257645968489342,
+        "critpt": 0.0485714285714286,
+        "omniscienceAccuracy": 0.407,
+        "gdpvalNormalized": 0.31559000000000004,
+        "mmmuPro": 0.758381502890173,
+        "tauBanking": 0.177319587628866,
+        "terminalBench21": 0.531835205992509,
+        "webdevFrontend": 1463.7904815357997,
+        "webdevFrontendSe": 34.94657869653123,
+        "scaled": 1
+      },
+      "listCostPerTask": 0.015598049609820011,
+      "costEstimated": false,
+      "tokensPerTask": 166853.37159267973,
+      "prices": [
+        0.2,
+        1.2
+      ],
+      "arena": {
+        "name": "gpt-5.6-luna-xhigh (codex-harness)",
+        "votes": 9384,
+        "scaled": true
+      }
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "effort": "high",
+      "provider": "openai",
+      "source": "GPT-5.6 Luna@high",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.0252525252525253,
+        "scicode": 0.516203703703704,
+        "lcr": 0.803333333333333,
+        "hle": 0.334105653382762,
+        "critpt": 0.165714285714286,
+        "omniscienceAccuracy": 0.41783333333333333,
+        "gdpvalNormalized": 0.41655,
+        "mmmuPro": 0.775722543352601,
+        "tauBanking": 0.251546391752577,
+        "terminalBench21": 0.696629213483146,
+        "webdevFrontend": 1518.3831731591217,
+        "webdevFrontendSe": 41.921066497875714,
+        "scaled": 1
+      },
+      "listCostPerTask": 0.043981552251920096,
+      "costEstimated": false,
+      "tokensPerTask": 554542.2621437499,
+      "prices": [
+        0.2,
+        1.2
+      ],
+      "arena": {
+        "name": "gpt-5.6-luna-xhigh (codex-harness)",
+        "votes": 9384,
+        "scaled": true
+      }
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "effort": "xhigh",
+      "provider": "openai",
+      "source": "GPT-5.6 Luna@xhigh",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.0353535353535354,
+        "scicode": 0.50462962962963,
+        "lcr": 0.816666666666667,
+        "hle": 0.369786839666358,
+        "critpt": 0.205714285714286,
+        "omniscienceAccuracy": 0.4245,
+        "gdpvalNormalized": 0.45144500000000004,
+        "mmmuPro": 0.785549132947977,
+        "tauBanking": 0.28659793814433,
+        "terminalBench21": 0.779026217228464,
+        "webdevFrontend": 1517.6191038909847,
+        "webdevFrontendSe": 3.693336955526594
+      },
+      "listCostPerTask": 0.085342806135728,
+      "costEstimated": false,
+      "tokensPerTask": 1186695.0920756909,
+      "prices": [
+        0.2,
+        1.2
+      ],
+      "arena": {
+        "name": "gpt-5.6-luna-xhigh (codex-harness)",
+        "votes": 9384
+      }
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "effort": "max",
+      "provider": "openai",
+      "source": "GPT-5.6 Luna@max",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.116161616161616,
+        "scicode": 0.53587962962963,
+        "lcr": 0.836666666666667,
+        "hle": 0.394810009267841,
+        "critpt": 0.205714285714286,
+        "omniscienceAccuracy": 0.42733333333333334,
+        "gdpvalNormalized": 0.48194000000000004,
+        "mmmuPro": 0.785549132947977,
+        "tauBanking": 0.311340206185567,
+        "terminalBench21": 0.808988764044944
+      },
+      "listCostPerTask": 0.17829726152289094,
+      "costEstimated": false,
+      "tokensPerTask": 2805791.0963828596,
+      "prices": [
+        0.2,
+        1.2
+      ]
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "effort": "low",
+      "provider": "openai",
+      "source": "GPT-5.6 Sol@low",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.0101010101010101,
+        "scicode": 0.563657407407407,
+        "lcr": 0.78,
+        "hle": 0.393883225208526,
+        "critpt": 0.148571428571429,
+        "omniscienceAccuracy": 0.5716666666666667,
+        "gdpvalNormalized": 0.402425,
+        "mmmuPro": 0.809826589595376,
+        "tauBanking": 0.290721649484536,
+        "terminalBench21": 0.767790262172285,
+        "ifbench": 0.66530612244898,
+        "tau2": 0.760233918128655,
+        "webdevFrontend": 1453.9481813169366,
+        "webdevFrontendSe": 33.3055457195578,
+        "scaled": 1
+      },
+      "listCostPerTask": 0.2606419442090313,
+      "costEstimated": false,
+      "tokensPerTask": 143950.95262293707,
+      "prices": [
+        4,
+        20
+      ],
+      "arena": {
+        "name": "gpt-5.6-sol-xhigh (codex-harness)",
+        "votes": 12836,
+        "scaled": true
+      }
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "effort": "medium",
+      "provider": "openai",
+      "source": "GPT-5.6 Sol@medium",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.146464646464646,
+        "scicode": 0.574074074074074,
+        "lcr": 0.803333333333333,
+        "hle": 0.422150139017609,
+        "critpt": 0.228571428571429,
+        "omniscienceAccuracy": 0.5775,
+        "gdpvalNormalized": 0.46106500000000006,
+        "mmmuPro": 0.813872832369942,
+        "tauBanking": 0.364948453608247,
+        "terminalBench21": 0.861423220973783,
+        "ifbench": 0.695918367346939,
+        "tau2": 0.809941520467836,
+        "webdevFrontend": 1551.5475909777044,
+        "webdevFrontendSe": 52.05771902608843,
+        "scaled": 1
+      },
+      "listCostPerTask": 0.5049926304382959,
+      "costEstimated": false,
+      "tokensPerTask": 331402.91880743764,
+      "prices": [
+        4,
+        20
+      ],
+      "arena": {
+        "name": "gpt-5.6-sol-xhigh (codex-harness)",
+        "votes": 12836,
+        "scaled": true
+      }
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "effort": "high",
+      "provider": "openai",
+      "source": "GPT-5.6 Sol@high",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.207070707070707,
+        "scicode": 0.577546296296296,
+        "lcr": 0.816666666666667,
+        "hle": 0.46014828544949,
+        "critpt": 0.257142857142857,
+        "omniscienceAccuracy": 0.5835,
+        "gdpvalNormalized": 0.502265,
+        "mmmuPro": 0.81849710982659,
+        "tauBanking": 0.36701030927835,
+        "terminalBench21": 0.872659176029963,
+        "ifbench": 0.691836734693878,
+        "tau2": 0.833333333333333,
+        "webdevFrontend": 1598.7342867756754,
+        "webdevFrontendSe": 62.908960925953124,
+        "scaled": 1
+      },
+      "listCostPerTask": 0.807982690134498,
+      "costEstimated": false,
+      "tokensPerTask": 579978.1662321272,
+      "prices": [
+        4,
+        20
+      ],
+      "arena": {
+        "name": "gpt-5.6-sol-xhigh (codex-harness)",
+        "votes": 12836,
+        "scaled": true
+      }
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "effort": "xhigh",
+      "provider": "openai",
+      "source": "GPT-5.6 Sol@xhigh",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.247474747474747,
+        "scicode": 0.570601851851852,
+        "lcr": 0.823333333333333,
+        "hle": 0.473123262279889,
+        "critpt": 0.285714285714286,
+        "omniscienceAccuracy": 0.5881666666666666,
+        "gdpvalNormalized": 0.536165,
+        "mmmuPro": 0.826589595375723,
+        "tauBanking": 0.381443298969072,
+        "terminalBench21": 0.895131086142322,
+        "ifbench": 0.710204081632653,
+        "tau2": 0.847953216374269,
+        "webdevFrontend": 1625.8759698256613,
+        "webdevFrontendSe": 3.410600284604586
+      },
+      "listCostPerTask": 1.1843629381907275,
+      "costEstimated": false,
+      "tokensPerTask": 866101.2316359024,
+      "prices": [
+        4,
+        20
+      ],
+      "arena": {
+        "name": "gpt-5.6-sol-xhigh (codex-harness)",
+        "votes": 12836
+      }
+    },
+    {
+      "model": "gpt-5.6-sol",
+      "effort": "max",
+      "provider": "openai",
+      "source": "GPT-5.6 Sol@max",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.398989898989899,
+        "scicode": 0.570601851851852,
+        "lcr": 0.84,
+        "hle": 0.494902687673772,
+        "critpt": 0.322857142857143,
+        "omniscienceAccuracy": 0.594,
+        "gdpvalNormalized": 0.55567,
+        "mmmuPro": 0.834104046242775,
+        "tauBanking": 0.443298969072165,
+        "terminalBench21": 0.880149812734082,
+        "ifbench": 0.726530612244898,
+        "tau2": 0.850877192982456
+      },
+      "listCostPerTask": 1.98845538085375,
+      "costEstimated": false,
+      "tokensPerTask": 1618068.3586623399,
+      "prices": [
+        4,
+        20
+      ]
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "effort": "non-reasoning",
+      "provider": "openai",
+      "source": "GPT-5.6 Terra@non-reasoning",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.00505050505050505,
+        "scicode": 0.451388888888889,
+        "lcr": 0.586666666666667,
+        "hle": 0.113994439295644,
+        "critpt": 0.02,
+        "omniscienceAccuracy": 0.36816666666666664,
+        "gdpvalNormalized": 0.29978999999999995,
+        "mmmuPro": 0.667052023121387,
+        "tauBanking": 0.156701030927835,
+        "terminalBench21": 0.561797752808989,
+        "webdevFrontend": 1405.5111411020907,
+        "webdevFrontendSe": 31.929725327829324,
+        "scaled": 1
+      },
+      "listCostPerTask": 0.13972397093498629,
+      "costEstimated": false,
+      "tokensPerTask": 192798.64556167394,
+      "prices": [
+        2,
+        12
+      ],
+      "arena": {
+        "name": "gpt-5.6-terra-xhigh (codex-harness)",
+        "votes": 9393,
+        "scaled": true
+      }
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "effort": "low",
+      "provider": "openai",
+      "source": "GPT-5.6 Terra@low",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.0151515151515152,
+        "scicode": 0.498842592592593,
+        "lcr": 0.713333333333333,
+        "hle": 0.291936978683967,
+        "critpt": 0.0942857142857143,
+        "omniscienceAccuracy": 0.43733333333333335,
+        "gdpvalNormalized": 0.30515,
+        "mmmuPro": 0.761271676300578,
+        "tauBanking": 0.187628865979381,
+        "terminalBench21": 0.625468164794007,
+        "ifbench": 0.596598639455782,
+        "tau2": 0.605263157894737,
+        "webdevFrontend": 1444.5296769478184,
+        "webdevFrontendSe": 34.94497341204146,
+        "scaled": 1
+      },
+      "listCostPerTask": 0.1444617614290821,
+      "costEstimated": false,
+      "tokensPerTask": 170260.63227780574,
+      "prices": [
+        2,
+        12
+      ],
+      "arena": {
+        "name": "gpt-5.6-terra-xhigh (codex-harness)",
+        "votes": 9393,
+        "scaled": true
+      }
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "effort": "medium",
+      "provider": "openai",
+      "source": "GPT-5.6 Terra@medium",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.0101010101010101,
+        "scicode": 0.50462962962963,
+        "lcr": 0.74,
+        "hle": 0.332715477293791,
+        "critpt": 0.174285714285714,
+        "omniscienceAccuracy": 0.446,
+        "gdpvalNormalized": 0.38457500000000006,
+        "mmmuPro": 0.767630057803468,
+        "tauBanking": 0.255670103092783,
+        "terminalBench21": 0.722846441947566,
+        "ifbench": 0.621768707482993,
+        "tau2": 0.728070175438596,
+        "webdevFrontend": 1444.8489168927913,
+        "webdevFrontendSe": 34.43250574216221,
+        "scaled": 1
+      },
+      "listCostPerTask": 0.18337295992969213,
+      "costEstimated": false,
+      "tokensPerTask": 206677.15012444934,
+      "prices": [
+        2,
+        12
+      ],
+      "arena": {
+        "name": "gpt-5.6-terra-xhigh (codex-harness)",
+        "votes": 9393,
+        "scaled": true
+      }
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "effort": "high",
+      "provider": "openai",
+      "source": "GPT-5.6 Terra@high",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.0151515151515152,
+        "scicode": 0.524305555555556,
+        "lcr": 0.776666666666667,
+        "hle": 0.385078776645042,
+        "critpt": 0.228571428571429,
+        "omniscienceAccuracy": 0.4548333333333333,
+        "gdpvalNormalized": 0.43927,
+        "mmmuPro": 0.790751445086705,
+        "tauBanking": 0.28659793814433,
+        "terminalBench21": 0.756554307116105,
+        "ifbench": 0.64421768707483,
+        "tau2": 0.783625730994152,
+        "webdevFrontend": 1461.5531711184094,
+        "webdevFrontendSe": 36.01563937437854,
+        "scaled": 1
+      },
+      "listCostPerTask": 0.3378727947949101,
+      "costEstimated": false,
+      "tokensPerTask": 397265.92701591295,
+      "prices": [
+        2,
+        12
+      ],
+      "arena": {
+        "name": "gpt-5.6-terra-xhigh (codex-harness)",
+        "votes": 9393,
+        "scaled": true
+      }
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "effort": "xhigh",
+      "provider": "openai",
+      "source": "GPT-5.6 Terra@xhigh",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.101010101010101,
+        "scicode": 0.523148148148148,
+        "lcr": 0.79,
+        "hle": 0.418906394810009,
+        "critpt": 0.271428571428571,
+        "omniscienceAccuracy": 0.45516666666666666,
+        "gdpvalNormalized": 0.47458000000000006,
+        "mmmuPro": 0.794797687861272,
+        "tauBanking": 0.296907216494845,
+        "terminalBench21": 0.801498127340824,
+        "ifbench": 0.662585034013605,
+        "tau2": 0.804093567251462,
+        "webdevFrontend": 1522.2015090275818,
+        "webdevFrontendSe": 3.7292996655994606
+      },
+      "listCostPerTask": 0.6317911346924275,
+      "costEstimated": false,
+      "tokensPerTask": 842706.0356491973,
+      "prices": [
+        2,
+        12
+      ],
+      "arena": {
+        "name": "gpt-5.6-terra-xhigh (codex-harness)",
+        "votes": 9393
+      }
+    },
+    {
+      "model": "gpt-5.6-terra",
+      "effort": "max",
+      "provider": "openai",
+      "source": "GPT-5.6 Terra@max",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.353535353535354,
+        "scicode": 0.549768518518518,
+        "lcr": 0.83,
+        "hle": 0.429101019462465,
+        "critpt": 0.3,
+        "omniscienceAccuracy": 0.468,
+        "gdpvalNormalized": 0.476605,
+        "mmmuPro": 0.806936416184971,
+        "tauBanking": 0.402061855670103,
+        "terminalBench21": 0.880149812734082,
+        "ifbench": 0.712244897959184,
+        "tau2": 0.862573099415205
+      },
+      "listCostPerTask": 1.3987235612691513,
+      "costEstimated": false,
+      "tokensPerTask": 1972210.4856549609,
+      "prices": [
+        2,
+        12
+      ]
+    },
+    {
+      "model": "grok-4.7",
+      "effort": "low",
+      "provider": "xai",
+      "source": "Grok 4.7@low",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.161616161616162,
+        "scicode": 0.548611111111111,
+        "lcr": 0.8,
+        "hle": 0.391566265060241,
+        "critpt": 0.134285714285714,
+        "omniscienceAccuracy": 0.497,
+        "gdpvalNormalized": 0.5443049999999999,
+        "mmmuPro": 0.78150289017341,
+        "webdevFrontend": 1558.2725419383396,
+        "webdevFrontendSe": 54.49961583965186,
+        "scaled": 1
+      },
+      "listCostPerTask": 1.2479664056943975,
+      "costEstimated": false,
+      "tokensPerTask": 1078426.1096222547,
+      "prices": [
+        2,
+        6
+      ],
+      "arena": {
+        "name": "grok-4.7-xhigh",
+        "votes": 2923,
+        "scaled": true
+      }
+    },
+    {
+      "model": "grok-4.7",
+      "effort": "medium",
+      "provider": "xai",
+      "source": "Grok 4.7@medium",
+      "basis": "interpolated from low and high",
+      "results": {
+        "terminalBench40": 0.20454545454545447,
+        "scicode": 0.5630787037037035,
+        "lcr": 0.785,
+        "hle": 0.40732159406858204,
+        "critpt": 0.157142857142857,
+        "omniscienceAccuracy": 0.48758333333333337,
+        "gdpvalNormalized": 0.5745975,
+        "webdevFrontend": 1601.6868483040491,
+        "webdevFrontendSe": 64.20298123397691,
+        "scaled": 1
+      },
+      "listCostPerTask": 1.9870365487402122,
+      "costEstimated": false,
+      "tokensPerTask": 1721683.3220072836,
+      "prices": [
+        2.0,
+        6.0
+      ],
+      "arena": {
+        "name": "grok-4.7-xhigh",
+        "votes": 2923,
+        "scaled": true
+      }
+    },
+    {
+      "model": "grok-4.7",
+      "effort": "high",
+      "provider": "xai",
+      "source": "Grok 4.7@high",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.247474747474747,
+        "scicode": 0.577546296296296,
+        "lcr": 0.77,
+        "hle": 0.423076923076923,
+        "critpt": 0.18,
+        "omniscienceAccuracy": 0.4781666666666667,
+        "gdpvalNormalized": 0.60489,
+        "webdevFrontend": 1650.167022459522,
+        "webdevFrontendSe": 77.9487994319819,
+        "scaled": 1
+      },
+      "listCostPerTask": 2.726106691786027,
+      "costEstimated": false,
+      "tokensPerTask": 2364940.5343923126,
+      "prices": [
+        2,
+        6
+      ],
+      "arena": {
+        "name": "grok-4.7-xhigh",
+        "votes": 2923,
+        "scaled": true
+      }
+    },
+    {
+      "model": "grok-4.7",
+      "effort": "xhigh",
+      "provider": "xai",
+      "source": "Grok 4.7@xhigh",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.257575757575758,
+        "scicode": 0.574074074074074,
+        "lcr": 0.766666666666667,
+        "hle": 0.431417979610751,
+        "critpt": 0.177142857142857,
+        "omniscienceAccuracy": 0.4745,
+        "gdpvalNormalized": 0.6077100000000001,
+        "webdevFrontend": 1656.4553862510097,
+        "webdevFrontendSe": 6.368858078679769
+      },
+      "listCostPerTask": 3.738325952106939,
+      "costEstimated": false,
+      "tokensPerTask": 3333359.3084136685,
+      "prices": [
+        2,
+        6
+      ],
+      "arena": {
+        "name": "grok-4.7-xhigh",
+        "votes": 2923
+      }
+    }
+  ],
+  "frontier": {
+    "snapshot": "2026-10-08",
+    "rows": 264,
+    "best": {
+      "terminalBench40": 0.636363636363636,
+      "scicode": 0.668981481481482,
+      "lcr": 0.886666666666667,
+      "hle": 0.613531047265987,
+      "critpt": 0.317142857142857,
+      "omniscienceAccuracy": 0.6723333333333333,
+      "gdpvalNormalized": 0.68312,
+      "mmmuPro": 0.876878612716763,
+      "tauBanking": 0.505154639175258,
+      "terminalBench21": 0.913857677902622,
+      "ifbench": 0.828571428571429,
+      "tau2": 0.991228070175439
+    },
+    "arena": {
+      "webdevFrontend": {
+        "url": "https://arena.ai/leaderboard/code/webdev/frontend",
+        "snapshot": "2026-10-08",
+        "models": 140,
+        "median": 1447.9533275874046,
+        "top": 1858.922748558086
+      }
+    },
+    "work": {
+      "coding": 0.9682539682539686,
+      "research": 0.9799219168396948,
+      "tooling": 0.9900676308701253,
+      "review": 0.9949595108246571,
+      "visual": 1.0
+    },
+    "costRatio": 0.2985700274071354
+  }
+}

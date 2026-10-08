@@ -148,7 +148,9 @@ multiple tickets. It starts empty. Update it from reconciled ticket results and
 user answers. New hints that need a product decision stay `proposed` until the
 user confirms them.
 
-Persona models live in `ROSTER.md`, not in working hints.
+Model choices the user states for the run go under a `Models` heading, as
+described under Model database and choices in `PERSONAS.md`. `ROSTER.md` records what they
+produce.
 
 Record confirmed planning depth as a working hint, with the end user and
 canonical docs or spec when known. A proposed or recommended depth is not
@@ -165,20 +167,21 @@ when only those entries apply. Do not add growing run files by default.
 ## Roster
 
 `ROSTER.md` records which model each persona uses and the state of each
-persona session. `PERSONAS.md` owns how the roster is suggested, asked for, and
+persona session. `PERSONAS.md` owns how models are chosen, confirmed, and
 changed.
 
 ```md
 # Roster
 
 Status: provisional | confirmed
-Source: <roster ask ticket ID, user invocation, or no per-subagent model choice>
+Source: machine models | <model ask ticket ID> | working hints | no per-subagent model choice
 Confirmed: <ISO time>
-Default fallback: suggest | ask | <model> <effort range>
+Model database: <machine model database path and version>
+Model choices: <machine model choices path, or none>
 
-| Persona | Model | Preferred effort | Effort range | Fallback | Tier | Basis |
+| Persona | Work | Complexity | Model | Effort | Cost | Basis |
 | --- | --- | --- | --- | --- | --- | --- |
-| senior-engineer | <model or inherit> | high | medium-xhigh | default | frontier | recommended / user / roster change |
+| senior-engineer | coding | highest | <model or inherit> | <effort or default> | <cost per task> | pin / model database / below target / working hint / stand-in |
 
 ## Sessions
 
@@ -187,13 +190,13 @@ Session: <client agent ID, or none>
 State: running | parked | idle | closed
 Ticket: <active ticket ID, or none>
 Model: <model and effort the session started with>
-Resolved by: preferred | in range | fallback | suggest | roster change
+Chosen by: pin | model database | below target | working hint | stand-in
 Tickets carried: <count>
 ```
 
 Keep one Sessions entry per persona that has had a session. Update it on every
-dispatch, resume, checkpoint return, and ticket return. A resolution that
-departs from the preferred model or effort, a roster change, or a user change
+dispatch, resume, checkpoint return, and ticket return. A session that
+starts on a model other than its persona's roster entry, or a user change,
 adds a row note with its time and reason, and a `LOG.md` entry.
 
 ## Ticket inboxes

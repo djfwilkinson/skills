@@ -597,8 +597,9 @@ Record on the ticket, per unit:
 Under reviewed planning, write one agent-facing change plan for one change set at
 `plans/<plan-ticket-id>.md`. Its path is stable. The active Plan worker owns its
 content; otherwise only the orchestrator may change its Status and revisions
-banner. A Plan ticket has one unit. The `architect` session takes the next
-Plan ticket while critics review the last one.
+banner. A Plan ticket has one unit. The `architect` or `frontend-planner`
+session takes the next Plan ticket for that persona while critics review the
+last one.
 
 Assignment prompt, after the shared agent rules:
 
@@ -758,9 +759,8 @@ basis, what observations indicate success or required changes, and a request
 to accept it or describe required changes. Do not use a structured questions
 form or multiple-choice prompt for acceptance.
 
-Ask only for judgement a subagent cannot make. The roster ask, roster-change
-asks, and the planning-depth offer are the only Discuss tickets whose subject
-is process:
+Ask only for judgement a subagent cannot make. The model ask and the
+planning-depth offer are the only Discuss tickets whose subject is process:
 they ask for preferences no subagent can supply. Never ask the user to perform or
 confirm a check a subagent can run, such as tests, builds, lint, searches, or
 doc checks, under any label, including inspection method or expected result;

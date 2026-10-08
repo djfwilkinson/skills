@@ -60,6 +60,10 @@ report the blocker rather than proceeding from memory. Never put them on a
 subagent's Reads; copy its persona brief from `PERSONAS.md` and its shared
 rules and type prompt from `TICKET-CONTRACTS.md`.
 
+Read [RATING-MODELS.md](RATING-MODELS.md) only when the user asks to rate
+models, re-rate the model database, or find which models and efforts to offer;
+runs never need it.
+
 ## Run files
 
 Conversation context is temporary. Recover from this skill, run files, tickets,
@@ -105,7 +109,8 @@ change-plan ownership.
 1. Create the placeholder files. Apply the `.agent-runs/` gitignore rule above.
    Register the run in the action ledger under `HUMAN-ASKS.md`; a failure does
    not block the run. When resuming a run, register it again.
-2. Build the recommended roster under Suggesting models in `PERSONAS.md`.
+2. Copy the default model database to the machine model database when it is
+   missing, and choose each persona's model under Choosing a model in `PERSONAS.md`.
 3. Create one bootstrap Research ticket with one unit per separable area. Use
    two tickets, one for the `scout` and one for the `investigator`, only when
    some areas need deep research and others only surface. Put likely project
@@ -113,11 +118,10 @@ change-plan ownership.
    that cannot meet its Completion requests deep, and the gap becomes an
    investigator unit. Bootstrap also seeks the end user and canonical docs or
    spec when cheap to establish.
-4. Dispatch bootstrap on the model and effort its persona's recommended row
-   resolves to, and record that row in `ROSTER.md` as provisional. Then create and present the roster ask
-   under `PERSONAS.md`, unless the client cannot choose models per subagent or
-   the invocation already settled every persona. Every session started after
-   the answer uses the confirmed roster.
+4. Dispatch bootstrap on the model chosen for its persona, and record the
+   roster in `ROSTER.md` as provisional. Then ask the models question under
+   `PERSONAS.md`. Every session started after the roster is confirmed uses
+   it.
 5. When bootstrap is two tickets, wait for both before activating goals or
    creating any other ticket; Discuss needed for discovery may start sooner.
    Reconcile them together under `RUN-STATE.md`, subject to step 6.
@@ -229,9 +233,9 @@ subagent commits a product choice; Plan records one under Open decisions.
 
 The orchestrator owns all process decisions, including next work, grouping,
 persona choice, assignment, result acceptance, verification, review, and
-completion. The roster, including roster-change asks when a row cannot be
-resolved, and planning depth are the only process decisions this skill puts to
-the user; other process decisions are not user tickets.
+completion. Persona models, through the models question and model asks, and
+planning depth are the only process decisions this skill puts to the user;
+other process decisions are not user tickets.
 
 ## Tickets
 Read [TICKET-CONTRACTS.md](TICKET-CONTRACTS.md) before creating a ticket.
@@ -297,16 +301,15 @@ When assigning a ticket:
 4. create its inbox file with a title only;
 5. set `status: active` and `owner` to the persona;
 6. resume the persona's idle session, or start a new one on the model and
-   effort its roster row resolves to under Resolving a row in `PERSONAS.md`,
-   and record the session and its state in `ROSTER.md`. When the row's
-   fallback is `ask` and nothing resolves, keep the ticket `ready` and present
-   the roster-change ask.
+   effort chosen under Choosing a model in `PERSONAS.md`, and record the
+   session and its state in `ROSTER.md`. When nothing is usable, keep the
+   ticket `ready` and present the model ask for that persona.
 
 Run every persona session in the background when the client allows it, so each
 return wakes the orchestrator, including while a human ask is presented.
 Waiting in the foreground on one session stops the others being resumed, and
 review no longer overlaps implementation. When the client has no background
-subagents, say so in the roster ask.
+subagents, say so in the models question.
 
 Send a unit through an inbox only after it passes the same dependency,
 conflict, Exclusive scope, and planning-depth checks as a unit on a new ticket.
@@ -400,7 +403,7 @@ is malformed too, treat the ticket as `failed`.
 
 When the client cannot resume a returned session, start a new session for the
 same ticket instead; it continues from the recorded checkpoints. Each module
-then pays a fresh start, so say so in the roster ask.
+then pays a fresh start, so say so in the models question.
 
 ## Human involvement
 Every required human interaction must have a ticket. A product decision that requires user involvement must have a `Discuss/Gather Inputs` ticket.

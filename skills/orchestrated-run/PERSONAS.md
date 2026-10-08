@@ -5,10 +5,10 @@ or changing the roster, choosing a persona for a ticket, or dispatching or
 resuming a persona session. It is not a skill and must not be invoked.
 
 A persona is a standing role that executes agent tickets of exactly one ticket
-type. Each persona has a model tier, a model the user confirms in the roster,
-and a brief copied into every assignment prompt for it. A ticket type may have
-several personas of different complexity; the orchestrator picks one persona
-for each ticket.
+type. Each persona has a work type, a complexity, and a brief copied into every
+assignment prompt for it. The orchestrator chooses its model under Choosing a
+model. A ticket type may have several personas of different complexity; the
+orchestrator picks one persona for each ticket.
 
 At most one ticket per persona is active at a time. Parallelism comes from
 different personas working at once, not from several copies of one persona.
@@ -16,23 +16,38 @@ Human tickets have no persona; the orchestrator handles them.
 
 ## Persona table
 
-| Persona | Ticket type | Use for | Tier | Model needs |
+| Persona | Ticket type | Use for | Work | Complexity |
 | --- | --- | --- | --- | --- |
-| `scout` | Research | `triage` and `surface` units that do not pre-authorise deep escalation: lookups across known paths, inventories, bootstrap when the request already states its outcome, acceptance basis, and paths | economy | reliable tool use and fast reading; low reasoning |
-| `investigator` | Research | `deep` units and `surface` units that pre-authorise deep escalation: unclear project structure, cross-cutting hunts, sources that conflict, gaps a scout returned | balanced | long context, careful reading; medium to high reasoning |
-| `options-analyst` | Explore Options | alternatives, prototypes, reproductions, and debugging experiments whose result is a recommendation | balanced | coding and trade-off reasoning |
-| `architect` | Plan | change plans under reviewed planning | frontier | strongest reasoning, long context |
-| `consequences-critic` | Plan Review, `consequences` lens | whether a change plan's choices hold, what else must change, ordering, compatibility, and migration risk | frontier | strongest reasoning about code and systems |
-| `product-critic` | Plan Review, `product` lens | whether a change plan reaches the cited goals, acceptance criteria, and canonical sections | balanced | careful reading against requirements |
-| `fixer` | Agent Task | work classified `trivial`: copy, config values, a rename in one area, an already-specified small fix, and environment preparation | economy | reliable tool use and edits; low reasoning |
-| `builder` | Agent Task | implementation classified `following an established project pattern` | balanced | strong coding |
-| `senior-engineer` | Agent Task | implementation classified `moderately complex or higher`, or naming a schema, persistence layer, public API, protocol, data migration, or canonical doc; units a builder escalated | frontier | strongest coding and design reasoning |
-| `inspector` | Agent Task, agent boundary inspection | per-unit acceptance of code, tests, configuration, and docs outside the product while implementation continues | balanced | careful reading of diffs against requirements |
-| `validator` | Agent Task, boundary validation | goal-level, repo-wide, and cross-area checks: tests, builds, lint, typecheck, scripted scenarios | economy | reliable command running and result reporting |
-| `scenario-tester` | Agent Task | check-producing work that exercises the actual product through a browser, CLI, preview, or prepared artifact, including a defect run's automated product check | balanced | tool use; vision when the product is visual |
-| `ux-reviewer` | Agent Task | an Agent Task whose result is a UX/UI review, following the `ux-ui-reviewer` skill | balanced | vision and interface judgement |
-| `reviewer` | Adversarial Review | completed work of ordinary risk at a run module boundary | balanced | adversarial reading and reasoning |
-| `principal-reviewer` | Adversarial Review | the pre-completion review; high-impact or cross-cutting work; review after unexpected test or debugging results or uncertain evidence | frontier | strongest adversarial reasoning, long context |
+| `scout` | Research | `triage` and `surface` units that do not pre-authorise deep escalation: lookups across known paths, inventories, bootstrap when the request already states its outcome, acceptance basis, and paths | research | low |
+| `investigator` | Research | `deep` units and `surface` units that pre-authorise deep escalation: unclear project structure, cross-cutting hunts, sources that conflict, gaps a scout returned | research | high |
+| `options-analyst` | Explore Options | alternatives, prototypes, reproductions, and debugging experiments whose result is a recommendation | coding | medium |
+| `architect` | Plan | change plans under reviewed planning | coding | highest |
+| `frontend-planner` | Plan | change plans whose change set only changes what users see: layouts, flows, components, and interface states | visual | high |
+| `consequences-critic` | Plan Review, `consequences` lens | whether a change plan's choices hold, what else must change, ordering, compatibility, and migration risk | review | highest |
+| `product-critic` | Plan Review, `product` lens | whether a change plan reaches the cited goals, acceptance criteria, and canonical sections | review | medium |
+| `fixer` | Agent Task | work classified `trivial`: copy, config values, a rename in one area, an already-specified small fix, and environment preparation | coding | low |
+| `builder` | Agent Task | implementation classified `following an established project pattern` | coding | medium |
+| `senior-engineer` | Agent Task | implementation classified `moderately complex or higher`, or naming a schema, persistence layer, public API, protocol, data migration, or canonical doc; units a builder escalated | coding | highest |
+| `inspector` | Agent Task, agent boundary inspection | per-unit acceptance of code, tests, configuration, and docs outside the product while implementation continues | review | medium |
+| `validator` | Agent Task, boundary validation | goal-level, repo-wide, and cross-area checks: tests, builds, lint, typecheck, scripted scenarios | tooling | low |
+| `scenario-tester` | Agent Task | check-producing work that exercises the actual product through a browser, CLI, preview, or prepared artifact, including a defect run's automated product check | tooling | medium |
+| `ux-reviewer` | Agent Task | an Agent Task whose result is a UX/UI review, following the `ux-ui-reviewer` skill | visual | medium |
+| `reviewer` | Adversarial Review | completed work of ordinary risk at a run module boundary | review | medium |
+| `principal-reviewer` | Adversarial Review | the pre-completion review; high-impact or cross-cutting work; review after unexpected test or debugging results or uncertain evidence | review | highest |
+
+`Work` is the kind of work the persona does:
+
+- `coding`: writes or designs code, configuration, or change plans.
+- `research`: reads and searches to establish facts; changes nothing.
+- `tooling`: runs commands, tools, or the product and reports what happened.
+- `review`: judges work or plans against requirements; changes nothing.
+- `visual`: judges or plans what users see: screenshots, layouts, flows, and
+  interface quality. Implementing an interface is `coding`.
+
+`Complexity` is how hard that work is, from `lowest`, `low`, `medium`, `high`,
+and `highest`. Each maps to a target score for the persona's work type, as a
+percentage of the frontier: 0%, 50%, 65%, 80%, and 90%. It names no model;
+model names change and complexities do not.
 
 ## Choosing a persona
 
@@ -53,6 +68,9 @@ proposing ticket. Do not re-investigate to choose.
   separate environment-preparation ticket. Preparation folded into an
   implementation, validation, or product-check ticket stays with that
   ticket's persona.
+- Plan: `frontend-planner` when the change set only changes what users see and
+  names no schema, persistence layer, public API, protocol, or data
+  migration; `architect` otherwise, including change sets that mix both.
 - Plan Review: the persona that matches the lens.
 - Adversarial Review: `principal-reviewer` for the pre-completion review and
   for the escalation cases in the table; `reviewer` otherwise.
@@ -60,143 +78,168 @@ proposing ticket. Do not re-investigate to choose.
 Every unit on one ticket needs the same persona. When a worker reclassifies a
 unit above its persona, it records the new label and blocks that unit; move the
 unit to a ticket for the matching persona. Moving work between personas is a
-process decision. Never move work to a lower tier to save cost after a worker
-recorded that it needs a higher one.
+process decision. Never move work to a lower-complexity persona to save cost
+after a worker recorded that it needs a higher one.
 
-## Model tiers
+## Model database and choices
 
-A tier describes the capability a persona needs, not a model name. Model names
-change; tiers do not.
+The default model database is [templates/models.json](templates/models.json),
+published with this skill. The machine model database is
+`~/.agent-runs/models.json`. At the start of every run, copy the default
+database there when it is missing, creating `~/.agent-runs/` when needed. Never
+overwrite an existing machine database without the user; they may have edited
+it.
 
-- `economy`: the cheapest models that still use tools reliably and follow a
-  structured prompt. Small models, or a mid-size model at low reasoning.
-- `balanced`: strong general coding and reasoning at moderate cost. A
-  family's mid-size model, or its flagship at default reasoning.
-- `frontier`: the strongest reasoning available. A family's flagship at high
-  reasoning.
+The database holds raw benchmark results, not scores: each row is one model at
+one effort level, whether or not the client offers it now, with its provider,
+results, list cost per task, and tokens per task. It also holds the frontier
+those results are scored against, the cost plan, and excluded rows.
+`scripts/model_setup.py` scores it: for each row, its score per work type as a
+percentage of the frontier, with a 90% interval, and its cost per task in US
+dollars under the cost plan. A work type with no evidence has no score; never
+choose that row for that work type. Excluded rows are never used.
 
-Never recommend, resolve to, or start a subagent on fast mode or a fast
-variant, meaning a mode or model the client marks as fast or whose name ends
-in `-fast`, unless the user explicitly asks for it for that persona or the
-whole run. Confirming a roster the orchestrator suggested is not that request.
-A small or cheap model that is not a fast variant is allowed.
+The machine model choices file, `~/.agent-runs/model-choices.md`, holds pins and
+a target. A pin is a model and effort the user chose for one persona. The
+target is the best setup if the client's efforts could be changed, for
+reference; runs never choose from it. Change the file only when the user asks
+or chooses it in the models question or a model ask, with
+`scripts/model_setup.py --pin <persona>=<model>@<effort>`, `--unpin
+<persona>`, or `--write target`.
 
-## Roster rows
+To rate or re-rate models, or to find which models and efforts the client
+should offer, follow [RATING-MODELS.md](RATING-MODELS.md), and only when the
+user asks for it.
 
-Each roster row names a model family and version, an effort range, a preferred
-effort, and a fallback. Availability changes between clients and over time,
-so a row states what is acceptable rather than one exact variant.
+Match a client's model to a row by model and effort. A client name that
+combines both, such as `grok-4.7-high`, matches that row. When a row's effort is
+not offered but a higher effort of the same model is, the higher effort may
+stand in for it with that row's scores, unless it has its own row. Never stand
+in a lower effort. Do not use a model no row rates; name it in the models
+question.
 
-Effort levels, lowest to highest: `low`, `medium`, `high`, `xhigh`. Use the
-client's own level names when it has others, in its order. An effort range
-such as `medium-xhigh` accepts every level from the first to the last. A single
-level such as `high` accepts only that level. A client that offers a model
-with no effort choice satisfies any range at that model's default; record the
-effort as `default`.
+Model choices the user states for the run are working hints under a `Models`
+heading in `WORKINGHINTS.md`, and they win over the machine model choices and
+database. A hint may name a model and effort for one persona or for all,
+exclude a model, provider, or effort, change a persona's complexity, or rate a
+model the database lacks.
+Record model choices stated in the invocation as such hints.
 
-The fallback says what to do when nothing in the range is available:
+Never choose a fast mode or fast variant, meaning a mode or model the client
+marks as fast or whose name ends in `-fast`, unless the user explicitly asks
+for it for that persona or the whole run. Answering Yes to the models question
+is not that request. A small or cheap model that is not a fast variant is
+allowed. Never choose a model or mode the user's rules exclude.
 
-- a model and range, such as `<model> medium-high`: use it, resolved the same
-  way;
-- `suggest`: use the best available match under Resolving a row and report it;
-- `ask`: hold that persona's work and ask the user.
+## Choosing a model
 
-`ROSTER.md` holds one default fallback for the whole roster. A row may override
-it. The default is `suggest` unless the user chooses otherwise.
-
-## Resolving a row
-
-Resolve a persona's row each time a session starts for it, from the models the
+Choose a persona's model each time a session starts for it, from the models the
 client offers at that moment. A resumed session keeps the model and effort it
 started with.
 
-1. Take the row's model. If it offers the preferred effort, use it. Otherwise
-   use the available level in the range nearest the preferred one; on a tie,
-   take the higher level.
-2. If the model is unavailable or offers no level in the range, apply the
-   row's fallback, or the roster's default when the row has none.
-3. For a fallback model and range, resolve it by step 1. If it also fails, ask.
-4. For `suggest`, choose another model in the same tier, then the nearest
-   tier above, using the same effort range, or the nearest level above it
-   when none is in range. Never choose a lower tier or a level below the range
-   without the user; ask instead.
-5. For `ask`, open a roster-change Discuss for that persona. Its tickets wait;
-   other personas continue. The ask names the row, what the client offers now,
-   and a recommendation from step 4.
+1. When a `Models` working hint names a model for the persona, use it, or its
+   stand-in. When the client offers neither, go to step 6.
+2. Otherwise run `scripts/model_setup.py --client <name>...` with every model
+   name the client offers, as it lists them. Its Available now table gives the
+   persona's pin when the client offers it, otherwise the cheapest row whose
+   score for the persona's work type meets the persona's target, and otherwise,
+   when no offered row meets it, the highest-scoring row, marked below target.
+   It skips fast variants, unscored models, and excluded rows; leave out of
+   `--client` whatever working hints or the user's rules exclude. Run it once
+   per run and again whenever the client's models change, such as when a
+   pinned model is no longer offered.
+3. Use a pinned row as given.
+4. Use an unpinned row unless judgement favours another row from
+   `--ratings`; log the reason when the choice is not the script's. Consider:
+   - for review work, a provider different from the model that produced the
+     work under review, for an independent view; the table names the
+     cheapest other-provider row that does as well against the target;
+   - a ticket whose work spans two work types, such as a plan that is half
+     interface: the row that meets both targets, or the best on both;
+   - vision, for `ux-reviewer`, and for `scenario-tester` when the product is
+     visual;
+   - long context when Reads are wide;
+   - an idle session that can be resumed under Persona sessions.
+5. When the script cannot run, choose by hand from `--ratings` output saved
+   earlier in the run, or ask the user; never guess scores.
+6. When nothing is usable, keep that persona's tickets `ready` and open a model
+   ask for that persona. Other personas continue.
+
+Report every persona whose model is below its target in the models question
+and the next progress update.
+
+If the client cannot choose a model per subagent, record every persona as
+`inherit` in `ROSTER.md`, note it in `LOG.md`, and skip the models question.
 
 Record the model and effort each session started on in `ROSTER.md`. Report
-every resolution that departs from the preferred model or effort in the next
-progress update, and log it.
+every session that started on a model other than its persona's roster entry
+in the next progress update, and log it.
 
-## Suggesting models
+The orchestrator's own model is the one the user is already running.
 
-Build the recommended roster mechanically:
+## The models question
 
-1. List the models the client lets the orchestrator choose for a subagent. If
-   the client cannot choose a model per subagent, record every persona as
-   `inherit` in `ROSTER.md`, note it in `LOG.md`, and skip the roster ask.
-2. Remove fast modes and fast variants unless the user asked for them under
-   Model tiers, and any other model or mode the user's rules or the invocation
-   exclude. Keep the latest version of each family unless the user named an
-   older one.
-3. Place each remaining model in a tier using what the client says about it:
-   its description, its position in its family, and its reasoning level. When
-   the client gives only names, place each by its family's naming (flagship,
-   mid-size, or small) and its reasoning suffix, and mark every
-   such placement as inferred in the ask. Do not invent capabilities. When the
-   placement is uncertain, say so in the ask.
-4. For each persona, recommend the cheapest model in its tier that meets its
-   model needs. If its tier has no model, use the nearest tier above and say
-   so; never recommend a lower tier. Give it a preferred effort that matches
-   the tier, and an effort range one level either side where the model's
-   family usually offers those levels: for example, preferred `high` and range
-   `medium-xhigh` for a frontier coder. Recommend `suggest` as the default
-   fallback.
-5. When `~/.agent-runs/persona-roster.md` exists, recommend each of its rows
-   and its default fallback, show what each row resolves to on this client
-   now, and apply steps 3 and 4 only to personas it lacks.
+After dispatching bootstrap, ask the user one direct question, with the
+client's structured question tool when it has one, or in chat. It is not a human
+ticket: it has no ticket, ask page, or ledger entry. Skip it when the client
+cannot choose models per subagent or `Models` working hints already name a
+model for every persona. Ask it once per run; a resumed run with a confirmed
+roster does not ask again.
 
-User-stated model choices always win. When the invocation already names
-models for personas or one model for all, record them in `ROSTER.md` and ask
-only about personas it left open.
+The question:
 
-The roster does not choose the orchestrator's model. That is the model the user
-is already running.
-
-## The roster ask
-
-The roster is a process decision put to the user, like planning depth. Use one
-Discuss ticket. Its ask, under Writing the ask in `HUMAN-ASKS.md`:
-
-- says the run will use these personas and models, and that each later
-  subagent uses its persona's model;
-- shows every persona with what it is used for, its tier, and the recommended
-  model, preferred effort, and effort range, from this file and step 4, and
-  what each row resolves to on this client now;
-- names the other available models and effort levels in each tier;
-- asks for the default fallback, `suggest`, `ask`, or one fallback model and
-  range, and says that any row may name its own;
-- offers two shortcuts: `lean` moves every persona one tier down, with
-  economy personas staying economy; `quality` moves every persona one tier
-  up, with frontier personas staying frontier;
-- says which persona and model any already-dispatched bootstrap uses;
+- shows every persona with its work type, complexity, the model and effort
+  Choosing a model gives it now, and that model's cost, saying why when it is
+  not the cheapest candidate;
+- names the machine database path and version, the machine model choices path
+  and its pins when it exists, any pin the client does not offer, every
+  persona whose model is below its target, and the client's models that the
+  database does not score;
+- says which persona and model bootstrap uses;
 - says when the client cannot run subagents in the background or resume them,
   and what that costs: no overlap between review and implementation, or a
   fresh session for every unit;
-- asks for one reply: accept, a shortcut, or the persona rows to change.
+- names the swaps the script reports from what the client offers now to the
+  best setup, with their saving, when the client lets the user change them;
+- says when the default database's `version` is higher than the machine
+  database's;
+- asks "Use the machine models?" with `Yes` and `No`, and, when the default
+  database is newer, `Update the machine database to the skill's defaults,
+  then use it`.
 
-On the answer, write the confirmed roster to `ROSTER.md` and to
-`~/.agent-runs/persona-roster.md`, creating `~/.agent-runs/` when missing, and
-log the source. Never ask for the whole roster twice in one run; the only later
-roster asks are roster-change asks under Resolving a row. Later user steering
-may change rows; record it in `ROSTER.md` and `LOG.md`. A change applies to
-sessions started after it. A roster-change answer updates that row, and the
-device default when the user says so.
+On `Yes`, record the roster as confirmed. On the update option, copy the default database over
+the machine database, choose again, and confirm. On `No`, open the model ask
+for every persona. Until the roster is confirmed it is provisional; sessions
+started after confirmation use it.
+
+## The model ask
+
+A model ask is a Discuss ticket where the user states model choices for the
+run. It covers every persona after `No` to the models question, or one persona
+when nothing it can use is available. Its ask, under Writing the ask in
+`HUMAN-ASKS.md`:
+
+- shows each persona it covers with what it is used for, its work type and
+  complexity, and its current model, if any;
+- shows the scored rows the client offers now, with their scores and cost,
+  from `scripts/model_setup.py --ratings`;
+- accepts a model and effort per persona or for all, exclusions, complexity
+  changes, and results for models the database lacks;
+- offers two shortcuts: `lean` lowers every persona's complexity one level,
+  with `lowest` staying; `quality` raises it one level, with `highest` staying;
+- asks whether the answer should also pin those models in the machine model
+  choices.
+
+On the answer, record it as `Models` working hints, pin them with
+`scripts/model_setup.py --pin` when the user said so, choose again, confirm the roster in `ROSTER.md`, and log
+the source. Never ask about every persona twice in one run. Later user steering
+may change `Models` hints; record it in `WORKINGHINTS.md`, `ROSTER.md`, and
+`LOG.md`. A change applies to sessions started after it.
 
 ## Persona sessions
 
 A persona session is one subagent conversation for one persona. Its model and
-effort are resolved from the roster row when the session starts; a resumed
+effort are chosen under Choosing a model when the session starts; a resumed
 session keeps them.
 
 Session states, recorded in `ROSTER.md`:
@@ -209,8 +252,9 @@ Session states, recorded in `ROSTER.md`:
 - `closed`: will not be resumed.
 
 When the client can resume a returned subagent with its context, resume the
-persona's idle session for its next ticket when that persona's roster row has
-not changed and still resolves to the session's model and effort, the new ticket shares Reads or run modules with the
+persona's idle session for its next ticket when that persona's roster entry has
+not changed and Choosing a model still allows the session's model and effort,
+the new ticket shares Reads or run modules with the
 session's last ticket, and the session has carried fewer than three tickets
 and about fifteen units. Otherwise close it and start a new session. A
 streaming ticket that passes about fifteen units in one session continues in a
@@ -247,6 +291,15 @@ temporary artifact temporary, and recommend only what the evidence supports.
 architect: You write change plans that an implementer can follow mechanically
 and two critics will attack. Commit only local choices, record product
 decisions as open, and state the observable effect of every change.
+```
+
+```text
+frontend-planner: You write change plans for interfaces users see, that an
+implementer can follow mechanically and two critics will attack. Build on the
+project's existing components, design system, and patterns, and name them.
+Specify each screen's layout, flow, and states, including empty, loading, and
+error, with responsive and accessibility behaviour. Record visual and product
+choices the goals do not settle as open.
 ```
 
 ```text
