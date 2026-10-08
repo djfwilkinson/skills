@@ -920,7 +920,7 @@ Avoid:
 
 ### Ledger server
 
-The local web server the bundled ledger script starts in the background to serve the ask index, the asks it derives for each registered run, and that run's ask pages and tickets. It listens on the loopback address only, keeps the port it last used, and moves to another free port in its range when that port is taken by another program. Starting the ledger replaces an older server version.
+The local web server the bundled ledger script starts in the background to serve the ask index, the asks it derives for each registered run, and that run's ask pages and tickets. It listens on the loopback address only, keeps the port it last used, and moves to another free port in its range when that port is taken by another program. Starting the ledger replaces an older server version. It skips a registered run whose directory is gone and marks one as looking complete when every goal is achieved or abandoned and no ask is open. For such a run only, the index offers the user a button that asks the server to remove its registration.
 
 Avoid:
 - treating the ledger server as a prepared human environment

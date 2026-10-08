@@ -10,7 +10,11 @@ Starting creates the ledger directory, replaces its index when the template's
 ledger-version is newer, and starts the server unless the same or a newer
 version is running. A registered run is runs/<key>.json holding run.dir. The
 server derives each run's asks from ticket YAML and ask pages under run.dir,
-returns them at /runs, and serves files under run.dir at /r/<key>/<path>.
+returns them at /runs, and serves files under run.dir at /r/<key>/<path>. It
+skips runs whose directory is gone and flags looksComplete when every goal in
+GOALS.md is achieved or abandoned and no ask is open. POST /r/<key>/complete
+with header X-Action-Ledger: complete removes such a run's registration; the
+custom header keeps other sites from sending it.
 """
 import json, mimetypes, os, re, shutil, signal, socket, subprocess, sys, time, urllib.request
 from datetime import datetime
@@ -21,7 +25,7 @@ from urllib.parse import unquote, urlsplit
 HOME = Path(os.environ.get("ACTION_LEDGER_HOME") or Path.home() / ".agent-runs" / "action-ledger")
 RUNS, PORT_FILE, PID_FILE, INDEX = HOME / "runs", HOME / "port", HOME / "pid", HOME / "index.html"
 TEMPLATE = Path(__file__).resolve().parent.parent / "templates" / "ask-index.html"
-FIRST_PORT, PORT_TRIES, VERSION = 47391, 20, 2
+FIRST_PORT, PORT_TRIES, VERSION = 47391, 20, 4
 NAME = f"action-ledger/{VERSION}"
 
 
@@ -51,9 +55,18 @@ def page_value(page, key):
         return ""
 
 
+def goal_statuses(base):
+    try:
+        return re.findall(r"(?m)^### Status[ \t]*\n+[ \t]*(\w+)", (base / "GOALS.md").read_text(encoding="utf-8"))
+    except OSError:
+        return []
+
+
 def run_view(key, data):
     run = dict(data.get("run") or {}) if isinstance(data, dict) else {}
     base, asks, updated = Path(run.get("dir") or "/nonexistent"), [], 0
+    if not base.is_dir():
+        return None
     for path in sorted((base / "tickets").glob("*.md")):
         try:
             updated = max(updated, path.stat().st_mtime)
@@ -71,21 +84,37 @@ def run_view(key, data):
                      "reason": page_value(page, "why"), "presentedAt": page_value(page, "presentedAt")})
     if updated:
         run["updatedAt"] = datetime.fromtimestamp(updated).astimezone().isoformat()
+    statuses = goal_statuses(base)
+    run["looksComplete"] = bool(statuses) and not asks and set(statuses) <= {"achieved", "abandoned"}
     return {"key": key, "run": run, "asks": asks}
 
 
 class Handler(BaseHTTPRequestHandler):
     server_version = NAME
 
+    def local(self):
+        return self.headers.get("Host", "").rsplit(":", 1)[0] in ("127.0.0.1", "localhost")
+
+    def do_POST(self):
+        parts = unquote(urlsplit(self.path).path).split("/")
+        if not self.local() or self.headers.get("X-Action-Ledger") != "complete" or len(parts) != 4 or parts[1::2] != ["r", "complete"]:
+            return self.send_error(403)
+        path = RUNS / f"{parts[2]}.json"
+        view = run_view(parts[2], read_json(path))
+        if not (view and view["run"]["looksComplete"]):
+            return self.send_error(409, "Run does not look complete")
+        path.unlink(missing_ok=True)
+        self.send(b"{}", "application/json")
+
     def do_GET(self):
-        if self.headers.get("Host", "").rsplit(":", 1)[0] not in ("127.0.0.1", "localhost"):
+        if not self.local():
             return self.send_error(403)
         path = unquote(urlsplit(self.path).path)
         if path == "/":
             return self.send(INDEX.read_bytes(), "text/html")
         if path == "/runs":
             views = [run_view(file.stem, read_json(file)) for file in sorted(RUNS.glob("*.json"))]
-            return self.send(json.dumps(views).encode(), "application/json")
+            return self.send(json.dumps([view for view in views if view]).encode(), "application/json")
         parts = path.split("/", 3)
         if len(parts) == 4 and parts[1] == "r":
             run = read_json(RUNS / f"{parts[2]}.json") or {}

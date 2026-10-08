@@ -77,6 +77,11 @@ seconds and on Refresh. It:
 - omits every other ticket;
 - derives counts, the oldest-ask age, and links to `asks/<id>.html` and
   `tickets/<id>.md`;
+- skips a registered run whose directory no longer exists;
+- marks a run as looking complete when every `GOALS.md` status is `achieved` or
+  `abandoned` and no ask is open, and offers the user a button that removes its
+  registration, as `complete` does. That is the user's choice, not run
+  completion; a run still in progress registers again at its next ask;
 - when the user opts in, raises a browser notification for each newly
   presented ask found while the page is in the background.
 
