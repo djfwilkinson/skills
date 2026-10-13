@@ -178,8 +178,8 @@ One page represents one human ticket. It contains:
 - the one-sentence summary of the ask;
 - the complete current return-to-user ask for that type;
 - why the ask matters to the user, from the ticket's Objective, never the
-  process or Interactive reason, except the model ask and the planning-depth
-  offer, whose subject is how the run works;
+  process or Interactive reason, except the model ask, whose subject is how
+  the run works;
 - what to inspect or compare and which results distinguish the available
   replies;
 - any prepared resource path or URL and its current state;
@@ -273,11 +273,6 @@ below; each list is the extra payload that type carries, not a substitute:
   personas as one ordered section, one complete reply example each for `lean`,
   `quality`, naming a model and effort for a persona, and excluding a model,
   and the ticket path.
-- Planning depth offer: what reviewed planning changes about how the run
-  reaches the user's result, the recorded conditions this run met, the cost as
-  the planning and review work it adds before implementation, that change
-  plans are agent-facing and require no user sign-off, the recommendation, and
-  the ticket path.
 - Acceptance: exact result or path, inspection method, successful and
   change-needed observations, acceptance basis, request to accept or describe
   changes, and ticket path.
@@ -293,8 +288,7 @@ below; each list is the extra payload that type carries, not a substitute:
   entry under that type's contract.
 
 Do not add unsupported hints. Do not paste ticket metadata, Reads, related run
-IDs, or the process reason. The model ask and the planning-depth offer are
-the only exceptions. Acceptance is not an options question; present it directly and
+IDs, or the process reason. The model ask is the only exception. Acceptance is not an options question; present it directly and
 wait for the user's reply.
 
 After that same ask has been presented once, later user-visible messages may

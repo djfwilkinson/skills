@@ -780,9 +780,9 @@ basis, what observations indicate success or required changes, and a request
 to accept it or describe required changes. Do not use a structured questions
 form or multiple-choice prompt for acceptance.
 
-Ask only for judgement a subagent cannot make. The model ask and the
-planning-depth offer are the only Discuss tickets whose subject is process:
-they ask for preferences no subagent can supply. Never ask the user to perform or
+Ask only for judgement a subagent cannot make. The model ask is the only
+Discuss ticket whose subject is process: it asks for preferences no subagent
+can supply. Never ask the user to perform or
 confirm a check a subagent can run, such as tests, builds, lint, searches, or
 doc checks, under any label, including inspection method or expected result;
 report it as a recorded outcome from its ticket instead. Asking the user to run

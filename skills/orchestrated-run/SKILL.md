@@ -177,10 +177,16 @@ choice once when a reconciled bootstrap ticket records:
 
 The condition must name its artifact; an open unknown alone does not qualify.
 Do not offer for research-only runs. If the user stated a preference, record it
-in `WORKINGHINTS.md` and `LOG.md` without asking. Otherwise use Discuss for the
-offer; if no offer is due, record `standard` in `WORKINGHINTS.md` and its basis
-in `LOG.md`. Only a stated preference, a returned offer, or that no-offer
-default confirms the value. While the ask is unanswered, steering may create
+in `WORKINGHINTS.md` and `LOG.md` without asking. Otherwise ask the user one direct question, with the
+client's structured question tool when it has one, or in chat. It is not a human
+ticket: it has no ticket, ask page, or ledger entry. The question covers what
+reviewed planning changes about how the run reaches the user's result, the
+recorded conditions this run met, the cost as the planning and review work it
+adds before implementation, that change plans are agent-facing and need no user
+sign-off, and the recommendation, and offers `standard` and `reviewed planning`.
+Record the answer in `WORKINGHINTS.md` and `LOG.md`. If no offer is due,
+record `standard` in `WORKINGHINTS.md` and its basis in `LOG.md`. Only a stated preference, an answered question, or that no-offer
+default confirms the value. While the question is unanswered, steering may create
 Research to draft and classify requested work. Do not create, ready, or
 dispatch Plan, Plan Review, Agent Task, Explore Options, or Human and Agent
 Task until planning depth is recorded.
@@ -235,7 +241,8 @@ The orchestrator owns all process decisions, including next work, grouping,
 persona choice, assignment, result acceptance, verification, review, and
 completion. Persona models, through the models question and model asks, and
 planning depth are the only process decisions this skill puts to the user;
-other process decisions are not user tickets.
+planning depth is a direct question, not a ticket, and only model asks are
+tickets. Other process decisions are not user tickets.
 
 ## Tickets
 Read [TICKET-CONTRACTS.md](TICKET-CONTRACTS.md) before creating a ticket.

@@ -592,7 +592,7 @@ Avoid:
 
 ### Planning depth
 
-A confirmed run-level choice between `standard`, where Research feeds Agent Tasks directly, and `reviewed planning`. With the roster, it is one of the two process decisions the skill puts to the user. It is offered at most once after goals become active and is recorded as a working hint; a proposal or recommendation is not confirmed.
+A confirmed run-level choice between `standard`, where Research feeds Agent Tasks directly, and `reviewed planning`. With the roster, it is one of the two process decisions the skill puts to the user. It is asked at most once after goals become active as a direct orchestrator question, not a ticket, and is recorded as a working hint; a proposal or recommendation is not confirmed.
 
 Related:
 - reviewed planning
@@ -677,7 +677,7 @@ Related:
 - product decision
 
 Avoid:
-- using Discuss for process decisions the orchestrator owns, other than the model ask and the planning-depth offer
+- using Discuss for process decisions the orchestrator owns, other than the model ask
 
 ### Human Task
 
