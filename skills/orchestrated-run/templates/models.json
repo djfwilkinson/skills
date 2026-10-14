@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "rated": "2026-10-12",
+  "rated": "2026-10-14",
   "source": "Artificial Analysis leaderboard, under RATING-MODELS.md",
   "plan": {
     "description": "Cursor Teams and Enterprise: $0.25 per 1M tokens on third-party models, Grok and Composer exempt; Grok at 40% of list cost, a user estimate of the Enterprise rate",
@@ -29,8 +29,8 @@
         "critpt": 0.0914285714285714,
         "omniscienceAccuracy": 0.3325,
         "gdpvalNormalized": 0.31111500000000003,
-        "webdevFrontend": 1537.989995883328,
-        "webdevFrontendSe": 55.542988449609844,
+        "webdevFrontend": 1535.19104288315,
+        "webdevFrontendSe": 53.91059792245951,
         "scaled": 1
       },
       "listCostPerTask": 0.02445936101890973,
@@ -42,7 +42,7 @@
       ],
       "arena": {
         "name": "claude-haiku-5.5-high",
-        "votes": 753,
+        "votes": 2102,
         "scaled": true
       }
     },
@@ -60,8 +60,8 @@
         "critpt": 0.128571428571429,
         "omniscienceAccuracy": 0.3403333333333333,
         "gdpvalNormalized": 0.38716999999999996,
-        "webdevFrontend": 1556.0813057937426,
-        "webdevFrontendSe": 59.77322759390122,
+        "webdevFrontend": 1552.8590864349014,
+        "webdevFrontendSe": 57.88155534686674,
         "scaled": 1
       },
       "listCostPerTask": 0.04703084793955566,
@@ -73,7 +73,7 @@
       ],
       "arena": {
         "name": "claude-haiku-5.5-high",
-        "votes": 753,
+        "votes": 2102,
         "scaled": true
       }
     },
@@ -91,8 +91,8 @@
         "critpt": 0.185714285714286,
         "omniscienceAccuracy": 0.3478333333333333,
         "gdpvalNormalized": 0.458885,
-        "webdevFrontend": 1609.270685037656,
-        "webdevFrontendSe": 11.534697860374346
+        "webdevFrontend": 1604.5239483422738,
+        "webdevFrontendSe": 7.175595313970181
       },
       "listCostPerTask": 0.07942671568737021,
       "costEstimated": false,
@@ -103,7 +103,7 @@
       ],
       "arena": {
         "name": "claude-haiku-5.5-high",
-        "votes": 753
+        "votes": 2102
       }
     },
     {
@@ -142,7 +142,7 @@
         "hle": 0.443929564411492,
         "critpt": 0.188571428571429,
         "omniscienceAccuracy": 0.36383333333333334,
-        "gdpvalNormalized": 0.559035
+        "gdpvalNormalized": 0.5591649999999999
       },
       "listCostPerTask": 0.21276971216992022,
       "costEstimated": false,
@@ -165,10 +165,10 @@
         "hle": 0.483317886932345,
         "critpt": 0.177142857142857,
         "omniscienceAccuracy": 0.6353333333333333,
-        "gdpvalNormalized": 0.36758500000000005,
+        "gdpvalNormalized": 0.36685,
         "mmmuPro": 0.846820809248555,
-        "webdevFrontend": 1554.0965243866772,
-        "webdevFrontendSe": 44.163572306642095,
+        "webdevFrontend": 1555.9947147851603,
+        "webdevFrontendSe": 43.89664814294714,
         "scaled": 1
       },
       "listCostPerTask": 0.551180473909146,
@@ -180,7 +180,7 @@
       ],
       "arena": {
         "name": "claude-opus-5.5-max",
-        "votes": 1687,
+        "votes": 1910,
         "scaled": true
       }
     },
@@ -197,10 +197,10 @@
         "hle": 0.547265987025023,
         "critpt": 0.277142857142857,
         "omniscienceAccuracy": 0.6455,
-        "gdpvalNormalized": 0.543125,
+        "gdpvalNormalized": 0.54185,
         "mmmuPro": 0.857225433526012,
-        "webdevFrontend": 1698.3450450231624,
-        "webdevFrontendSe": 73.26853112559854,
+        "webdevFrontend": 1698.9048211755053,
+        "webdevFrontendSe": 72.26567726759622,
         "scaled": 1
       },
       "listCostPerTask": 1.3360093438976588,
@@ -212,7 +212,7 @@
       ],
       "arena": {
         "name": "claude-opus-5.5-max",
-        "votes": 1687,
+        "votes": 1910,
         "scaled": true
       }
     },
@@ -229,10 +229,10 @@
         "hle": 0.555607043558851,
         "critpt": 0.308571428571429,
         "omniscienceAccuracy": 0.6458333333333334,
-        "gdpvalNormalized": 0.6027250000000001,
+        "gdpvalNormalized": 0.60127,
         "mmmuPro": 0.858381502890173,
-        "webdevFrontend": 1744.2320057114393,
-        "webdevFrontendSe": 88.46087335520795,
+        "webdevFrontend": 1744.078715245558,
+        "webdevFrontendSe": 86.89223111857129,
         "scaled": 1
       },
       "listCostPerTask": 1.822504718771704,
@@ -244,7 +244,7 @@
       ],
       "arena": {
         "name": "claude-opus-5.5-max",
-        "votes": 1687,
+        "votes": 1910,
         "scaled": true
       }
     },
@@ -261,10 +261,10 @@
         "hle": 0.575069508804449,
         "critpt": 0.317142857142857,
         "omniscienceAccuracy": 0.6538333333333334,
-        "gdpvalNormalized": 0.66853,
+        "gdpvalNormalized": 0.6678999999999999,
         "mmmuPro": 0.865895953757225,
-        "webdevFrontend": 1830.637364941602,
-        "webdevFrontendSe": 131.23906773540767,
+        "webdevFrontend": 1828.5197920726932,
+        "webdevFrontendSe": 127.46148862657701,
         "scaled": 1
       },
       "listCostPerTask": 3.459110175822289,
@@ -276,7 +276,7 @@
       ],
       "arena": {
         "name": "claude-opus-5.5-max",
-        "votes": 1687,
+        "votes": 1910,
         "scaled": true
       }
     },
@@ -295,8 +295,8 @@
         "omniscienceAccuracy": 0.6621666666666667,
         "gdpvalNormalized": 0.6831349999999999,
         "mmmuPro": 0.876878612716763,
-        "webdevFrontend": 1857.1015050069875,
-        "webdevFrontendSe": 9.568922091318713
+        "webdevFrontend": 1854.16568604211,
+        "webdevFrontendSe": 9.029198343685202
       },
       "listCostPerTask": 5.982012019521066,
       "costEstimated": false,
@@ -307,7 +307,7 @@
       ],
       "arena": {
         "name": "claude-opus-5.5-max",
-        "votes": 1687
+        "votes": 1910
       }
     },
     {
@@ -323,9 +323,9 @@
         "hle": 0.362372567191844,
         "critpt": 0.114285714285714,
         "omniscienceAccuracy": 0.463,
-        "gdpvalNormalized": 0.33929999999999993,
-        "webdevFrontend": 1520.7783104882694,
-        "webdevFrontendSe": 47.90627726376388,
+        "gdpvalNormalized": 0.337545,
+        "webdevFrontend": 1522.702563826022,
+        "webdevFrontendSe": 47.64040448308137,
         "scaled": 1
       },
       "listCostPerTask": 0.3451610270666562,
@@ -337,7 +337,7 @@
       ],
       "arena": {
         "name": "claude-sonnet-5.5-high",
-        "votes": 3208,
+        "votes": 3683,
         "scaled": true
       }
     },
@@ -354,9 +354,9 @@
         "hle": 0.39805375347544,
         "critpt": 0.168571428571429,
         "omniscienceAccuracy": 0.4716666666666667,
-        "gdpvalNormalized": 0.41179999999999994,
-        "webdevFrontend": 1608.344404857824,
-        "webdevFrontendSe": 63.78689661518236,
+        "gdpvalNormalized": 0.411615,
+        "webdevFrontend": 1609.6470635507947,
+        "webdevFrontendSe": 63.205837397157495,
         "scaled": 1
       },
       "listCostPerTask": 0.48326378260543096,
@@ -368,7 +368,7 @@
       ],
       "arena": {
         "name": "claude-sonnet-5.5-high",
-        "votes": 3208,
+        "votes": 3683,
         "scaled": true
       }
     },
@@ -386,8 +386,8 @@
         "critpt": 0.245714285714286,
         "omniscienceAccuracy": 0.5198333333333334,
         "gdpvalNormalized": 0.524885,
-        "webdevFrontend": 1745.0444036468496,
-        "webdevFrontendSe": 6.340292456651028
+        "webdevFrontend": 1744.4818773972074,
+        "webdevFrontendSe": 6.020928474186474
       },
       "listCostPerTask": 0.8844498581005511,
       "costEstimated": false,
@@ -398,7 +398,7 @@
       ],
       "arena": {
         "name": "claude-sonnet-5.5-high",
-        "votes": 3208
+        "votes": 3683
       }
     },
     {
@@ -415,8 +415,8 @@
         "critpt": 0.311428571428571,
         "omniscienceAccuracy": 0.5303333333333333,
         "gdpvalNormalized": 0.6147699999999999,
-        "webdevFrontend": 1812.5243507931007,
-        "webdevFrontendSe": 8.817130346528698
+        "webdevFrontend": 1812.4277458845668,
+        "webdevFrontendSe": 8.192428588888005
       },
       "listCostPerTask": 2.0120345801545785,
       "costEstimated": false,
@@ -427,7 +427,7 @@
       ],
       "arena": {
         "name": "claude-sonnet-5.5-xhigh",
-        "votes": 1833
+        "votes": 2235
       }
     },
     {
@@ -443,7 +443,7 @@
         "hle": 0.549582947173309,
         "critpt": 0.314285714285714,
         "omniscienceAccuracy": 0.5395,
-        "gdpvalNormalized": 0.66955
+        "gdpvalNormalized": 0.66891
       },
       "listCostPerTask": 5.4608525948098325,
       "costEstimated": false,
@@ -466,15 +466,15 @@
         "hle": 0.370713623725672,
         "critpt": 0.04,
         "omniscienceAccuracy": 0.5221666666666667,
-        "gdpvalNormalized": 0.40517499999999995,
+        "gdpvalNormalized": 0.403275,
         "mmmuPro": 0.845086705202312,
         "tauBanking": 0.331958762886598,
         "terminalBench21": 0.831460674157303,
-        "webdevFrontend": 1510.0453024587266,
-        "webdevFrontendSe": 44.67953490841114,
+        "webdevFrontend": 1511.3673187704128,
+        "webdevFrontendSe": 44.349556336324184,
         "scaled": 1
       },
-      "listCostPerTask": 0.44785504111070307,
+      "listCostPerTask": 0.4483728185541193,
       "costEstimated": true,
       "tokensPerTask": null,
       "prices": [
@@ -483,7 +483,7 @@
       ],
       "arena": {
         "name": "gemini-3.8-flash-high",
-        "votes": 7239,
+        "votes": 7918,
         "scaled": true
       }
     },
@@ -504,8 +504,8 @@
         "mmmuPro": 0.842196531791908,
         "tauBanking": 0.457731958762887,
         "terminalBench21": 0.838951310861423,
-        "webdevFrontend": 1577.945616823895,
-        "webdevFrontendSe": 58.571114900128535,
+        "webdevFrontend": 1578.6592948295981,
+        "webdevFrontendSe": 57.935443379888156,
         "scaled": 1
       },
       "listCostPerTask": 0.9310379374376306,
@@ -517,7 +517,7 @@
       ],
       "arena": {
         "name": "gemini-3.8-flash-high",
-        "votes": 7239,
+        "votes": 7918,
         "scaled": true
       }
     },
@@ -534,12 +534,12 @@
         "hle": 0.478220574606117,
         "critpt": 0.182857142857143,
         "omniscienceAccuracy": 0.546,
-        "gdpvalNormalized": 0.46776,
+        "gdpvalNormalized": 0.46814999999999996,
         "mmmuPro": 0.85606936416185,
         "tauBanking": 0.449484536082474,
         "terminalBench21": 0.876404494382023,
-        "webdevFrontend": 1588.6655282755307,
-        "webdevFrontendSe": 4.360595015158969
+        "webdevFrontend": 1589.2597694706524,
+        "webdevFrontendSe": 4.2693401121570735
       },
       "listCostPerTask": 1.2427947606950427,
       "costEstimated": false,
@@ -550,7 +550,36 @@
       ],
       "arena": {
         "name": "gemini-3.8-flash-high",
-        "votes": 7239
+        "votes": 7918
+      }
+    },
+    {
+      "model": "gemini-4-argon",
+      "effort": "high",
+      "provider": "google",
+      "source": "Gemini 4 Argon@high",
+      "basis": "measured",
+      "results": {
+        "terminalBench40": 0.570707070707071,
+        "scicode": 0.618055555555556,
+        "lcr": 0.796666666666667,
+        "hle": 0.570898980537535,
+        "critpt": 0.271428571428571,
+        "omniscienceAccuracy": 0.499,
+        "gdpvalNormalized": 0.561995,
+        "webdevFrontend": 1687.391966166237,
+        "webdevFrontendSe": 9.41124939901142
+      },
+      "listCostPerTask": 1.990322379299008,
+      "costEstimated": false,
+      "tokensPerTask": 2694494.9843841097,
+      "prices": [
+        2,
+        10
+      ],
+      "arena": {
+        "name": "gemini-4-argon-high",
+        "votes": 1276
       }
     },
     {
@@ -566,12 +595,12 @@
         "hle": 0.072289156626506,
         "critpt": 0.00285714285714286,
         "omniscienceAccuracy": 0.286,
-        "gdpvalNormalized": 0.21124,
+        "gdpvalNormalized": 0.20949500000000001,
         "mmmuPro": 0.603468208092486,
         "tauBanking": 0.0969072164948454,
         "terminalBench21": 0.389513108614232,
-        "webdevFrontend": 1419.0569768148894,
-        "webdevFrontendSe": 33.08191190731624,
+        "webdevFrontend": 1419.2609314142169,
+        "webdevFrontendSe": 32.80087357014064,
         "scaled": 1
       },
       "listCostPerTask": 0.010091821810180262,
@@ -583,7 +612,7 @@
       ],
       "arena": {
         "name": "gpt-5.6-luna-xhigh (codex-harness)",
-        "votes": 9600,
+        "votes": 9668,
         "scaled": true
       }
     },
@@ -600,12 +629,12 @@
         "hle": 0.198331788693234,
         "critpt": 0.0257142857142857,
         "omniscienceAccuracy": 0.39616666666666667,
-        "gdpvalNormalized": 0.248485,
+        "gdpvalNormalized": 0.247245,
         "mmmuPro": 0.739884393063584,
         "tauBanking": 0.127835051546392,
         "terminalBench21": 0.434456928838951,
-        "webdevFrontend": 1454.2187257238438,
-        "webdevFrontendSe": 33.328420127277504,
+        "webdevFrontend": 1454.0887187049202,
+        "webdevFrontendSe": 32.98235660620971,
         "scaled": 1
       },
       "listCostPerTask": 0.009827249754655997,
@@ -617,7 +646,7 @@
       ],
       "arena": {
         "name": "gpt-5.6-luna-xhigh (codex-harness)",
-        "votes": 9600,
+        "votes": 9668,
         "scaled": true
       }
     },
@@ -638,8 +667,8 @@
         "mmmuPro": 0.758381502890173,
         "tauBanking": 0.177319587628866,
         "terminalBench21": 0.531835205992509,
-        "webdevFrontend": 1463.5471260011313,
-        "webdevFrontendSe": 34.58763098583059,
+        "webdevFrontend": 1463.3167003940214,
+        "webdevFrontendSe": 34.20864759304524,
         "scaled": 1
       },
       "listCostPerTask": 0.015598049609820011,
@@ -651,7 +680,7 @@
       ],
       "arena": {
         "name": "gpt-5.6-luna-xhigh (codex-harness)",
-        "votes": 9600,
+        "votes": 9668,
         "scaled": true
       }
     },
@@ -668,12 +697,12 @@
         "hle": 0.334105653382762,
         "critpt": 0.165714285714286,
         "omniscienceAccuracy": 0.41783333333333333,
-        "gdpvalNormalized": 0.41655,
+        "gdpvalNormalized": 0.41476999999999997,
         "mmmuPro": 0.775722543352601,
         "tauBanking": 0.251546391752577,
         "terminalBench21": 0.696629213483146,
-        "webdevFrontend": 1517.4792578705947,
-        "webdevFrontendSe": 41.33299307582491,
+        "webdevFrontend": 1516.55120586644,
+        "webdevFrontendSe": 40.716216860643534,
         "scaled": 1
       },
       "listCostPerTask": 0.043981552251920096,
@@ -685,7 +714,7 @@
       ],
       "arena": {
         "name": "gpt-5.6-luna-xhigh (codex-harness)",
-        "votes": 9600,
+        "votes": 9668,
         "scaled": true
       }
     },
@@ -706,8 +735,8 @@
         "mmmuPro": 0.785549132947977,
         "tauBanking": 0.28659793814433,
         "terminalBench21": 0.779026217228464,
-        "webdevFrontend": 1516.7259185793466,
-        "webdevFrontendSe": 3.6630851299679885
+        "webdevFrontend": 1515.8091551574698,
+        "webdevFrontendSe": 3.6519576532339446
       },
       "listCostPerTask": 0.085342806135728,
       "costEstimated": false,
@@ -718,7 +747,7 @@
       ],
       "arena": {
         "name": "gpt-5.6-luna-xhigh (codex-harness)",
-        "votes": 9600
+        "votes": 9668
       }
     },
     {
@@ -734,7 +763,7 @@
         "hle": 0.394810009267841,
         "critpt": 0.205714285714286,
         "omniscienceAccuracy": 0.42733333333333334,
-        "gdpvalNormalized": 0.48194000000000004,
+        "gdpvalNormalized": 0.47970000000000007,
         "mmmuPro": 0.785549132947977,
         "tauBanking": 0.311340206185567,
         "terminalBench21": 0.808988764044944
@@ -760,14 +789,14 @@
         "hle": 0.393883225208526,
         "critpt": 0.148571428571429,
         "omniscienceAccuracy": 0.5716666666666667,
-        "gdpvalNormalized": 0.402425,
+        "gdpvalNormalized": 0.40176999999999996,
         "mmmuPro": 0.809826589595376,
         "tauBanking": 0.290721649484536,
         "terminalBench21": 0.767790262172285,
         "ifbench": 0.66530612244898,
         "tau2": 0.760233918128655,
-        "webdevFrontend": 1455.6908706323563,
-        "webdevFrontendSe": 33.16312692400188,
+        "webdevFrontend": 1456.6917496869326,
+        "webdevFrontendSe": 32.92202459321454,
         "scaled": 1
       },
       "listCostPerTask": 0.2606419442090313,
@@ -779,7 +808,7 @@
       ],
       "arena": {
         "name": "gpt-5.6-sol-xhigh (codex-harness)",
-        "votes": 12985,
+        "votes": 13475,
         "scaled": true
       }
     },
@@ -802,8 +831,8 @@
         "terminalBench21": 0.861423220973783,
         "ifbench": 0.695918367346939,
         "tau2": 0.809941520467836,
-        "webdevFrontend": 1552.7273461037819,
-        "webdevFrontendSe": 51.667083707457785,
+        "webdevFrontend": 1552.7837756893125,
+        "webdevFrontendSe": 51.01317754013533,
         "scaled": 1
       },
       "listCostPerTask": 0.5049926304382959,
@@ -815,7 +844,7 @@
       ],
       "arena": {
         "name": "gpt-5.6-sol-xhigh (codex-harness)",
-        "votes": 12985,
+        "votes": 13475,
         "scaled": true
       }
     },
@@ -838,8 +867,8 @@
         "terminalBench21": 0.872659176029963,
         "ifbench": 0.691836734693878,
         "tau2": 0.833333333333333,
-        "webdevFrontend": 1599.5064393100495,
-        "webdevFrontendSe": 62.29055500097292,
+        "webdevFrontend": 1598.8841092356713,
+        "webdevFrontendSe": 61.26235157714086,
         "scaled": 1
       },
       "listCostPerTask": 0.807982690134498,
@@ -851,7 +880,7 @@
       ],
       "arena": {
         "name": "gpt-5.6-sol-xhigh (codex-harness)",
-        "votes": 12985,
+        "votes": 13475,
         "scaled": true
       }
     },
@@ -868,14 +897,14 @@
         "hle": 0.473123262279889,
         "critpt": 0.285714285714286,
         "omniscienceAccuracy": 0.5881666666666666,
-        "gdpvalNormalized": 0.536165,
+        "gdpvalNormalized": 0.534455,
         "mmmuPro": 0.826589595375723,
         "tauBanking": 0.381443298969072,
         "terminalBench21": 0.895131086142322,
         "ifbench": 0.710204081632653,
         "tau2": 0.847953216374269,
-        "webdevFrontend": 1626.358920559344,
-        "webdevFrontendSe": 3.40396391256748
+        "webdevFrontend": 1625.2575613514516,
+        "webdevFrontendSe": 3.3558267718171804
       },
       "listCostPerTask": 1.1843629381907275,
       "costEstimated": false,
@@ -886,7 +915,7 @@
       ],
       "arena": {
         "name": "gpt-5.6-sol-xhigh (codex-harness)",
-        "votes": 12985
+        "votes": 13475
       }
     },
     {
@@ -902,7 +931,7 @@
         "hle": 0.494902687673772,
         "critpt": 0.322857142857143,
         "omniscienceAccuracy": 0.594,
-        "gdpvalNormalized": 0.55567,
+        "gdpvalNormalized": 0.55426,
         "mmmuPro": 0.834104046242775,
         "tauBanking": 0.443298969072165,
         "terminalBench21": 0.880149812734082,
@@ -930,12 +959,12 @@
         "hle": 0.113994439295644,
         "critpt": 0.02,
         "omniscienceAccuracy": 0.36816666666666664,
-        "gdpvalNormalized": 0.29978999999999995,
+        "gdpvalNormalized": 0.29865499999999995,
         "mmmuPro": 0.667052023121387,
         "tauBanking": 0.156701030927835,
         "terminalBench21": 0.561797752808989,
-        "webdevFrontend": 1406.7772148762722,
-        "webdevFrontendSe": 31.773709012026323,
+        "webdevFrontend": 1407.7971223448442,
+        "webdevFrontendSe": 31.573669421540313,
         "scaled": 1
       },
       "listCostPerTask": 0.13972397093498629,
@@ -947,7 +976,7 @@
       ],
       "arena": {
         "name": "gpt-5.6-terra-xhigh (codex-harness)",
-        "votes": 9588,
+        "votes": 10276,
         "scaled": true
       }
     },
@@ -964,14 +993,14 @@
         "hle": 0.291936978683967,
         "critpt": 0.0942857142857143,
         "omniscienceAccuracy": 0.43733333333333335,
-        "gdpvalNormalized": 0.30515,
+        "gdpvalNormalized": 0.30395500000000003,
         "mmmuPro": 0.761271676300578,
         "tauBanking": 0.187628865979381,
         "terminalBench21": 0.625468164794007,
         "ifbench": 0.596598639455782,
         "tau2": 0.605263157894737,
-        "webdevFrontend": 1445.5810300948415,
-        "webdevFrontendSe": 34.73129431086559,
+        "webdevFrontend": 1446.330212934897,
+        "webdevFrontendSe": 34.45882483798646,
         "scaled": 1
       },
       "listCostPerTask": 0.1444617614290821,
@@ -983,7 +1012,7 @@
       ],
       "arena": {
         "name": "gpt-5.6-terra-xhigh (codex-harness)",
-        "votes": 9588,
+        "votes": 10276,
         "scaled": true
       }
     },
@@ -1000,14 +1029,14 @@
         "hle": 0.332715477293791,
         "critpt": 0.174285714285714,
         "omniscienceAccuracy": 0.446,
-        "gdpvalNormalized": 0.38457500000000006,
+        "gdpvalNormalized": 0.38214499999999996,
         "mmmuPro": 0.767630057803468,
         "tauBanking": 0.255670103092783,
         "terminalBench21": 0.722846441947566,
         "ifbench": 0.621768707482993,
         "tau2": 0.728070175438596,
-        "webdevFrontend": 1445.8983079948428,
-        "webdevFrontendSe": 34.221601865679524,
+        "webdevFrontend": 1446.64502052962,
+        "webdevFrontendSe": 33.95257597534635,
         "scaled": 1
       },
       "listCostPerTask": 0.18337295992969213,
@@ -1019,7 +1048,7 @@
       ],
       "arena": {
         "name": "gpt-5.6-terra-xhigh (codex-harness)",
-        "votes": 9588,
+        "votes": 10276,
         "scaled": true
       }
     },
@@ -1042,8 +1071,8 @@
         "terminalBench21": 0.756554307116105,
         "ifbench": 0.64421768707483,
         "tau2": 0.783625730994152,
-        "webdevFrontend": 1462.4947350551925,
-        "webdevFrontendSe": 35.77283475610273,
+        "webdevFrontend": 1463.1057850480959,
+        "webdevFrontendSe": 35.46388942172462,
         "scaled": 1
       },
       "listCostPerTask": 0.3378727947949101,
@@ -1055,7 +1084,7 @@
       ],
       "arena": {
         "name": "gpt-5.6-terra-xhigh (codex-harness)",
-        "votes": 9588,
+        "votes": 10276,
         "scaled": true
       }
     },
@@ -1072,14 +1101,14 @@
         "hle": 0.418906394810009,
         "critpt": 0.271428571428571,
         "omniscienceAccuracy": 0.45516666666666666,
-        "gdpvalNormalized": 0.47458000000000006,
+        "gdpvalNormalized": 0.47348,
         "mmmuPro": 0.794797687861272,
         "tauBanking": 0.296907216494845,
         "terminalBench21": 0.801498127340824,
         "ifbench": 0.662585034013605,
         "tau2": 0.804093567251462,
-        "webdevFrontend": 1522.6525056057114,
-        "webdevFrontendSe": 3.7072812384511806
+        "webdevFrontend": 1522.6487408998541,
+        "webdevFrontendSe": 3.627525413555956
       },
       "listCostPerTask": 0.6317911346924275,
       "costEstimated": false,
@@ -1090,7 +1119,7 @@
       ],
       "arena": {
         "name": "gpt-5.6-terra-xhigh (codex-harness)",
-        "votes": 9588
+        "votes": 10276
       }
     },
     {
@@ -1106,7 +1135,7 @@
         "hle": 0.429101019462465,
         "critpt": 0.3,
         "omniscienceAccuracy": 0.468,
-        "gdpvalNormalized": 0.476605,
+        "gdpvalNormalized": 0.47559500000000005,
         "mmmuPro": 0.806936416184971,
         "tauBanking": 0.402061855670103,
         "terminalBench21": 0.880149812734082,
@@ -1134,10 +1163,10 @@
         "hle": 0.391566265060241,
         "critpt": 0.134285714285714,
         "omniscienceAccuracy": 0.497,
-        "gdpvalNormalized": 0.5443049999999999,
+        "gdpvalNormalized": 0.5441849999999999,
         "mmmuPro": 0.78150289017341,
-        "webdevFrontend": 1560.092158878193,
-        "webdevFrontendSe": 54.2095768791158,
+        "webdevFrontend": 1562.8765935017275,
+        "webdevFrontendSe": 54.043358433264665,
         "scaled": 1
       },
       "listCostPerTask": 1.2479664056943975,
@@ -1149,7 +1178,7 @@
       ],
       "arena": {
         "name": "grok-4.7-xhigh",
-        "votes": 3082,
+        "votes": 3598,
         "scaled": true
       }
     },
@@ -1166,9 +1195,9 @@
         "hle": 0.40732159406858204,
         "critpt": 0.157142857142857,
         "omniscienceAccuracy": 0.48758333333333337,
-        "gdpvalNormalized": 0.5740274999999999,
-        "webdevFrontend": 1603.2479283507555,
-        "webdevFrontendSe": 63.76626848143644,
+        "gdpvalNormalized": 0.5739675,
+        "webdevFrontend": 1605.897861563494,
+        "webdevFrontendSe": 63.52128508771802,
         "scaled": 1
       },
       "listCostPerTask": 1.9870365487402122,
@@ -1180,7 +1209,7 @@
       ],
       "arena": {
         "name": "grok-4.7-xhigh",
-        "votes": 3082,
+        "votes": 3598,
         "scaled": true
       }
     },
@@ -1198,8 +1227,8 @@
         "critpt": 0.18,
         "omniscienceAccuracy": 0.4781666666666667,
         "gdpvalNormalized": 0.60375,
-        "webdevFrontend": 1651.3524312701127,
-        "webdevFrontendSe": 77.25121074263113,
+        "webdevFrontend": 1653.807466304027,
+        "webdevFrontendSe": 76.8675617718104,
         "scaled": 1
       },
       "listCostPerTask": 2.726106691786027,
@@ -1211,7 +1240,7 @@
       ],
       "arena": {
         "name": "grok-4.7-xhigh",
-        "votes": 3082,
+        "votes": 3598,
         "scaled": true
       }
     },
@@ -1228,9 +1257,9 @@
         "hle": 0.431417979610751,
         "critpt": 0.177142857142857,
         "omniscienceAccuracy": 0.4745,
-        "gdpvalNormalized": 0.606225,
-        "webdevFrontend": 1657.583999173267,
-        "webdevFrontendSe": 6.230715547045242
+        "gdpvalNormalized": 0.6055349999999999,
+        "webdevFrontend": 1660.009624161157,
+        "webdevFrontendSe": 5.8570217186220175
       },
       "listCostPerTask": 3.738325952106939,
       "costEstimated": false,
@@ -1241,19 +1270,19 @@
       ],
       "arena": {
         "name": "grok-4.7-xhigh",
-        "votes": 3082
+        "votes": 3598
       }
     }
   ],
   "frontier": {
-    "snapshot": "2026-10-12",
-    "rows": 262,
+    "snapshot": "2026-10-14",
+    "rows": 265,
     "best": {
       "terminalBench40": 0.636363636363636,
       "scicode": 0.668981481481482,
       "lcr": 0.886666666666667,
       "hle": 0.613531047265987,
-      "critpt": 0.317142857142857,
+      "critpt": 0.328571428571429,
       "omniscienceAccuracy": 0.6723333333333333,
       "gdpvalNormalized": 0.6831349999999999,
       "mmmuPro": 0.876878612716763,
@@ -1265,19 +1294,19 @@
     "arena": {
       "webdevFrontend": {
         "url": "https://arena.ai/leaderboard/code/webdev/frontend",
-        "snapshot": "2026-10-12",
-        "models": 141,
-        "median": 1451.172770765115,
-        "top": 1857.1015050069875
+        "snapshot": "2026-10-14",
+        "models": 142,
+        "median": 1454.6907681910043,
+        "top": 1854.16568604211
       }
     },
     "work": {
       "coding": 0.9682539682539686,
       "research": 0.9799219168396948,
-      "tooling": 0.9900568701647552,
-      "review": 0.9949595108246571,
+      "tooling": 0.9895884415232714,
+      "review": 0.9833653079261059,
       "visual": 1.0
     },
-    "costRatio": 0.2985700274071354
+    "costRatio": 0.2989152123694129
   }
 }
