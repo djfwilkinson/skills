@@ -51,6 +51,15 @@ def objects(text, marker, keep):
                 break
 
 
+def numeric_row(row):
+    # Artificial Analysis now serialises a missing metric as the string "$undefined".
+    for key in (*KEYS, "intelligenceIndex", "intelligenceIndexCostPerTask", "price1mInputTokens", "price1mOutputTokens"):
+        value = row.get(key)
+        if value is not None and not isinstance(value, (int, float)):
+            row[key] = None
+    return row
+
+
 def leaderboard():
     path = CACHE / f"aa-{datetime.date.today()}.json"
     if not path.exists():
@@ -58,7 +67,7 @@ def leaderboard():
         found = {r["slug"] + r["name"]: r for r in objects(page(URL), '"terminalBench40"',
                                                            lambda o: "name" in o and "terminalBench40" in o)}
         path.write_text(json.dumps(list(found.values())))
-    return json.loads(path.read_text())
+    return [numeric_row(r) for r in json.loads(path.read_text())]
 
 
 def arena_board(key):
