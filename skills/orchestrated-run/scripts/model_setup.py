@@ -5,6 +5,7 @@ model_setup.py [--db PATH] [--choices PATH] [--ratings]
                [--client NAME... | --available MODEL=EFFORT[,EFFORT]...]
                [--multi MODEL]... [--weight PERSONA=N]... [--top N]
                [--write target] [--pin PERSONA=MODEL@EFFORT]... [--unpin PERSONA]...
+               [--personas PATH]...
 
 Scores every database row per work type as a percentage of the database's
 frontier, prices it under the database's cost plan, then finds the best setup:
@@ -16,6 +17,10 @@ the target counts as meeting it when it costs at most two-thirds of the
 cheapest row that does; it is marked near target. Setups rank by total
 shortfall below target, then by mean cost per task, weighted by --weight,
 default 1.
+
+--personas adds the personas in another Markdown file with the same Persona,
+Work and Complexity table as PERSONAS.md, for a skill that defines its own.
+They are scored, chosen, pinned and weighted like the built-in ones.
 
 --client takes the client's model names as it lists them, such as
 claude-haiku-5-5-thinking-high or grok-4.7-high, and skips fast variants;
@@ -158,8 +163,15 @@ def table(path, *columns):
     sys.exit(f"{path}: no table with {', '.join(columns)}")
 
 
-def personas():
+def personas(extra=()):
     found = table(SKILL / "PERSONAS.md", "Persona", "Work", "Complexity")
+    for path in extra:
+        found += table(Path(path), "Persona", "Work", "Complexity")
+    seen = set()
+    for p in found:
+        if p["Persona"] in seen:
+            sys.exit(f"persona {p['Persona']} is defined twice")
+        seen.add(p["Persona"])
     return [dict(name=p["Persona"], work=p["Work"], level=p["Complexity"], target=TARGETS[p["Complexity"]])
             for p in found]
 
@@ -410,7 +422,7 @@ def ratings(rows):
 
 def main(args):
     db_path, show_ratings, available, client, multi, weight, top = None, False, {}, [], set(), {}, 3
-    write, choices, pin, unpin = False, None, {}, []
+    write, choices, pin, unpin, extra = False, None, {}, [], []
     while args:
         flag, args = args[0], args[1:]
         if flag == "--ratings":
@@ -445,13 +457,15 @@ def main(args):
             unpin.append(value)
         elif flag == "--choices":
             choices = Path(value)
+        elif flag == "--personas":
+            extra.append(value)
         else:
             sys.exit(__doc__)
     machine = AGENT_RUNS / "models.json"
     db_path = db_path or (machine if machine.exists() else SKILL / "templates" / "models.json")
     choices = choices or AGENT_RUNS / "model-choices.md"
     db, rows = load(db_path)
-    people = personas()
+    people = personas(extra)
     names = {p["name"] for p in people}
     for persona in list(pin) + unpin:
         if persona not in names:
@@ -461,7 +475,7 @@ def main(args):
     print(f"Database: {db_path}, version {db.get('version')}, rated {db.get('rated')}, {len(rows)} rows")
     print(f"Cost plan: {db.get('plan', {}).get('description', 'list prices')}")
     print(f"Choices: {choices}" + (f", pins for {', '.join(pins)}" if pins else ", no pins"))
-    print(f"Personas: {len(people)} from PERSONAS.md" + (f", weighted {weight}" if weight else ", equally weighted"))
+    print(f"Personas: {len(people)} from PERSONAS.md" + (f" and {', '.join(extra)}" if extra else "") + (f", weighted {weight}" if weight else ", equally weighted"))
     if show_ratings:
         ratings(rows)
 

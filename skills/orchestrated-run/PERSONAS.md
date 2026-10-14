@@ -188,7 +188,9 @@ started with.
    A row up to two points below the target counts as meeting it, marked near
    target, when it costs at most two-thirds of the cheapest row that meets it.
    It skips fast variants, unscored models, and excluded rows; leave out of
-   `--client` whatever working hints or the user's rules exclude. Run it once
+   `--client` whatever working hints or the user's rules exclude. When a
+   skill that governs the run names an extra persona file, add `--personas
+   <path>` for each, so those personas are scored and chosen the same way. Run it once
    per run and again whenever the client's models change, such as when a
    pinned model is no longer offered.
 3. Use a pinned row as given.
