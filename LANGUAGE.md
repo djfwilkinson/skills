@@ -11,6 +11,7 @@ When naming, describing, or changing project concepts, use these terms.
 - [Packaging and authoring](#packaging-and-authoring)
 - [Writing](#writing)
 - [Orchestrated-run and project-alignment](#orchestrated-run-and-project-alignment)
+- [Orchestrated planning and questioning](#orchestrated-planning-and-questioning)
 - [Defect capture and defect runs](#defect-capture-and-defect-runs)
 - [UX/UI review](#uxui-review)
 - [Git stage and commit](#git-stage-and-commit)
@@ -262,6 +263,8 @@ Avoid:
 
 Auto-invoked library skill that shapes **chat replies** and **response-only artifacts** while they are being composed. It is not a separate rewrite or audit step. Chat replies and response-only artifacts are human-facing copy, not public copy.
 
+It also governs the user part of an orchestrated-plan plan file, which is stored in the project, and grill-to-done rounds. It requires that no concept, label or term is named before it is explained.
+
 Avoid:
 - using it to restyle public copy
 - using it on engine text
@@ -407,7 +410,7 @@ Related:
 - complexity
 
 Avoid:
-- running two tickets for one persona at once
+- running two tickets for one persona at once, except `locator` tickets, one per survey area, which orchestrated-plan's persona file allows
 - giving one ticket units that need different personas
 - naming specific models in persona definitions
 
@@ -660,7 +663,7 @@ Ticket type used only under reviewed planning to attack a change plan through on
 
 ### Review lens
 
-The single perspective a Plan Review ticket uses, named in its Objective. `consequences` covers whether the choices hold, what else must change, and ordering, compatibility and migration risk. `product` covers whether the plan reaches the outcomes and acceptance criteria of the goals and the canonical doc or spec sections it cites. Exactly two lenses exist.
+The single perspective a Plan Review ticket uses, named in its Objective. `consequences` covers whether the choices hold, what else must change, and ordering, compatibility and migration risk. `product` covers whether the plan reaches the outcomes and acceptance criteria of the goals and the canonical doc or spec sections it cites. Exactly two lenses exist for Plan Review. A plan-reviewer review of a plan file uses its own three lenses; see Plan reviewer.
 
 ### Adversarial Review
 
@@ -997,6 +1000,111 @@ For chat progress updates, a ticket whose ticket status has just become `resolve
 ### Orchestrator thread
 
 The conversation where the orchestrator works. Must not execute agent-ticket work or invent verification evidence there. Human and Agent Task is the narrow exception for bounded orchestrator work.
+
+## Orchestrated planning and questioning
+
+### Orchestrated plan
+
+User-invoked library skill that runs one orchestrated run whose deliverable is a plan file the user has accepted twice. It surveys sources in parallel, settles questions with grill-to-done, drafts and adversarially reviews the plan, publishes it, and ends by giving the command that implements it. It does not implement the plan.
+
+Related:
+- plan file
+- survey
+- first pass
+- grill-to-done
+
+Avoid:
+- calling its plan file a change plan
+- creating Plan or Plan Review tickets for it
+
+### Plan file
+
+The one Markdown file orchestrated-plan produces, with a banner, a part for the user and a part for agents that describe the same plan step for step. Not a change plan: a change plan is agent-facing, owned by a Plan ticket and reviewed by Plan Review under reviewed planning, and the user never accepts it.
+
+Related:
+- plan workspace
+- user part
+- agent part
+
+Avoid:
+- change plan
+- asking the user to accept the agent part
+
+### Plan workspace
+
+The folder `<project>/.agent-runs/orchestrated-plan/<timestamp-short-name>/` holding `first-pass.md`, `plan.md` and `files/`. It sits outside the run folder because an Agent Task may write project files but not run files, and only a Plan ticket may add other files under the run folder. Plan-drafting tickets write only here.
+
+### User part
+
+The `For you` part of a plan file. It explains the plan in the order a newcomer can follow, with the reason for each step. The user-response skill governs it, even though the file is stored in the project; public-docs does not apply to it.
+
+### Agent part
+
+The `For agents` part of a plan file. Engine text that an implementing run follows as its specification. Neither writing skill applies.
+
+### Survey
+
+Research that sweeps one named source for locations that may be relevant to a stated topic, and lists them without interpreting them. Run by a `locator`, one ticket per survey area (a source, or one part of a large source), several at once, each at surface depth. It is wide and thorough, not deep.
+
+Related:
+- locator
+- research depth (a survey is a surface sweep)
+
+Avoid:
+- calling it research without the qualifier when the sweep-and-list work is meant
+- asking a survey to explain what it finds
+
+### Locator
+
+Economy-tier persona defined in orchestrated-plan's persona file, not orchestrated-run's, for Research survey units. Lowest complexity, research work. The only persona that runs in parallel with itself, one ticket and one roster session entry per survey area.
+
+### Planning brief
+
+The investigator's result after tying the surveys together: what the request touches, how it works today, conventions, candidate approaches, a decision tree with options and recommendations, facts settled and unknowns. The input to questioning and to the first pass.
+
+### First pass
+
+The short draft of the broad ideas, `first-pass.md`, written quickly by the plan-author, given a first-pass review, and put to the user for the first acceptance before any full plan exists. Not a lower-quality plan: a direction.
+
+### Plan author
+
+Persona, defined in orchestrated-plan's persona file, that drafts and amends a plan file, an Agent Task for the highest complexity of coding work. Blocks and names a gap rather than guessing.
+
+### Plan reviewer
+
+Persona, defined in orchestrated-plan's persona file, that adversarially reviews a first pass or full plan. Its rounds are the planning run's Adversarial Review, replacing the base module-boundary and pre-completion reviews, and it and the plan author are not implementation tickets. A full review has three lenses: correctness, coverage and followability, and reader test.
+
+### Reader test
+
+The review lens that reads only the user part, as the user, and finds terms, labels or IDs named before they are explained, steps with no reason, and claims the reader could not check.
+
+### Grill-to-done
+
+User-invoked library skill that questions the user in grouped rounds until a plan or design is settled. A variation on the grilling skill in Matt Pocock's library that adds where-we-are, a finish line, unblocking, grouping and quick-pick defaults.
+
+Related:
+- design tree
+- round
+- finish line
+
+### Design tree
+
+The decisions of a thing being settled, with each decision's dependents under it. Each node is `settled`, `ready`, `waiting`, `blocked` or `parked`. In an orchestrated run a node is an entry in `UNKNOWNS.md`.
+
+### Round
+
+One batch of questions asked together: every `ready` question that passes the worth-asking test, grouped by topic. In an orchestrated run it is one Discuss/Gather Inputs ticket.
+
+Avoid:
+- unqualified **round** when review rounds are meant
+
+### Finish line
+
+What a grill-to-done session must produce, stated at the start, and against which the session decides it is done.
+
+### Worth-asking test
+
+A question is asked only if a different answer would change what gets built, decided or written. Otherwise the recommended default is taken and listed as an assumption.
 
 ## Defect capture and defect runs
 

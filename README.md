@@ -10,8 +10,10 @@ Cursor agent skills I keep here so I can install them on another machine.
 - [project-alignment](skills/project-alignment/SKILL.md): Establish a project's shared language and write an alignment plan or implement the alignment changes.
 - [ux-ui-reviewer](skills/ux-ui-reviewer/SKILL.md): Review an implemented interface and optionally capture selected findings as defects.
 - [git-stage-commit](skills/git-stage-commit/SKILL.md): Analyze git changes, group them, and stage and commit.
+- [grill-to-done](skills/grill-to-done/SKILL.md): Question the user in grouped rounds with quick-pick defaults until a plan or design is settled.
+- [orchestrated-plan](skills/orchestrated-plan/SKILL.md): Survey sources in parallel, settle questions, and produce a reviewed plan file the user has accepted twice.
 
-orchestrated-run needs Python 3.9 or later for its action ledger, a local web page that lists the open asks from every run on the machine; for the snapshot script reviewers use to read a finished unit of work while the next one is being written; and for the scripts that choose models for personas and report which models past runs used. Snapshots need git; without it, reviewers read the live files. It keeps its files in `~/.agent-runs/`, including the model database and your model choices. project-alignment depends on orchestrated-run. orchestrated-defect-run depends on orchestrated-run and the defect-ticket contract bundled with defect-capture. ux-ui-reviewer depends on defect-capture and orchestrated-defect-run for its optional finding capture and resolution handoff. A UX/UI review inside an orchestrated-run is an Agent Task that reads ux-ui-reviewer. Adversarial Review of completed UI work may also read that skill.
+orchestrated-run needs Python 3.9 or later for its action ledger, a local web page that lists the open asks from every run on the machine; for the snapshot script reviewers use to read a finished unit of work while the next one is being written; and for the scripts that choose models for personas and report which models past runs used. Snapshots need git; without it, reviewers read the live files. It keeps its files in `~/.agent-runs/`, including the model database and your model choices. project-alignment depends on orchestrated-run. orchestrated-defect-run depends on orchestrated-run and the defect-ticket contract bundled with defect-capture. ux-ui-reviewer depends on defect-capture and orchestrated-defect-run for its optional finding capture and resolution handoff. A UX/UI review inside an orchestrated-run is an Agent Task that reads ux-ui-reviewer. Adversarial Review of completed UI work may also read that skill. orchestrated-plan depends on orchestrated-run, grill-to-done and user-response, and defines its own `locator`, `plan-author` and `plan-reviewer` personas in a file beside its skill, leaving orchestrated-run unchanged. grill-to-done stands alone and also follows user-response when it is installed.
 
 ## Repo management
 
@@ -39,6 +41,8 @@ cp -R skills/orchestrated-defect-run ~/.cursor/skills/
 cp -R skills/project-alignment ~/.cursor/skills/
 cp -R skills/ux-ui-reviewer ~/.cursor/skills/
 cp -R skills/git-stage-commit ~/.cursor/skills/
+cp -R skills/grill-to-done ~/.cursor/skills/
+cp -R skills/orchestrated-plan ~/.cursor/skills/
 ```
 
 Symlink, so edits in this checkout apply without recopying:
@@ -55,6 +59,8 @@ ln -s "$(pwd)/skills/orchestrated-defect-run" ~/.cursor/skills/orchestrated-defe
 ln -s "$(pwd)/skills/project-alignment" ~/.cursor/skills/project-alignment
 ln -s "$(pwd)/skills/ux-ui-reviewer" ~/.cursor/skills/ux-ui-reviewer
 ln -s "$(pwd)/skills/git-stage-commit" ~/.cursor/skills/git-stage-commit
+ln -s "$(pwd)/skills/grill-to-done" ~/.cursor/skills/grill-to-done
+ln -s "$(pwd)/skills/orchestrated-plan" ~/.cursor/skills/orchestrated-plan
 ```
 
 ## Agent directives
@@ -63,5 +69,5 @@ ln -s "$(pwd)/skills/git-stage-commit" ~/.cursor/skills/git-stage-commit
 
 ## Credits
 
-- [Matt Pocock's skills library](https://github.com/mattpocock/skills): influenced orchestrated-run and project-alignment
+- [Matt Pocock's skills library](https://github.com/mattpocock/skills): influenced orchestrated-run and project-alignment; grill-to-done took the design tree, the rounds, the recommended answer on each question, and the rule that agents find facts while users make decisions from its grilling skill
 - [pstack's unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md): used as the basis for public-docs and user-response

@@ -35,8 +35,14 @@ The artifact's intended use controls the boundary, not whether the harness
 writes it to disk. If the result is meant to become a repository file,
 published page, product surface or work-tracker item, `public-docs` governs it.
 
-Do not apply it to reasoning, tool inputs, code, diffs, structured data, plans,
-engine tickets, run files, subagent prompts or other agent-facing text.
+Do not apply it to reasoning, tool inputs, code, diffs, structured data, plans
+written for agents, engine tickets, run files, subagent prompts or other
+agent-facing text.
+
+One exception to the repository-file rule: the user's part of an
+`orchestrated-plan` plan file follows this skill even though the file is stored
+in the project. `public-docs` does not apply to that part, and this skill does
+not apply to the rest of the file.
 
 ## Shape chat replies
 
@@ -53,6 +59,38 @@ Apply these rules to chat replies and progress updates:
 
 Do not treat repetition, a group of three or consistent terminology as writing
 faults. Repeat the right term when that is clearer.
+
+## Explain in order
+
+Apply this to the user's part of an `orchestrated-plan` plan file, to a round
+of `grill-to-done` questions, and to any other reply or artifact that explains
+something at length that the reader has not seen before. Progress updates and
+short answers keep the lead-with-the-result rule; a ticket ID in a progress
+update is a reference, not an explanation.
+
+- Do not name a concept before it has been explained. Describe what it is in
+  plain words first, then give its name if the reader will need the name. If
+  they will not meet it again, leave the name out.
+- This holds for labels you coined, such as a phase, a step, a section or an
+  ID. Do not refer to "Part 2" or "S3" before the reader has been told what
+  it is.
+- Order the explanation from what the reader already knows toward what is new.
+  Each step answers the question the step before it raised, and a reader who
+  stops at any step holds a complete, correct picture so far.
+- State why each step comes where it does and why the whole is shaped the way
+  it is, not only what it contains. Give the reason next to the thing it
+  explains.
+- Define a term at its first use, in the sentence that uses it. When a
+  summary has to come first, write it in words the reader already uses.
+
+For a plan, the order is usually: the outcome wanted, how things stand today
+in the terms the reader uses, the approach and why it beats the alternatives,
+the steps and why they run in that order, what could go wrong, and how the
+reader will know it worked.
+
+This rule outranks "Lead with the answer" when the answer needs a concept the
+reader has not met. Lead with the answer in the reader's own words, and bring
+in the new concept after it.
 
 ## Shape temporary artifacts
 
