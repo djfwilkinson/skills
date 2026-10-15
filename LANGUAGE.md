@@ -386,7 +386,7 @@ Avoid:
 
 ### Subagent
 
-The agent that executes an agent ticket, as a persona session. It owns that ticket file while the ticket is active, works through its work units, reads but never writes the ticket inbox, and must not edit run files or create tickets. A Plan ticket's subagent also owns and writes its change plan file.
+The agent that executes an agent ticket, as a persona session. It owns that ticket file while the ticket is active, works through its work units, reads but never writes the ticket inbox, and must not edit run files or create tickets. A Plan ticket's subagent also owns and writes its change plan file, and an Explore Options ticket's subagent also owns and writes the mock or concept files under `mocks/` named by its Objective.
 
 Related:
 - persona (the role it plays)
@@ -410,7 +410,7 @@ Related:
 - complexity
 
 Avoid:
-- running two tickets for one persona at once, except `locator` tickets, one per survey area, which orchestrated-plan's persona file allows
+- running two tickets for one persona at once, except `locator` tickets, one per survey area, which orchestrated-plan's and orchestrated-product-run's persona files allow
 - giving one ticket units that need different personas
 - naming specific models in persona definitions
 
@@ -588,16 +588,21 @@ Avoid:
 
 ### Run file
 
-A run-level state document the orchestrator writes, except that an active agent ticket file is owned by its subagent. Kinds: goals, non-goals, unknowns, working hints, log, pillars, modules, roster, tickets and ticket inboxes. Ask pages, stored under the run, are derived artifacts, not run files or recovery sources; the run's ledger registration only points the device action ledger at the run. A change plan is persistent memory stored under the run and owned by its Plan ticket's active worker; it is not a run file. Current filenames are the layout, not the concepts.
+A run-level state document the orchestrator writes, except that an active agent ticket file is owned by its subagent. Kinds: goals, non-goals, unknowns, working hints, log, pillars, modules, roster, tickets and ticket inboxes. Ask pages, stored under the run, are derived artifacts, not run files or recovery sources; the run's ledger registration only points the device action ledger at the run. A change plan is persistent memory stored under the run and owned by its Plan ticket's active worker; it is not a run file. A mock or concept under `mocks/` is persistent memory stored under the run and owned by its Explore Options ticket's active worker; it is not a run file. Current filenames are the layout, not the concepts.
 
 Avoid:
 - treating a ticket's Unknowns or Findings as a second copy of the unknowns run file
 
+### Ticket source definition
+
+A contract file under `skills/orchestrated-run/ticket-sources/<source>.md`, governed by `TICKET-SOURCES.md`, that defines how work tickets are stored or projected while engine state (`ROSTER.md`, `LOG.md`, `UNKNOWNS.md`, `inbox/`, `mocks/`, `asks/`, and snapshots) stays in `.agent-runs/`. The default definition is `filesystem.md`.
+
 ### Planning depth
 
-A confirmed run-level choice between `standard`, where Research feeds Agent Tasks directly, and `reviewed planning`. With the roster, it is one of the two process decisions the skill puts to the user. It is asked at most once after goals become active as a direct orchestrator question, not a ticket, and is recorded as a working hint; a proposal or recommendation is not confirmed.
+A confirmed run-level choice between `standard`, where Research feeds Agent Tasks directly; `smart`, where the orchestrator decides upfront per qualifying change set whether it needs a Plan ticket and whether that plan takes zero, one, or both Plan Review lenses; and `reviewed planning`, where every qualifying change set passes through a Plan and both Plan Review lenses. With the roster, it is one of the two process decisions the skill puts to the user, unless a specialization skill such as `orchestrated-product-run` confirms `smart` at start. It is asked at most once after goals become active as a direct orchestrator question, not a ticket, and is recorded as a working hint; a proposal or recommendation is not confirmed.
 
 Related:
+- smart planning depth
 - reviewed planning
 - research depth
 
@@ -605,6 +610,10 @@ Avoid:
 - naming it `deep`, which is a research depth
 - unqualified **depth**
 - offering it twice in one run
+
+### Smart planning depth
+
+The planning depth (`smart`) under which the orchestrator decides upfront for each qualifying change set whether to create a Plan ticket and whether to route that plan to zero, one (`consequences` or `product`), or both Plan Review lenses, logging the choice and reason in `LOG.md`. Any change set touching a high-risk surface or proposing a user-approved large refactor must use a Plan and at least `principal-critic`.
 
 ### Reviewed planning
 
@@ -1089,11 +1098,15 @@ Related:
 
 ### Design tree
 
-The decisions of a thing being settled, with each decision's dependents under it. Each node is `settled`, `ready`, `waiting`, `blocked` or `parked`. In an orchestrated run a node is an entry in `UNKNOWNS.md`.
+The decisions of a thing being settled, with each decision's dependents under it. Each node is `settled`, `ready`, `waiting`, `fog`, `blocked` or `parked`. In an orchestrated run a node is an entry in `UNKNOWNS.md`.
+
+### Fog
+
+A node state (`fog`) in a `grill-to-done` design tree and `UNKNOWNS.md` for an unknown unknown or open area where a risk, interaction, or dependency is visible, but concrete options cannot be framed until an earlier decision, Research lookup, or Explore Options mock clears what is possible. Once unblocked and prepared with options, it graduates to `ready`.
 
 ### Round
 
-One batch of questions asked together: every `ready` question that passes the worth-asking test, grouped by topic. In an orchestrated run it is one Discuss/Gather Inputs ticket.
+One batch of questions asked together: every `ready` question that passes the worth-asking test, grouped by topic, optionally headed by a wholesale product proposal. A `detail <item>` reply expands an item's evidence and knock-on trace and re-presents the remaining open items of the same round without counting as a new round. In an orchestrated run it is one Discuss/Gather Inputs ticket.
 
 Avoid:
 - unqualified **round** when review rounds are meant
@@ -1105,6 +1118,30 @@ What a grill-to-done session must produce, stated at the start, and against whic
 ### Worth-asking test
 
 A question is asked only if a different answer would change what gets built, decided or written. Otherwise the recommended default is taken and listed as an assumption.
+
+### Orchestrated product run
+
+User-invoked library skill (`orchestrated-product-run`) that runs one orchestrated run with the user as Product Owner. It discovers the problem space and adjacent spaces, tracks known unknowns and `fog`, builds run-local wireframes or production-styled mocks under `<run-dir>/mocks/`, presents wholesale product proposals with cross-space knock-ons and separated optional extras, builds the simplest non-hacky solution under `smart` planning depth, runs automated product checks, and asks the user only to judge product behaviour (or stops after shaping tickets when requested).
+
+### Product partner
+
+Persona defined in `orchestrated-product-run`'s persona file (`Research`, `research`, `high` complexity) that maps the problem space and adjacent product areas, separates settled facts, known unknowns, cross-space knock-on effects, optional extras, and `fog`, and drafts minimal-complete wholesale product proposals and acceptance criteria.
+
+### Product designer
+
+Persona defined in `orchestrated-product-run`'s persona file (`Explore Options`, `visual`, `high` complexity) that creates user flows, information hierarchy, interaction states, and fast wireframe or concept HTML mocks under `<run-dir>/mocks/`, working within the project's existing UI setup.
+
+### Prototyper
+
+Persona defined in `orchestrated-product-run`'s persona file (`Explore Options`, `coding`, `medium` complexity) that builds interactive HTML/CSS/JS prototypes and production-styled sign-off mocks under `<run-dir>/mocks/` using the project's real production CSS, tokens, and markup.
+
+### Wholesale product proposal
+
+The recommended minimal-complete product package presented at the top of a `Discuss/Gather Inputs` round in `orchestrated-product-run` (and supported in `grill-to-done`): what the change does for the user, which mock it uses (with its `Binding` versus `Context only` boundary), where it knocks on other product areas, and what it assumes, with optional extras separated out so the user can accept the baseline wholesale (`accept`) or override specific items.
+
+### Mock contract
+
+The explicit boundary declared on every mock under `<run-dir>/mocks/` and recorded in `GOALS.md` or `WORKINGHINTS.md` when accepted: `Fidelity` (`wireframe` or `sign-off`), `Binding` (the exact flow, states, copy, or visual rules the mock obliges), `Context only` (surrounding page chrome, sample data, or adjacent features shown only for context that must not be built or tested against), and `Overrides` (any adjustments from user acceptance).
 
 ## Defect capture and defect runs
 

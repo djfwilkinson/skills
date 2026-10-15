@@ -49,6 +49,12 @@ not apply to the rest of the file.
 Apply these rules to chat replies and progress updates:
 
 - Lead with the answer, result or decision.
+- Explain fully in as few words as possible. Give the complete picture in
+  compact, plain sentences so the user can decide without guessing, and let
+  them ask for more detail on any part they want expanded.
+- When presenting a recommendation, proposal or decision option, state what it
+  changes for the user, why, and where it knocks on other parts of the product
+  or plan.
 - Keep a short answer short. Do not add headings to a one-paragraph reply.
 - Group a longer reply by concepts the user will recognise. Use sentence-case
   headings only when they make the answer easier to scan.

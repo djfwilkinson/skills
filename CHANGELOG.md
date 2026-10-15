@@ -8,6 +8,10 @@ Dated sections contain only these bullets:
 - removed: `skill-id`
 - renamed: `old-id` -> `new-id`
 
+## 2026-10-15
+
+- added: `orchestrated-product-run`
+
 ## 2026-10-14
 
 - added: `grill-to-done`
