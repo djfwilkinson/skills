@@ -10,11 +10,13 @@ Starting creates the ledger directory, replaces its index when the template's
 ledger-version is newer, and starts the server unless the same or a newer
 version is running. A registered run is runs/<key>.json holding run.dir. The
 server derives each run's asks from ticket YAML and ask pages under run.dir,
-returns them at /runs, and serves files under run.dir at /r/<key>/<path>. It
-skips runs whose directory is gone and flags looksComplete when every goal in
-GOALS.md is achieved or abandoned and no ask is open. POST /r/<key>/complete
-with header X-Action-Ledger: complete removes such a run's registration; the
-custom header keeps other sites from sending it.
+returns them at /runs, serves files under run.dir (including asks/, tickets/,
+and mocks/) at /r/<key>/<path>, and serves read-only target-project files at
+/r/<key>/project/<path> so run-local mocks in mocks/ can load production CSS
+and assets. It skips runs whose directory is gone and flags looksComplete when
+every goal in GOALS.md is achieved or abandoned and no ask is open. POST
+/r/<key>/complete with header X-Action-Ledger: complete removes such a run's
+registration; the custom header keeps other sites from sending it.
 """
 import json, mimetypes, os, re, shutil, signal, socket, subprocess, sys, time, urllib.request
 from datetime import datetime
@@ -25,7 +27,7 @@ from urllib.parse import unquote, urlsplit
 HOME = Path(os.environ.get("ACTION_LEDGER_HOME") or Path.home() / ".agent-runs" / "action-ledger")
 RUNS, PORT_FILE, PID_FILE, INDEX = HOME / "runs", HOME / "port", HOME / "pid", HOME / "index.html"
 TEMPLATE = Path(__file__).resolve().parent.parent / "templates" / "ask-index.html"
-FIRST_PORT, PORT_TRIES, VERSION = 47391, 20, 4
+FIRST_PORT, PORT_TRIES, VERSION = 47391, 20, 5
 NAME = f"action-ledger/{VERSION}"
 
 
@@ -119,6 +121,15 @@ class Handler(BaseHTTPRequestHandler):
         if len(parts) == 4 and parts[1] == "r":
             run = read_json(RUNS / f"{parts[2]}.json") or {}
             base = Path(run.get("run", {}).get("dir") or "/nonexistent").resolve()
+            if parts[3].startswith("project/"):
+                proj = next((p.parent for p in base.parents if p.name == ".agent-runs"), None)
+                rel = parts[3][len("project/"):]
+                file = (proj / rel).resolve() if proj else Path("/nonexistent")
+                if proj and file.is_relative_to(proj.resolve()) and file.is_file() and not any(
+                    part.startswith(".env") or part in (".git", ".agent-runs") for part in file.relative_to(proj.resolve()).parts
+                ):
+                    kind = mimetypes.guess_type(file.name)[0] or "text/plain"
+                    return self.send(file.read_bytes(), "text/plain" if kind == "text/markdown" else kind)
             file = (base / parts[3]).resolve()
             if file.is_relative_to(base) and file.is_file():
                 kind = mimetypes.guess_type(file.name)[0] or "text/plain"

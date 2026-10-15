@@ -39,6 +39,7 @@ Research | Discuss/Gather Inputs | Human Task | Human and Agent Task
 
 ### Status
 open | assigned | resolved | abandoned
+Node state: settled | ready | waiting | fog | blocked | parked (when using grill-to-done)
 
 ### Related goals
 - G-001
@@ -49,6 +50,11 @@ open | assigned | resolved | abandoned
 ### Evidence
 - <result when resolved, with ticket ID>
 ```
+
+When a run uses `grill-to-done`, `Node state` tracks where each unknown sits in
+the questioning tree, including `fog` for unknown unknowns whose options cannot
+be framed until an earlier decision, Research lookup, or Explore Options mock
+clears what is possible.
 
 Copy new unknowns during reconciliation without re-investigating them. When
 creating a resolution ticket, list its ID under Resolution tickets, name the
@@ -152,8 +158,12 @@ Model choices the user states for the run go under a `Models` heading, as
 described under Model database and choices in `PERSONAS.md`. `ROSTER.md` records what they
 produce.
 
-Record confirmed planning depth as a working hint, with the end user and
-canonical docs or spec when known. A proposed or recommended depth is not
+Record confirmed planning depth (`standard`, `smart`, or `reviewed planning`)
+as a working hint, with the active ticket source (`filesystem` by default), the
+end user, and canonical docs or spec when known. When the user accepts a mock
+or concept from `mocks/`, record its confirmed mock contract (`Mock`,
+`Fidelity`, `Binding`, `Context only`, and `Overrides`) on the goal in
+`GOALS.md` or in `WORKINGHINTS.md`. A proposed or recommended depth is not
 confirmed and does not satisfy a Plan or Plan Review gate.
 
 If a working hint conflicts with a goal, the subagent records the conflict on
@@ -220,6 +230,22 @@ require reassigning the Plan ticket.
 
 `SKILL.md` owns planning coverage and completion.
 
+## Mocks
+
+A mock or concept is persistent memory at `mocks/<filename>.html` (or related
+assets under `mocks/`) written by an active `Explore Options` worker to give
+the user a rough wireframe or production-styled interactive concept to judge
+before implementation.
+
+The active `Explore Options` worker owns the mock files named in its Objective.
+Every mock carries a mock contract (`Mock`, `Fidelity: wireframe | sign-off`,
+`Binding`, `Context only`, `Overrides`). Once the user accepts a mock through
+`Discuss/Gather Inputs`, the orchestrator records the accepted mock contract
+(including any user `Overrides`) in `GOALS.md` or `WORKINGHINTS.md` and places
+it on `Reads` for governed planning, implementation, inspection, product-check,
+and review units. Downstream workers and reviewers are bound by `Binding` at
+the recorded `Fidelity` and must ignore `Context only` scaffolding.
+
 ## Pillars
 
 `PILLARS.md` lists substantial areas of the run. Each pillar has stable ID,
@@ -257,9 +283,11 @@ review or inbox items it led to, and whether the session was resumed or held
 and why. Record roster confirmation, substitutions, and changes, and each
 inbox item sent with its kind and source.
 
-For planning, also record the depth choice or no-offer basis; plan acceptance;
-choice reclassifications; declined findings and reasons; revision-round ticket
-IDs; departures from plan-need classifications and reasons; and the record
-cited for Plan cancellation.
+For planning, also record the depth choice (`standard`, `smart`, or `reviewed
+planning`) or no-offer basis; under `smart`, whether each qualifying change set
+took a Plan and how many review lenses (`0`, `1`, or `2`) and why; plan
+acceptance; choice reclassifications; declined findings and reasons;
+revision-round ticket IDs; departures from plan-need classifications and
+reasons; and the record cited for Plan cancellation.
 
 Detailed investigation and implementation notes stay on tickets.

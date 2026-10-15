@@ -48,6 +48,10 @@ follow-ups change the run.
 - Read [TICKET-CONTRACTS.md](TICKET-CONTRACTS.md) before creating, assigning,
   presenting, executing, or recovering a ticket. Read the schema, work units,
   ticket inbox, shared rules, and exact type contract that apply.
+- Read [TICKET-SOURCES.md](TICKET-SOURCES.md) and the active ticket-source
+  definition (by default
+  [ticket-sources/filesystem.md](ticket-sources/filesystem.md)) before creating,
+  projecting, or recovering tickets.
 - Read [PERSONAS.md](PERSONAS.md) before building or changing the roster,
   choosing a persona, or starting or resuming a persona session.
 - Read [RUN-STATE.md](RUN-STATE.md) before creating or updating run files and
@@ -90,19 +94,21 @@ inbox/
 asks/
 ```
 
-Create `plans/` only when planning depth is recorded as reviewed planning.
-Ask pages are orchestrator-owned presentation artifacts derived from human
-tickets; they are never a source of truth. Resume a run when the user or
-invocation identifies it. Otherwise create a new run.
+Create `plans/` only when planning depth is recorded as `reviewed planning` or
+`smart`. Create `mocks/` when an `Explore Options` ticket writes a run-local
+mock or concept. Ask pages are orchestrator-owned presentation artifacts
+derived from human tickets; they are never a source of truth. Resume a run when
+the user or invocation identifies it. Otherwise create a new run.
 
 When creating `<project>/.agent-runs/`, add `.agent-runs/` to the project `.gitignore` if that line is missing. Create `.gitignore` if the project has none. That is setup, not an Agent Task.
 
 Use stable IDs: goals `G-001`, non-goals `NG-001`, unknowns `U-001`, pillars `P-001`, modules `M-001`, tickets such as `T-001-RES`, work units such as `T-004-AGT/W1`, and inbox items such as `T-004-AGT/I-001`. IDs remain stable for the lifetime of the run and are not reused.
 
 The orchestrator owns run files, `inbox/`, and `asks/`. A persona session
-exclusively owns its active ticket and a Plan worker also owns its change plan;
-the orchestrator owns an active `Human and Agent Task`. See `RUN-STATE.md` for
-change-plan ownership.
+exclusively owns its active ticket, a Plan worker also owns its change plan, and
+an Explore Options worker also owns the mock files in `mocks/` named by its
+Objective; the orchestrator owns an active `Human and Agent Task`. See
+`RUN-STATE.md` for change-plan and mock ownership.
 
 ## Start the run
 
@@ -153,18 +159,21 @@ implementation in bootstrap.
 
 ## Planning depth
 
-Planning depth is `standard`, where Research feeds Agent Tasks directly, or
-`reviewed planning`, where qualifying change sets pass through Plan and Plan
-Review tickets first.
+Planning depth is `standard`, where Research feeds Agent Tasks directly;
+`smart`, where the orchestrator decides upfront per qualifying change set
+whether it needs a `Plan` ticket and whether that plan takes zero, one, or both
+`Plan Review` lenses; or `reviewed planning`, where every qualifying change set
+passes through a `Plan` and both `Plan Review` lenses first.
 
 Never create, ready, or dispatch a Plan or Plan Review unless
-`WORKINGHINTS.md` records the confirmed planning depth as `reviewed planning`.
-An unset, proposed, recommended, or `standard` value forbids both types.
+`WORKINGHINTS.md` records the confirmed planning depth as `reviewed planning`
+or `smart`. An unset, proposed, recommended, or `standard` value forbids both
+types.
 
-If either type already exists without that value, do not infer planning depth
-from it or use its change plan. Let an active worker return, then clear owner,
-set the ticket `blocked` as invalid, create no reviews, and reconcile its
-original proposing drafts under the recorded depth.
+If either type already exists without `reviewed planning` or `smart`, do not
+infer planning depth from it or use its change plan. Let an active worker
+return, then clear owner, set the ticket `blocked` as invalid, create no
+reviews, and reconcile its original proposing drafts under the recorded depth.
 
 After goals become `active` and before creating `Agent Task`, `Explore
 Options`, or `Human and Agent Task` tickets from bootstrap follow-ups, offer the
@@ -176,14 +185,15 @@ choice once when a reconciled bootstrap ticket records:
 - a conflict between two sources it could not settle.
 
 The condition must name its artifact; an open unknown alone does not qualify.
-Do not offer for research-only runs. If the user stated a preference, record it
-in `WORKINGHINTS.md` and `LOG.md` without asking. Otherwise ask the user one direct question, with the
+Do not offer for research-only runs. If the user or a governing specialization
+skill (such as `orchestrated-product-run`) stated a preference, record it in
+`WORKINGHINTS.md` and `LOG.md` without asking. Otherwise ask the user one direct question, with the
 client's structured question tool when it has one, or in chat. It is not a human
 ticket: it has no ticket, ask page, or ledger entry. The question covers what
-reviewed planning changes about how the run reaches the user's result, the
-recorded conditions this run met, the cost as the planning and review work it
-adds before implementation, that change plans are agent-facing and need no user
-sign-off, and the recommendation, and offers `standard` and `reviewed planning`.
+`smart` and `reviewed planning` change about how the run reaches the user's result, the
+recorded conditions this run met, the cost as the planning and review work they
+add before implementation, that change plans are agent-facing and need no user
+sign-off, and the recommendation, and offers `standard`, `smart`, and `reviewed planning`.
 Record the answer in `WORKINGHINTS.md` and `LOG.md`. If no offer is due,
 record `standard` in `WORKINGHINTS.md` and its basis in `LOG.md`. Only a stated preference, an answered question, or that no-offer
 default confirms the value. While the question is unanswered, steering may create
@@ -196,15 +206,27 @@ pass's progress update and continue. A process decision never overrides a user
 answer. User steering may change the depth for undispatched work; record it in
 `WORKINGHINTS.md` and `LOG.md`, without retroactively planning implemented work.
 
-When `WORKINGHINTS.md` records confirmed planning depth as `reviewed planning`, a
-proposing ticket qualifies a change set by classifying it as moderately complex
-or higher or naming a schema, persistence layer, public API, protocol, data
-migration, or canonical doc it changes. The orchestrator follows that record,
-departing only for a missing or contradictory label and logging why.
+When `WORKINGHINTS.md` records confirmed planning depth as `reviewed planning`
+or `smart`, a proposing ticket qualifies a change set by classifying it as
+moderately complex or higher or naming a schema, persistence layer, public API,
+protocol, data migration, or canonical doc it changes.
 
+- Under `reviewed planning`, the orchestrator follows that record, departing
+  only for a missing or contradictory label and logging why, and sends every
+  qualifying change set through a `Plan` and both `Plan Review` lenses.
+- Under `smart`, the orchestrator decides upfront for each qualifying change
+  set whether a `Plan` ticket is warranted (skipping `Plan` when a single
+  persona unit can implement the change directly from settled requirements or an
+  accepted mock) and, when a `Plan` is created, whether it needs `0`, `1`
+  (`consequences` or `product`), or `2` `Plan Review` lenses. Log the choice and
+  reason in `LOG.md`. A change set that touches a high-risk surface (`schema`,
+  `persistence layer`, `public API`, `protocol`, `data migration`, or
+  `security, authentication, or secrets handling`) or carries a user-approved
+  large refactor must use a `Plan` and at least `principal-critic` (plus
+  `product-critic` when product criteria are non-trivial).
 - One classified draft is one change set unless the proposing ticket groups
   drafts that share a plan. Use one Plan ticket per change set.
-- Put qualifying drafts on Plan Reads; create Agent Tasks directly for the
+- Put drafts that get a Plan on Plan Reads; create Agent Tasks directly for the
   rest.
 - Tickets created from an accepted plan inherit it and need no new
   classification.
@@ -213,11 +235,11 @@ departing only for a missing or contradictory label and logging why.
   no classification is a missing label.
 - If nothing qualifies, say so in the next progress update.
 
-Reviewed planning needs the end user and the canonical docs or spec. When
+Reviewed planning and `smart` planning need the end user and the canonical docs or spec. When
 bootstrap did not establish them, open Research to close the gap where the
 project can answer it cheaply, and otherwise record the gap as an unknown and
 continue; the product lens then reviews against the goals the plan cites.
-Missing either blocks neither the offer nor reviewed planning.
+Missing either blocks neither the offer nor planning.
 
 ## Run state
 Read [RUN-STATE.md](RUN-STATE.md) before creating or updating goals,
@@ -232,6 +254,13 @@ includes changing goals, architecture, public API, persistence, UX,
 dependencies, platforms, scope, or accepting significant adversarial findings.
 Local implementation choices following established patterns are process.
 
+Every planner, implementer, and reviewer must aim for the simplest non-hacky
+solution that solves the problem cleanly. Keep optional extras out of baseline
+work and surface them separately as opt-in choices for the user. A large
+unrequested refactor is a product decision: never default to one without
+recording why a minimal change fails and settling it through Discuss/Gather
+Inputs.
+
 For ticketed alternatives, use existing options and recommendations as Discuss
 evidence; do not investigate again. The orchestrator selects and logs process
 choices. Do not treat uncertainty alone as a product choice. Neither it nor a
@@ -245,9 +274,10 @@ planning depth is a direct question, not a ticket, and only model asks are
 tickets. Other process decisions are not user tickets.
 
 ## Tickets
-Read [TICKET-CONTRACTS.md](TICKET-CONTRACTS.md) before creating a ticket.
-That reference owns ticket IDs, schema, ownership, readiness, and type
-contracts. Every new ticket follows it.
+Read [TICKET-CONTRACTS.md](TICKET-CONTRACTS.md) and
+[TICKET-SOURCES.md](TICKET-SOURCES.md) before creating a ticket.
+Those references own ticket IDs, schema, ownership, readiness, type contracts,
+and ticket-source projection. Every new ticket follows them.
 
 ## Grouping
 
@@ -493,7 +523,13 @@ conflicting assignment until the conflicting session reaches a checkpoint.
 Record the steering, inbox items, and tickets created in `LOG.md`.
 
 If the prompt responds to a presented Discuss or Human Task, treat it as that
-ticket's return. A response to a withdrawn ask is steering or new evidence,
+ticket's return, except when the user asks for `detail <item>` (or asks a
+follow-up question about an item in a presented Discuss ask before deciding).
+On a `detail <item>` reply, do not resolve the Discuss ticket: record any
+answers the reply also gave in Evidence, expand the requested item from the
+ticket and run-file record (or withdraw the ask and run a quick Research ticket
+if project facts are missing), update the Discuss ask and ask page with the
+expanded detail and the remaining unanswered items, and re-present. A response to a withdrawn ask is steering or new evidence,
 not ticket completion. If it answers the current presented ask on an active
 Human and Agent Task, follow the presented-to-upcoming transition under Human
 involvement and treat it as the next interaction, not a ticket return. If the
@@ -639,14 +675,19 @@ invalidated result never verifies the fixed result.
 ### Change plans
 
 Follow this section only while `WORKINGHINTS.md` records confirmed planning
-depth as `reviewed planning`. Otherwise take none of its create, ready,
-assignment, or dispatch actions.
+depth as `reviewed planning` or `smart`. Otherwise take none of its create,
+ready, assignment, or dispatch actions.
 
 Reconcile a Plan return by result:
 
-- `completed`: create the round's Plan Review tickets, one per lens the round
-  needs, replace `reviews` and `depends_on` with their IDs, and set the Plan
-  `blocked`. A first draft needs both lenses;
+- `completed`: under `reviewed planning`, a first draft needs both lenses. Under
+  `smart`, the orchestrator chooses upfront (`0`, `1`, or `2` lenses, always
+  including `principal-critic` when the plan touches a high-risk surface or
+  proposes a justified large refactor) and logs the choice in `LOG.md`. When the
+  round needs one or two lenses, create the round's Plan Review tickets, replace
+  `reviews` and `depends_on` with their IDs, and set the Plan `blocked`. When a
+  low-risk plan under `smart` needs `0` reviews and has no Open decision or
+  Approach product decision, accept it directly by setting the Plan `resolved`;
 - `blocked` on a choice or required investigation: block it on the Discuss,
   Research, or Explore Options ticket that settles it; create no review;
 - first `failed`: reassign it; second `failed`: block it on Discuss asking
@@ -779,20 +820,22 @@ After compaction, rebuild context from:
 
 1. this skill;
 2. `TICKET-CONTRACTS.md`;
-3. `RUN-STATE.md`;
-4. `PERSONAS.md`;
-5. `HUMAN-ASKS.md` when any human ticket is presented;
-6. `ROSTER.md`;
-7. `GOALS.md`;
-8. `NONGOALS.md`;
-9. `UNKNOWNS.md`;
-10. `WORKINGHINTS.md`;
-11. `PILLARS.md`;
-12. `MODULES.md`;
-13. relevant entries from `LOG.md`;
-14. tickets needed for current work, with the inbox of each active one;
-15. change plans for any Plan or Plan Review ticket that is active, ready, or
-    blocked, and any accepted change plan governing current implementation work.
+3. `TICKET-SOURCES.md` and the active `ticket-sources/<source>.md`;
+4. `RUN-STATE.md`;
+5. `PERSONAS.md`;
+6. `HUMAN-ASKS.md` when any human ticket is presented;
+7. `ROSTER.md`;
+8. `GOALS.md`;
+9. `NONGOALS.md`;
+10. `UNKNOWNS.md`;
+11. `WORKINGHINTS.md`;
+12. `PILLARS.md`;
+13. `MODULES.md`;
+14. relevant entries from `LOG.md`;
+15. tickets needed for current work, with the inbox of each active one;
+16. change plans for any Plan or Plan Review ticket that is active, ready, or
+    blocked, any accepted change plan governing current implementation work, and
+    any accepted mock in `mocks/` governing current work.
 
 Reload completed tickets only when their detailed results become relevant.
 The roster and persona sessions are recovered from `ROSTER.md`; a session
@@ -846,14 +889,16 @@ The run is complete when:
   current `accepted` agent verdict or resolved human inspection for each part
   of its result, and a resolved boundary validation ticket;
 - no ticket is active and no persona session is `running` or `parked`;
-- under reviewed planning, every change plan whose change set is still in the
-  run is `resolved` and accepted with every ID in its `reviews` resolved or
-  cancelled, and every implementation ticket or unit it governs names it in
-  `plans` or its `Plans` line; a
-  `cancelled` Plan ticket carries the record its cancellation cited;
-- under reviewed planning, no work a ticket record classified as needing a
+- under `reviewed planning` or `smart`, every change plan whose change set is
+  still in the run is `resolved` and accepted with every ID in its `reviews`
+  resolved or cancelled, and every implementation ticket or unit it governs
+  names it in `plans` or its `Plans` line; a `cancelled` Plan ticket carries
+  the record its cancellation cited;
+- under `reviewed planning`, no work a ticket record classified as needing a
   change plan was implemented without one, unless `LOG.md` records the
-  departure and its reason;
+  departure and its reason; under `smart`, every qualifying change set either
+  has an accepted change plan or a `LOG.md` entry recording why the
+  orchestrator routed it directly;
 - required human tasks and acceptance are complete;
 - significant adversarial findings are resolved or explicitly accepted by the user;
 - open entries in `UNKNOWNS.md` required for achieved goals are closed;

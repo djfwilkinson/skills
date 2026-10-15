@@ -167,13 +167,17 @@ def personas(extra=()):
     found = table(SKILL / "PERSONAS.md", "Persona", "Work", "Complexity")
     for path in extra:
         found += table(Path(path), "Persona", "Work", "Complexity")
-    seen = set()
+    seen, unique = {}, []
     for p in found:
+        spec = (p["Work"], p["Complexity"])
         if p["Persona"] in seen:
-            sys.exit(f"persona {p['Persona']} is defined twice")
-        seen.add(p["Persona"])
+            if seen[p["Persona"]] != spec:
+                sys.exit(f"persona {p['Persona']} is defined twice with different Work or Complexity")
+            continue
+        seen[p["Persona"]] = spec
+        unique.append(p)
     return [dict(name=p["Persona"], work=p["Work"], level=p["Complexity"], target=TARGETS[p["Complexity"]])
-            for p in found]
+            for p in unique]
 
 
 def client_names(names, rows):

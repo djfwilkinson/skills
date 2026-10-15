@@ -10,7 +10,9 @@ prompt from this file.
 
 ## Ticket identity and types
 
-Store tickets in `tickets/` as Markdown with ticket YAML.
+Store tickets in `tickets/` as Markdown with ticket YAML, and apply the active
+ticket-source definition under [TICKET-SOURCES.md](TICKET-SOURCES.md) (by
+default [ticket-sources/filesystem.md](ticket-sources/filesystem.md)).
 
 | Type | Suffix | Example |
 | --- | --- | --- |
@@ -54,9 +56,11 @@ While a ticket is active, the worker may update only:
 - `Interaction log`;
 - `Blockers / follow-ups`.
 
-A Plan worker may also write its Completion-named change plan; no other type
-writes under the run directory. Agent Task and Explore Options may write
-project files under their Objective.
+A Plan worker may also write its Completion-named change plan, and an Explore
+Options worker may write run-local mock or concept files under `mocks/` in the
+run directory when its Objective names them; no other type writes under the run
+directory. Agent Task and Explore Options may write project files under their
+Objective.
 
 The worker must not modify other ticket metadata. When the orchestrator is the
 worker for a Human and Agent Task, it still updates orchestrator-owned fields
@@ -312,18 +316,19 @@ investigation becomes an Explore Options ticket, and no Plan Review starts
 until it returns and the plan is revised.
 
 Do not create a Plan or Plan Review, even as `proposed` or `blocked`, unless
-`WORKINGHINTS.md` records confirmed planning depth as `reviewed planning`.
+`WORKINGHINTS.md` records confirmed planning depth as `reviewed planning` or
+`smart`.
 
-A Plan is not `ready` unless that confirmed value is `reviewed planning`. It
-also requires an Objective naming its change set and goal outcome; Reads naming
+A Plan is not `ready` unless that confirmed value is `reviewed planning` or
+`smart`. It also requires an Objective naming its change set and goal outcome; Reads naming
 the proposing tickets and drafts, governing run state, end user and canonical
 docs when known, and discovered project paths; and Completion requiring every
 Plan-prompt section at the change plan path. Objective and Completion permit
 only the worker-maintained ticket sections and change plan write, prohibiting
 project, external-state, and prepared-environment changes.
 
-A Plan Review is not `ready` unless that confirmed value is `reviewed
-planning`. It also requires the Plan to have returned `completed` with no
+A Plan Review is not `ready` unless that confirmed value is `reviewed planning`
+or `smart`. It also requires the Plan to have returned `completed` with no
 approach-blocking investigation, its file to exist, its persona to match the
 lens, Objective to name the lens,
 and Reads to name the plan, governing goals and acceptance criteria, non-goals
@@ -433,8 +438,22 @@ Do not edit run-level files (GOALS.md, NONGOALS.md, UNKNOWNS.md,
 WORKINGHINTS.md, LOG.md, PILLARS.md, MODULES.md, ROSTER.md, inbox/, or asks/).
 Do not create tickets. Do not plan the run. Record follow-ups on this ticket.
 The orchestrator decides what happens next. A Plan ticket also writes the
-change plan named in its Completion; no other type writes a file under the run
-directory.
+change plan named in its Completion, and an Explore Options ticket may write
+mock or concept files under mocks/ in the run directory when its Objective
+names them; no other type writes a file under the run directory.
+
+Aim for the simplest non-hacky solution that solves the problem cleanly. Keep
+optional extras out of baseline work and record them separately as proposals in
+Blockers / follow-ups. Never default to a large unrequested refactor: if a
+minimal change would be a hack, record why and propose the refactor as a
+product decision.
+
+When Reads include an accepted mock contract, honor its Binding obligations at
+its stated Fidelity (`wireframe` binds flow, layout structure, hierarchy, copy,
+and states while using the project's real components and styling; `sign-off`
+binds exact visual appearance, copy, states, and interactions) together with
+any recorded user Overrides. Never implement, test, or raise review findings
+against elements listed under `Context only` in a mock contract.
 
 Classify proposed or recommended implementation work as `trivial`, `following
 an established project pattern`, or `moderately complex or higher`. The last
@@ -593,33 +612,47 @@ Evidence.
 
 ## Explore Options (subagent)
 
-Investigate alternatives without committing them to the production solution.
+Investigate alternatives or build run-local mocks and concepts without
+committing them to the production solution.
 
 Assignment prompt, after the shared agent rules:
 
 ```text
-This ticket is Explore Options. Investigate alternatives. Do not commit them to
-the production solution.
+This ticket is Explore Options. Investigate alternatives or build the mocks and
+concepts named in Objective. Do not commit them to the production solution.
 
 You may use prototypes, temporary code, temporary tests, instrumentation,
-reproductions, or debugging experiments. Label temporary artifacts temporary.
+reproductions, debugging experiments, or self-contained / production-CSS-linked
+HTML mocks under <run-dir>/mocks/. When Objective asks for a run-local mock or
+concept, write it only under <run-dir>/mocks/ and do not modify project files
+unless Objective explicitly states the user requested a project deliverable.
+Label temporary artifacts temporary.
+
+For every mock or concept file you write under <run-dir>/mocks/, include this
+mock contract block at the top of the file (visible in the page header) and in
+the unit's checkpoint:
+- Mock: mocks/<filename>.html
+- Fidelity: wireframe | sign-off
+- Binding: <exact component, flow, states, copy, or visual rules this mock obliges>
+- Context only: <surrounding page chrome, sample data, or adjacent features shown for context that must not be built or tested against>
+- Overrides: none
 
 Record on the ticket, per unit:
-- options explored
+- options explored or mocks created, with their mock contract blocks
 - evidence from each
-- trade-offs
+- trade-offs and cross-space knock-on effects
 - a recommendation where supported
-- temporary artifacts created
+- temporary artifacts or mock paths created
 ```
 
 ## Plan (subagent)
 
-Under reviewed planning, write one agent-facing change plan for one change set at
-`plans/<plan-ticket-id>.md`. Its path is stable. The active Plan worker owns its
-content; otherwise only the orchestrator may change its Status and revisions
-banner. A Plan ticket has one unit. The `architect`, `principal-architect`, or
-`frontend-planner` session takes the next Plan ticket for that persona while
-critics review the last one.
+Under `reviewed planning` or `smart`, write one agent-facing change plan for one
+change set at `plans/<plan-ticket-id>.md`. Its path is stable. The active Plan
+worker owns its content; otherwise only the orchestrator may change its Status
+and revisions banner. A Plan ticket has one unit. The `architect`,
+`principal-architect`, or `frontend-planner` session takes the next Plan ticket
+for that persona while critics review the last one.
 
 Assignment prompt, after the shared agent rules:
 
@@ -633,6 +666,11 @@ create tickets.
 
 Write the change plan for the subagent that will implement it and for the
 reviewers who will attack it. Keep it mechanical. It has no user-facing copy.
+Choose the simplest non-hacky approach that solves the problem cleanly. Keep
+optional extras out of the plan, honor any accepted mock's Binding scope at its
+Fidelity while ignoring Context only scaffolding, and never propose an
+unrequested large refactor unless a minimal change fails and you record it
+under Open decisions.
 
 Plan from Objective, Completion, and Reads, including draft implementation
 tickets earlier work recorded. Investigate only as far as the plan requires. If
@@ -672,9 +710,10 @@ record.
 
 ## Plan Review (subagent)
 
-Under reviewed planning, try to show that a change plan will not work or will
-not deliver what it claims. One lens per ticket, named in Objective. Exactly
-two lenses exist: `consequences` and `product`.
+Under `reviewed planning` or `smart`, try to show that a change plan will not
+work, is unnecessarily complex, or will not deliver what it claims. One lens
+per ticket, named in Objective. Exactly two lenses exist: `consequences` and
+`product`.
 
 Neither lens depends on the other. When a round has both and both are
 `ready`, dispatch them together; their shared read is not a conflict. The
@@ -687,18 +726,22 @@ Assignment prompt, after the shared agent rules:
 
 ```text
 This ticket is Plan Review. Try to show that the change plan named in Reads
-will not work or will not deliver what it claims. Review only through the lens
-named in Objective.
+will not work, is more complex than needed, or will not deliver what it claims.
+Review only through the lens named in Objective.
 
 consequences: check whether the choices hold, what else must change for the
-plan to work, what the plan breaks or leaves inconsistent, and whether the
-order, compatibility, and migration handling are safe.
+plan to work, what the plan breaks or leaves inconsistent, whether the order,
+compatibility, and migration handling are safe, and whether a simpler non-hacky
+approach would do the job without speculative abstractions or unrequested
+refactors.
 
-product: check the plan against the goals it cites, including their outcomes
-and acceptance criteria, and the canonical doc or spec sections it cites. Use
-the observable effect the plan states for each area. Report where the plan
-contradicts those requirements, drifts past a non-goal, or would finish without
-reaching the cited outcome.
+product: check the plan against the goals it cites, including their outcomes,
+acceptance criteria, any accepted mock's Binding contract, and the canonical
+doc or spec sections it cites. Use the observable effect the plan states for
+each area. Report where the plan contradicts those requirements, drifts past a
+non-goal, bundles unrequested extras, plans work for Context only mock
+scaffolding, or would finish without reaching the cited outcome. Never fault a
+plan for omitting elements marked Context only in an accepted mock.
 
 When Objective names parts of the plan, review only those parts through your
 lens.
@@ -738,10 +781,13 @@ Assignment prompt, after the shared agent rules:
 
 ```text
 This ticket is Adversarial Review. Try to show that the completed work is
-incorrect, incomplete, or inconsistent with the run.
+incorrect, incomplete, over-engineered, or inconsistent with the run.
 
-Read the listed goals, acceptance criteria, non-goals, working hints, and
-verification requirements. Check the work each unit covers against them.
+Read the listed goals, acceptance criteria, accepted mock contracts, non-goals,
+working hints, and verification requirements. Check the work each unit covers
+against them. Flag hacks, unnecessary complexity, or unrequested scope, and
+never raise findings against elements listed under Context only in an accepted
+mock contract.
 
 When a unit's Reads name snapshots for the work it covers, judge the work as
 of those snapshots, as the agent boundary inspection prompt describes, and

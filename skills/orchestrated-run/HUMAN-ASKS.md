@@ -137,12 +137,20 @@ or done, without needing the ticket, the module, chat history, or the run.
 Restating a name or label as its own purpose describes nothing.
 
 When the ask needs judgement, state exactly what to inspect or compare and
-which observable results distinguish the possible replies. For a decision,
-describe what the user would observe under each option, its known knock-on
-effects for later development, compatibility, or scope, and whether it can be
-deferred to a named later goal, module, or project-plan step. Say why it must be
-decided now when deferral is unsafe or would block current work. Use only
-recorded evidence; if these consequences are not known, prepare them before
+which observable results distinguish the possible replies. Explain every
+proposal, option, and consequence in as few plain words as possible while
+keeping the picture complete; let the user reply `detail <item>` when they want
+deeper evidence or knock-on traces on a specific item before deciding. For a
+decision, describe what the user would observe under each option, its known
+knock-on effects for other product areas, later development, compatibility, or
+scope, and whether it can be deferred to a named later goal, module, or
+project-plan step. Say why it must be decided now when deferral is unsafe or
+would block current work. When an ask presents a mock or concept from
+`<run-dir>/mocks/`, link its served URL (`<index URL>r/<key>/mocks/<file>`) in
+`askPageData.resources` and chat, and state its mock contract (`Fidelity:
+wireframe | sign-off`, what is `Binding`, and what is `Context only`
+scaffolding that will not be built or tested against). Use only recorded
+evidence; if these consequences or mocks are not known, prepare them before
 making the ticket `ready`.
 
 Lead with one sentence stating the ask in the words the user uses for their own
@@ -265,10 +273,12 @@ below; each list is the extra payload that type carries, not a substitute:
 - Human Task: what to do, applicable steps, commands, URLs and paths, expected
   result, evidence to return, ticket path, and evidence-backed hints or
   recovery steps when they apply.
-- Discuss/Gather Inputs: the question or decision, essential context, options
-  and recommendation when present, each option's observable behavior, known
-  knock-on effects and deferral point or reason it must be decided now,
-  expected reply, and ticket path.
+- Discuss/Gather Inputs: the question or decision (and any wholesale product
+  proposal), essential context, options and recommendation when present, each
+  option's observable behavior, known knock-on effects and deferral point or
+  reason it must be decided now, any linked mock URL with its `Fidelity` and
+  `Binding` versus `Context only` boundary, expected reply (including `accept`
+  / `recs` and `detail <item>` where applicable), and ticket path.
 - Model ask: the payload under The model ask in `PERSONAS.md`, with the
   personas as one ordered section, one complete reply example each for `lean`,
   `quality`, naming a model and effort for a persona, and excluding a model,
