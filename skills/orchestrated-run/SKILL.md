@@ -19,8 +19,9 @@ The skill defines the process. Run files define current state. Tickets define pi
 
 The orchestrator owns run state, the roster, ticket creation and assignment,
 user interaction, steering, reconciliation, next work, and goal verification.
-Personas execute and own active agent tickets. Each persona serves one ticket
-type, runs on the model the roster gives it, and has at most one active ticket.
+Personas execute and own active agent tickets. Each persona does one kind of
+task for one ticket type. Each ticket also has a level, which sets the model the
+roster gives it; a persona has at most one active ticket per level.
 The orchestrator owns `Discuss/Gather Inputs`, `Human Task`, and `Human and
 Agent Task`. Discovery, planning, implementation, issue resolution, validation,
 and human acceptance all happen as tickets.
@@ -53,7 +54,7 @@ follow-ups change the run.
   [ticket-sources/filesystem.md](ticket-sources/filesystem.md)) before creating,
   projecting, or recovering tickets.
 - Read [PERSONAS.md](PERSONAS.md) before building or changing the roster,
-  choosing a persona, or starting or resuming a persona session.
+  choosing a persona or level, or starting or resuming a persona session.
 - Read [RUN-STATE.md](RUN-STATE.md) before creating or updating run files and
   after compaction.
 - Read [HUMAN-ASKS.md](HUMAN-ASKS.md) and use its templates before every
@@ -116,15 +117,15 @@ Objective; the orchestrator owns an active `Human and Agent Task`. See
    Register the run in the action ledger under `HUMAN-ASKS.md`; a failure does
    not block the run. When resuming a run, register it again.
 2. Copy the default model database to the machine model database when it is
-   missing, and choose each persona's model under Choosing a model in `PERSONAS.md`.
-3. Create one bootstrap Research ticket with one unit per separable area. Use
-   two tickets, one for the `scout` and one for the `investigator`, only when
-   some areas need deep research and others only surface. Put likely project
-   paths on Reads; never research in the orchestrator thread. A scout unit
-   that cannot meet its Completion requests deep, and the gap becomes an
-   investigator unit. Bootstrap also seeks the end user and canonical docs or
+   missing, and choose each slot's model under Choosing a model in `PERSONAS.md`.
+3. Create one bootstrap Research ticket for the `researcher` with one unit per
+   separable area. Use two tickets, one at `junior` and one at `standard`, only
+   when some areas need deep research and others only surface. Put likely
+   project paths on Reads; never research in the orchestrator thread. A surface
+   unit that cannot meet its Completion requests deep, and the gap becomes a
+   `standard` unit. Bootstrap also seeks the end user and canonical docs or
    spec when cheap to establish.
-4. Dispatch bootstrap on the model chosen for its persona, and record the
+4. Dispatch bootstrap on the model chosen for its persona and level, and record the
    roster in `ROSTER.md` as provisional. Then ask the models question under
    `PERSONAS.md`. Every session started after the roster is confirmed uses
    it.
@@ -219,13 +220,16 @@ protocol, data migration, or canonical doc it changes.
   persona unit can implement the change directly from settled requirements or an
   accepted mock) and, when a `Plan` is created, whether it needs `0`, `1`
   (`consequences` or `product`), or `2` `Plan Review` lenses. Log the choice and
-  reason in `LOG.md`. A change set that touches a high-risk surface (`schema`,
-  `persistence layer`, `public API`, `protocol`, `data migration`, or
-  `security, authentication, or secrets handling`) or carries a user-approved
-  large refactor must use a `Plan` and at least `principal-critic` (plus
-  `product-critic` when product criteria are non-trivial).
+  reason in `LOG.md`. A change set that touches a high-risk surface, under
+  Choosing a level in `PERSONAS.md`, or carries a user-approved large refactor
+  must use a `Plan` and at least the `consequences` lens (plus the `product`
+  lens when product criteria are non-trivial).
 - One classified draft is one change set unless the proposing ticket groups
   drafts that share a plan. Use one Plan ticket per change set.
+- The first Plan ticket of the run is the main plan: it covers the change set
+  the run's goals depend most on and is created before any other Plan. Choose
+  its level under Principal in `PERSONAS.md`. Under `smart`, a run whose
+  qualifying change sets all skip a Plan has no main plan.
 - Put drafts that get a Plan on Plan Reads; create Agent Tasks directly for the
   rest.
 - Tickets created from an accepted plan inherit it and need no new
@@ -282,33 +286,36 @@ and ticket-source projection. Every new ticket follows them.
 ## Grouping
 
 Cost grows with the number of sessions started and with what each one must
-read. Group work so each persona takes few, large tickets.
+read. Group work so each persona and level takes few, large tickets.
 
 - A unit is one coherent change or one research question with its own
   Completion, the size a ticket used to be.
-- Put every ready unit for one persona that shares Reads or run modules on one
-  ticket, in dependency order. A coder may take five modules on one ticket.
+- Put every ready unit for one persona and level that shares Reads or run
+  modules on one ticket, in dependency order. A coder may take five modules on
+  one ticket.
 - Split a ticket only when its units share no Reads, when an early unit
   awaits a decision that later units depend on, when it would need several
-  personas, or when it would pass about seven units. Queue the rest as that
-  persona's next ticket.
-- When a persona already has an active ticket, add fitting new units, fixes,
-  and steering changes to it through its inbox instead of creating a ticket.
-  Otherwise create a `ready` ticket that waits for that persona.
-- Accept that same-persona work runs one ticket at a time. That trades
-  elapsed time for cost.
+  personas or levels, or when it would pass about seven units. Queue the rest
+  as that persona and level's next ticket.
+- When a persona already has an active ticket at the unit's level, add fitting
+  new units, fixes, and steering changes to it through its inbox instead of
+  creating a ticket. Otherwise create a `ready` ticket that waits for that
+  persona and level.
+- Accept that work for one persona and level runs one ticket at a time. That
+  trades elapsed time for cost.
 - Batch human asks the same way: one grouped inspection per completed ticket
   or set of tickets, and related decisions in one Discuss.
 
-Choose the persona under Choosing a persona in `PERSONAS.md`. Prefer the
-cheapest persona the recorded classification allows, and escalate a unit when
-its worker records that it needs more.
+Choose the persona and level under Choosing a persona and Choosing a level in
+`PERSONAS.md`. Prefer the lowest level the recorded classification allows, and
+escalate a unit when its worker records that it needs more.
 
 ## Assignment
 
-Every `ready` agent ticket is assigned to its persona's session before any work
-on it starts. That is the only way agent tickets get done. A persona has at most
-one active ticket; its other ready tickets wait.
+Every `ready` agent ticket is assigned to a session for its persona and level
+before any work on it starts. That is the only way agent tickets get done. A
+persona has at most one active ticket per level; its other ready tickets at
+that level wait.
 
 Do not give the subagent this skill. A new session gets:
 
@@ -336,11 +343,13 @@ When assigning a ticket:
    and queued;
 3. fill `## Reads` and `## Work units`;
 4. create its inbox file with a title only;
-5. set `status: active` and `owner` to the persona;
-6. resume the persona's idle session, or start a new one on the model and
-   effort chosen under Choosing a model in `PERSONAS.md`, and record the
-   session and its state in `ROSTER.md`. When nothing is usable, keep the
-   ticket `ready` and present the model ask for that persona.
+5. set `status: active` and `owner` to the persona and level, such as
+   `engineer/standard`;
+6. resume the idle session for that persona and level, or start a new one on
+   the model and effort chosen for its slot under Choosing a model in
+   `PERSONAS.md`, and record the session and its state in `ROSTER.md`. When
+   nothing is usable, keep the ticket `ready` and present the model ask for
+   that slot.
 
 Run every persona session in the background when the client allows it, so each
 return wakes the orchestrator, including while a human ask is presented.
@@ -351,9 +360,9 @@ subagents, say so in the models question.
 Send a unit through an inbox only after it passes the same dependency,
 conflict, Exclusive scope, and planning-depth checks as a unit on a new ticket.
 
-Different personas may run in parallel. A wave of ready tickets for different
-personas may be dependency-checked, conflict-checked, filled, and dispatched in
-one pass. Do not dispatch `proposed` or `blocked` tickets. Handle Discuss,
+Different personas, or one persona at different levels, may run in parallel.
+A wave of such ready tickets may be dependency-checked, conflict-checked,
+filled, and dispatched in one pass. Do not dispatch `proposed` or `blocked` tickets. Handle Discuss,
 Human Task, and Human and Agent Task in the orchestrator thread.
 
 Outside a selected or active Human and Agent Task, wait for sessions to return.
@@ -414,29 +423,29 @@ this order:
    checkpoint, route its findings as below. Treat a Research or Explore
    Options checkpoint's follow-ups like those of a returned ticket.
 5. For a `blocked` unit, create the Discuss, Research, or Explore Options
-   ticket that settles it, or move the unit to a ticket for the persona its
+   ticket that settles it, or move the unit to a ticket at the level its
    worker named. Send the result through the inbox as a decision or added unit
    when it lands.
 6. For a checkpoint with an `Escalate` line, follow Escalation in
    `PERSONAS.md`.
 
-Route findings to the persona that owns the work. When a review finds changes
+Route findings to the persona that owns the work, at the level its unit ran. When a review finds changes
 needed in a unit whose ticket is still active, including one parked after its
 last unit, decide which findings become work, then send each as a fix request
 through that ticket's inbox. Mark it `blocking` when later units build on what
 it changes; otherwise leave placement to the worker. When the ticket has ended,
-classify the fixes themselves and choose their persona under Choosing a persona
-in `PERSONAS.md`. Put the fixes one review or inspection found for one persona
-in one unit with its own Reads, never a unit or ticket per finding. Add it to
-that persona's active ticket, or create one ticket for it when the persona has
-none. A finding that meets the product-decision test goes to Discuss first;
+classify the fixes themselves and choose their persona and level under
+`PERSONAS.md`. Put the fixes one review or inspection found for one persona and
+level in one unit with its own Reads, never a unit or ticket per finding. Add
+it to that persona's active ticket at that level, or create one ticket for it
+when there is none. A finding that meets the product-decision test goes to Discuss first;
 send a `hold` naming the paths or choices to leave alone until the decision
 arrives.
 
 Every fix a worker places reaches a checkpoint. Re-inspect it by adding an
 inspection unit whose `Covers` line names the original unit and the fix. When
 two re-inspections of one ID still find changes needed, move the remaining fix
-to the `senior-engineer` unless it is already there. After a third, open a
+to the `engineer` at `senior` unless it is already there. After a third, open a
 Discuss on whether to keep, change, or drop that result.
 
 A return with no new checkpoint and `execution_result: null` is malformed.
@@ -483,7 +492,9 @@ Task current asks live in the latest Interaction log entry.
 
 Create human tickets with `presentation: upcoming`. Immediately before first
 presentation, follow the liveness, page, ticket-state, register, complete
-chat ask, and later-repeat lifecycle in `HUMAN-ASKS.md`. Set a presented ticket
+chat ask, and later-repeat lifecycle in `HUMAN-ASKS.md`. The page and
+ticket-state steps include setting `may_withdraw_on` under Unsettled asks in
+`HUMAN-ASKS.md`. Set a presented ticket
 `active` with owner `orchestrator`; a link alone is not presentation.
 
 If a non-mutating liveness check shows that the prepared environment is
@@ -494,9 +505,12 @@ returns, set it `ready` and `upcoming`, then present a new ask.
 That return does not pause the run. Reconcile any agent ticket that returns while you wait. A return for an active `Human and Agent Task` is different: the run intentionally stays in that ticket's interaction loop.
 
 On a presented Discuss or Human Task response, mark the presentation answered
-under `HUMAN-ASKS.md`, record the response, and reconcile. On a Human and Agent
+under `HUMAN-ASKS.md`, record the response, and reconcile. When the ticket's
+`may_withdraw_on` is non-empty, apply reply intake under Unsettled asks first. On a Human and Agent
 Task response, record the interaction, return presentation to `upcoming`, and
-continue the ticket; reconcile only when execution ends. Present each next ask
+continue the ticket; reconcile only when execution ends. Such a response is
+never provisional: the ticket's `may_withdraw_on` drives only the unsettled
+display and the withdrawn re-check. Present each next ask
 through the same contract.
 
 ## Steering
@@ -530,7 +544,8 @@ answers the reply also gave in Evidence, expand the requested item from the
 ticket and run-file record (or withdraw the ask and run a quick Research ticket
 if project facts are missing), update the Discuss ask and ask page with the
 expanded detail and the remaining unanswered items, and re-present. A response to a withdrawn ask is steering or new evidence,
-not ticket completion. If it answers the current presented ask on an active
+not ticket completion. A response to an unsettled ask follows reply intake under
+Unsettled asks in `HUMAN-ASKS.md`. If it answers the current presented ask on an active
 Human and Agent Task, follow the presented-to-upcoming transition under Human
 involvement and treat it as the next interaction, not a ticket return. If the
 user stops or replaces the interactive task, end and reconcile it before
@@ -562,13 +577,27 @@ Do not copy the investigation into the log or re-do the ticket in the
 orchestrator thread. If evidence is missing or the result is unacceptable,
 create or reassign tickets.
 
+Whenever any ticket named in a human ticket's `may_withdraw_on` (search
+`tickets/`) changes status, decide whether that changes the ask. This covers a
+reconciled return and also a ticket set to `cancelled` without returning, for
+example a superseded Plan Review or a ticket cancelled before dispatch. If its
+result invalidates the ask, withdraw it when it is presented, under
+`HUMAN-ASKS.md` and the cause-specific process, or apply the late-invalidation
+paragraph when it was answered provisionally. Otherwise nothing changes, and
+the ledger clears the notice. When the status change leaves every listed ticket
+of a provisionally answered human ticket `resolved` or `cancelled`, with no
+invalidation recorded, record `provisional cleared <time>` in that ticket's
+Evidence and in `LOG.md`.
+
 Every implementation unit or placed fix with a `done` checkpoint, and every
 Human and Agent Task that performed implementation, needs implementation
 coverage before its module or the run completes: for each part of its result,
 a current `accepted` verdict from an agent boundary inspection or a resolved
 human boundary inspection, and a resolved boundary validation ticket covering
 its ticket. The inspections must not be superseded, and validation Evidence
-must meet its success conditions. Below, a covered ID is such a unit, fix, or
+must meet its success conditions. A human boundary inspection answered
+provisionally gives no coverage until its Evidence records `provisional
+cleared`; apply the fallback under Goal verification first. Below, a covered ID is such a unit, fix, or
 Human and Agent Task.
 
 A boundary inspection is human or agent. A human boundary inspection is a
@@ -636,7 +665,8 @@ every prepared environment that could restart, rebuild, or reload. Until the
 inspection returns or is withdrawn, do not resume a session onto, send a fix
 request for, or ready work that would change that scope. Findings outside it
 may become work immediately. An agent boundary inspection gets the same
-stability from checkpoint snapshots.
+stability from checkpoint snapshots. Naming a ticket in the inspection's
+`may_withdraw_on` does not exempt it from the freeze.
 
 If boundary validation finds issues, record them and decide which become fix
 work, routed under Checkpoints. If an issue invalidates an upcoming human
@@ -672,6 +702,14 @@ of `achieved` to `active` or `blocked` as the remaining work requires, and
 create a new boundary inspection after fixes. A reply or acceptance for an
 invalidated result never verifies the fixed result.
 
+If invalidation arrives after a provisional answer to a Discuss or Human Task
+that is not an inspection, mark the answer superseded and move any affected goal
+out of `achieved` as above. Treat it as steering that invalidates work in
+progress: `hold` or `stop` the active dependents built on it, apply
+accepted-plan supersession where a change plan used the decision, and re-ask in
+a new Discuss. No boundary inspection is needed unless the superseded answer was
+one. A provisional answer to an inspection follows the paragraph above.
+
 ### Change plans
 
 Follow this section only while `WORKINGHINTS.md` records confirmed planning
@@ -682,7 +720,7 @@ Reconcile a Plan return by result:
 
 - `completed`: under `reviewed planning`, a first draft needs both lenses. Under
   `smart`, the orchestrator chooses upfront (`0`, `1`, or `2` lenses, always
-  including `principal-critic` when the plan touches a high-risk surface or
+  including the `consequences` lens when the plan touches a high-risk surface or
   proposes a justified large refactor) and logs the choice in `LOG.md`. When the
   round needs one or two lenses, create the round's Plan Review tickets, replace
   `reviews` and `depends_on` with their IDs, and set the Plan `blocked`. When a
@@ -757,10 +795,10 @@ the `reviewer`'s active Adversarial Review ticket through its inbox, so review
 of one module runs while later modules are built. Name the covered work's
 latest snapshots on each unit's Reads. That ticket is a streaming
 ticket; send `closing` when no further module boundary is expected before the
-pre-completion review. Use the
-`principal-reviewer` for the pre-completion review, always; earlier, only for a
-module that touched a high-risk surface, under Choosing a persona in
-`PERSONAS.md`, or for scope a `reviewer` escalated. After remediation, review the changed surface;
+pre-completion review. Choose each review's level under Choosing a level and
+Principal in `PERSONAS.md`: the pre-completion review is the only Adversarial
+Review that may run at `principal`. After remediation, review the changed
+surface at `standard`, or at `senior` when the fix touches a high-risk surface;
 repeat a full review only when the remediation is itself high-impact or
 cross-cutting. Do not run overlapping reviews of the same completed work. A
 pre-completion review may also satisfy the last module boundary when its Reads
@@ -851,7 +889,10 @@ Before acting on any active, ready, or presented ticket, read its schema and
 exact type contract in `TICKET-CONTRACTS.md`.
 
 Reload every presented human ticket from Objective or its latest Interaction
-log entry and Presentation. Read `HUMAN-ASKS.md`, then rebuild missing or stale
+log entry and Presentation. Also reload human tickets answered provisionally
+whose Evidence has no `provisional cleared` record, so that later linked status
+changes are checked, and apply the Goal verification fallback to them. Read
+`HUMAN-ASKS.md`, then rebuild missing or stale
 ask pages from those tickets and the bundled template before
 another user-visible message. Tickets, not HTML, determine current presentation
 state and ask content.
@@ -867,7 +908,7 @@ restore its exclusive-scope barrier before dispatching any agent ticket.
 
 Ticket completion, module completion and goal achievement are separate.
 
-The orchestrator marks a goal `achieved` when it decides verification is satisfied, using evidence already in tickets and run files: accepted criteria, defined verification, completed verification work, required human acceptance, and disposition of adversarial findings.
+The orchestrator marks a goal `achieved` when it decides verification is satisfied, using evidence already in tickets and run files: accepted criteria, defined verification, completed verification work, required human acceptance, and disposition of adversarial findings. A provisional answer counts as human acceptance or verification evidence only after its ticket's Evidence records `provisional cleared`. If it has no such record, but every listed ticket is `resolved` or `cancelled` and no invalidation is recorded, write `provisional cleared` first.
 
 Outside an active Human and Agent Task, it must not re-run tests, inspect artifacts, or otherwise execute verification in the orchestrator thread. A non-mutating liveness check used only to present an already-prepared human environment is process work, not goal-verification evidence. Checks performed inside Human and Agent Task remain ticket Evidence and do not replace independently required verification. If verification evidence is missing, create tickets.
 
@@ -887,7 +928,8 @@ The run is complete when:
 - no unresolved ticket is required for an achieved goal;
 - every covered ID under Reconciliation has implementation coverage: a
   current `accepted` agent verdict or resolved human inspection for each part
-  of its result, and a resolved boundary validation ticket;
+  of its result, and a resolved boundary validation ticket; a provisional
+  answer counts only once `provisional cleared` is recorded;
 - no ticket is active and no persona session is `running` or `parked`;
 - under `reviewed planning` or `smart`, every change plan whose change set is
   still in the run is `resolved` and accepted with every ID in its `reviews`
@@ -899,7 +941,9 @@ The run is complete when:
   departure and its reason; under `smart`, every qualifying change set either
   has an accepted change plan or a `LOG.md` entry recording why the
   orchestrator routed it directly;
-- required human tasks and acceptance are complete;
+- required human tasks and acceptance are complete; a provisional answer counts
+  only once `provisional cleared` is recorded, writing it first under the Goal
+  verification fallback when the condition holds;
 - significant adversarial findings are resolved or explicitly accepted by the user;
 - open entries in `UNKNOWNS.md` required for achieved goals are closed;
 - the run files reflect the final state.

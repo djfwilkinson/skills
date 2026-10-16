@@ -35,7 +35,10 @@ The orchestrator writes `asks/` as process work, like `LOG.md`. A subagent must
 never create, edit, or delete these files or a registration.
 
 Copy `templates/ask-detail.html` to `asks/<ticket-id>.html` for each human
-ticket. Ask pages are static, self-contained HTML with an inline renderer.
+ticket. Ask pages are static, self-contained HTML with an inline renderer. A
+page the ledger serves also polls `/runs` for its unsettled checks. Opened as a
+file or a copy, it is not live and shows only the unsettled snapshot written
+into its data.
 
 The ask index is shared by every run on the device. Use this skill's
 `scripts/ledger.py` with Python 3.9 or later:
@@ -51,8 +54,9 @@ and starts the ledger server in the background unless the same or a newer
 server is running. It replaces an older server. The server listens on
 `127.0.0.1` only, keeps using the port in `port`, and moves to the next free
 port in its range when another program holds it. Never edit the device
-`index.html` or a registration by hand. Do not add any other script, network
-request, build step, server, dependency, or install.
+`index.html` or a registration by hand. Beyond the bundled ledger script and
+templates, do not add any other script, network request, build step, server,
+dependency, or install.
 
 Ask pages and the ledger are not a prepared human environment. A preview,
 service, artifact, or other resource the ask refers to still follows
@@ -66,7 +70,8 @@ renderer for routine ask changes.
 
 The ledger server derives every registered run's asks from its files; the
 orchestrator writes no ask records for it. It reads ticket YAML `presentation`,
-`status`, `type`, and `title` from `tickets/`, and `ask.summary`, `ask.why`, and
+`status`, `type`, and `title` from `tickets/`, plus `may_withdraw_on` and the
+`status` and `title` of the tickets it names, and `ask.summary`, `ask.why`, and
 `presentation.presentedAt` from the ticket's ask page. The index polls every 5
 seconds and on Refresh. It:
 
@@ -82,8 +87,12 @@ seconds and on Refresh. It:
   `abandoned` and no ask is open, and offers the user a button that removes its
   registration, as `complete` does. That is the user's choice, not run
   completion; a run still in progress registers again at its next ask;
-- when the user opts in, raises a browser notification for each newly
-  presented ask found while the page is in the background.
+- shows "May change" with a count on a live row while any ticket in its
+  `may_withdraw_on` is not `resolved` or `cancelled`, or cannot be read;
+- when the user opts in, raises one browser notification for each newly
+  presented ask found while the page is in the background, labelled "May
+  change" when the ask is unsettled, and one more when that ask stops being
+  unsettled while still presented.
 
 Notifications are a convenience for the user. They never replace the complete
 first presentation in chat or count as a successful open in the current client.
@@ -96,7 +105,12 @@ states what the returned result must contain. Its examples omit the ask ticket
 ID because the renderer displays and copies each as `<ask-ticket-id>: <reply>`.
 For a finite choice, include one complete reply example per option.
 For Human and Agent Task, replace the current ask data rather than appending
-earlier turns.
+earlier turns. `ticket.mayWithdrawOn` mirrors the ticket YAML IDs as history.
+`presentation.unsettled` is a snapshot, `{ at, checks }`, recomputed from
+current ticket statuses on every page-data write with the ledger's rules: `at`
+is the ISO write time and `checks` holds each listed ticket not `resolved` or
+`cancelled` as `{ id, title, status }`, with `status: null` when it cannot be
+read. It is what a file or copy shows.
 
 For a grouped inspection, put every covered implementation ticket or unit in
 `ticket.covered`, group each result with its recorded outcomes into ordered
@@ -109,8 +123,9 @@ unsupported information to the detail object. Keep its `ask.summary`, `ask.why`,
 and `presentation.presentedAt` values double-quoted strings on one line so the
 index can read them. If a template
 or renderer itself needs changing, fix the bundled template first, then replace
-affected run pages from ticket state. A change to `ask-index.html` also raises
-its `ledger-version` so the next `scripts/ledger.py` run replaces the device
+affected run pages from ticket state. Raise `templateVersion` with every change
+to `ask-detail.html`. A change to `ask-index.html` also raises its
+`ledger-version` so the next `scripts/ledger.py` run replaces the device
 index.
 
 ## Source of truth
@@ -209,6 +224,7 @@ and upcoming list. Each live row shows:
 - the ask page's summary sentence;
 - why the ask matters to the user;
 - ticket ID, linked to the ticket, and type;
+- a "May change" tag and check count while the ask is unsettled;
 - presentation time;
 - a link to the ask page.
 
@@ -223,13 +239,17 @@ Immediately before first presentation:
 1. perform the allowed liveness check;
 2. record the page path, source, liveness result, and presentation time in
    Presentation;
-3. copy the bundled template only when the page file is missing, then populate
-   or replace its `ORCHESTRATOR DATA` object;
-4. set `presentation: presented`, which makes it a live row;
-5. run `scripts/ledger.py register <run-dir>`; the ledger's notifications tell
+3. copy the bundled template when the page file is missing or its
+   `templateVersion` is lower than the bundled template's, then populate or
+   replace its `ORCHESTRATOR DATA` object. Apply the same rule wherever page
+   data is updated;
+4. set `may_withdraw_on` under Unsettled asks, mirror it into
+   `ticket.mayWithdrawOn`, and write `presentation.unsettled`;
+5. set `presentation: presented`, which makes it a live row;
+6. run `scripts/ledger.py register <run-dir>`; the ledger's notifications tell
    the user the ask is waiting. Do not open the ask page or index in a browser,
    wait, verify, retry, or treat a script failure as a blocker;
-6. send the complete first ask in chat with links to the page and the ledger
+7. send the complete first ask in chat with links to the page and the ledger
    index, using the served URLs when the script succeeded and the absolute page
    path otherwise.
 
@@ -259,6 +279,79 @@ owner, and dependencies before new work starts.
 
 Keep the run registered while it is open, even when it has no live rows. Run
 `scripts/ledger.py complete <run-dir>` when the run completes.
+
+## Unsettled asks
+
+A presented ask is unsettled while any ticket in its `may_withdraw_on` is not
+`resolved` or `cancelled`, or cannot be read. The ledger derives this. It is not
+a presentation state, and settling does not withdraw, re-present, or rewrite
+anything.
+
+Set the field immediately before first presentation. List only unresolved agent
+tickets whose result could withdraw that exact ask, never unrelated running
+work, and write full ticket IDs such as `T-011-REV`; the shorthand `T-011` reads
+as status unavailable. Write it as a one-line inline list. A block list or a
+trailing comment reads as unavailable, never as safe. You may append an ID while
+the ask is presented, and must then update the page data, snapshot included,
+before the next user-visible message. Remove an ID only to correct a mistaken
+entry, and log that in `LOG.md`. A settled link stays listed as presentation
+history. On an `upcoming` ticket the field may be prepared but is not shown.
+
+What the user sees: on a ledger-served page, a notice naming each open check
+with its ID, name, and status, and a warning above the reply; on the index, the
+"May change" tag and two notifications. Only the served page is live. A file or
+copy shows the snapshot from when its data was written. An open page whose ask
+has left `presented`, or been presented again, hides the notice, the warning,
+and the reply, and asks the user to reload. Clearing needs no page or ticket
+write.
+
+Reply intake for a presented Discuss or Human Task ask with a non-empty
+`may_withdraw_on`, in order:
+
+1. record the raw reply in Evidence;
+2. reconcile every return already received for a listed ticket;
+3. re-read the ask's presentation and every listed status;
+4. if the ask is `withdrawn`, the reply is steering or new evidence and does not
+   complete the ticket;
+5. if every listed ticket is `resolved` or `cancelled`, handle the reply
+   normally;
+6. otherwise accept it as a provisional answer: record "provisional pending
+   <IDs>" in Evidence, mark the presentation answered, and reconcile.
+
+A return that arrives after this check is late invalidation. It cannot erase
+the recorded reply.
+
+Provisional answers:
+
+- They never count as human acceptance, implementation coverage, or goal
+  verification until every listed ticket is `resolved` or `cancelled` without
+  invalidating the ask.
+- Whenever a listed ticket's status changes to `resolved` or `cancelled`, for
+  any reason (a reconciled return, or a cancellation without a return), check
+  the human ticket. If every listed ticket is now `resolved` or `cancelled` and
+  no invalidation is recorded, record `provisional cleared <time>` in the human
+  ticket's Evidence and in `LOG.md`.
+- Before coverage, goal verification, or run completion uses a provisional
+  answer that has no `provisional cleared` record, check the same condition and
+  write the record first when it holds.
+- Supersession follows the late-invalidation rule in SKILL.md for a provisional
+  answer. A superseded provisional decision is steering that invalidates work in progress: send
+  `hold` or `stop` to the active dependents built on it, apply accepted-plan
+  supersession where a change plan used it, and re-ask in a new Discuss.
+
+Withdrawal precedence: a listed result that invalidates a presented ask uses the
+existing withdrawal flow and the cause-specific process. `withdrawn` hides the
+notice, the reply, and the row.
+
+Inspection freeze: listing a ticket does not exempt it from a presented
+inspection's freeze. Findings follow the existing withdraw-then-fix order.
+
+Specializations: listing a ticket never permits presenting earlier than a
+governing skill's stricter gate.
+
+Human and Agent Task: the field drives the display and the withdrawn re-check
+only. A turn is an interaction, not a return, so it is never marked provisional
+and needs no `provisional pending` or `provisional cleared` record.
 
 ## Chat contract
 
@@ -295,6 +388,19 @@ below; each list is the extra payload that type carries, not a substitute:
 - Human and Agent Task: only the current ask from its latest Interaction log
   entry under that type's contract.
 
+For an unsettled ask:
+
+- First presentation adds one sentence: the ask can be answered now and may be
+  withdrawn if a named check (ID and title) finds a problem. For a Discuss or
+  Human Task it also says a reply given now is provisional. A Human and Agent
+  Task turn does not.
+- The condensed line adds that it may change and names the open IDs.
+- Each message re-derives this from current ticket statuses, because chat cannot
+  clear itself.
+- Acknowledging a provisional reply to a Discuss or Human Task says it is
+  provisional until the named checks finish.
+- Send no all-clear message.
+
 Do not add unsupported hints. Do not paste ticket metadata, Reads, related run
 IDs, or the process reason. The model ask is the only exception. Acceptance is not an options question; present it directly and
 wait for the user's reply.
@@ -329,5 +435,6 @@ the condensed line only when that exact ask has already been presented.
 
 After compaction, reload every presented human ticket first. Rebuild or repair
 its pages from the bundled template using Objective, the latest Interaction log
-entry, and Presentation before another user-visible message. Never infer
+entry, Presentation, and `may_withdraw_on` before another user-visible message.
+A page whose `templateVersion` is lower than the bundled one counts as stale. Never infer
 presentation state or the current ask from HTML or the index alone.

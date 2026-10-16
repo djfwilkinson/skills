@@ -16,7 +16,9 @@ and mocks/) at /r/<key>/<path>, and serves read-only target-project files at
 and assets. It skips runs whose directory is gone and flags looksComplete when
 every goal in GOALS.md is achieved or abandoned and no ask is open. POST
 /r/<key>/complete with header X-Action-Ledger: complete removes such a run's
-registration; the custom header keeps other sites from sending it.
+registration; the custom header keeps other sites from sending it. For each
+presented ask, the server also reports as checks the tickets named in its
+may_withdraw_on that are not resolved or cancelled (status null when unreadable).
 """
 import json, mimetypes, os, re, shutil, signal, socket, subprocess, sys, time, urllib.request
 from datetime import datetime
@@ -27,8 +29,9 @@ from urllib.parse import unquote, urlsplit
 HOME = Path(os.environ.get("ACTION_LEDGER_HOME") or Path.home() / ".agent-runs" / "action-ledger")
 RUNS, PORT_FILE, PID_FILE, INDEX = HOME / "runs", HOME / "port", HOME / "pid", HOME / "index.html"
 TEMPLATE = Path(__file__).resolve().parent.parent / "templates" / "ask-index.html"
-FIRST_PORT, PORT_TRIES, VERSION = 47391, 20, 5
+FIRST_PORT, PORT_TRIES, VERSION = 47391, 20, 6
 NAME = f"action-ledger/{VERSION}"
+UNSETTLED = ("proposed", "ready", "active", "blocked")
 
 
 def read_json(path):
@@ -64,9 +67,34 @@ def goal_statuses(base):
         return []
 
 
+def link_ids(raw):
+    if raw is None or raw in ("[]", "null"):
+        return []
+    if not (raw.startswith("[") and raw.endswith("]")):
+        return None
+    items = (item.strip().strip("\"'") for item in raw[1:-1].split(","))
+    return list(dict.fromkeys(item for item in items if item))
+
+
+def checks(ask_id, raw, metas):
+    refs = link_ids(raw)
+    if refs is None:
+        return [{"id": raw or "may_withdraw_on", "title": "", "status": None}]
+    found = []
+    for ref in refs:
+        meta = metas.get(ref) if ref != ask_id else None
+        human = meta is not None and meta.get("presentation") not in (None, "", "null")
+        status = None if meta is None or human else meta.get("status")
+        if status in ("resolved", "cancelled"):
+            continue
+        found.append({"id": ref, "title": (meta or {}).get("title") or (meta or {}).get("type") or "",
+                      "status": status if status in UNSETTLED else None})
+    return found
+
+
 def run_view(key, data):
     run = dict(data.get("run") or {}) if isinstance(data, dict) else {}
-    base, asks, updated = Path(run.get("dir") or "/nonexistent"), [], 0
+    base, asks, updated, metas = Path(run.get("dir") or "/nonexistent"), [], 0, {}
     if not base.is_dir():
         return None
     for path in sorted((base / "tickets").glob("*.md")):
@@ -74,16 +102,18 @@ def run_view(key, data):
             updated = max(updated, path.stat().st_mtime)
         except OSError:
             continue
-        meta = ticket_yaml(path)
+        metas[path.stem] = ticket_yaml(path)
+    for stem, meta in metas.items():
         if meta.get("presentation") not in ("presented", "upcoming") or meta.get("status") in ("resolved", "cancelled"):
             continue
         try:
-            page = (base / "asks" / f"{path.stem}.html").read_text(encoding="utf-8")
+            page = (base / "asks" / f"{stem}.html").read_text(encoding="utf-8")
         except OSError:
             page = ""
-        asks.append({"id": path.stem, "type": meta.get("type"), "presentation": meta["presentation"],
+        asks.append({"id": stem, "type": meta.get("type"), "presentation": meta["presentation"],
                      "action": page_value(page, "summary") or meta.get("title"),
-                     "reason": page_value(page, "why"), "presentedAt": page_value(page, "presentedAt")})
+                     "reason": page_value(page, "why"), "presentedAt": page_value(page, "presentedAt"),
+                     "checks": checks(stem, meta.get("may_withdraw_on"), metas) if meta["presentation"] == "presented" else []})
     if updated:
         run["updatedAt"] = datetime.fromtimestamp(updated).astimezone().isoformat()
     statuses = goal_statuses(base)

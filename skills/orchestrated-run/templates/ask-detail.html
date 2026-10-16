@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; connect-src 'self'; base-uri 'none'; form-action 'none'">
   <title>Human ask</title>
   <script>
     /*
@@ -23,9 +23,13 @@
      *
      * Set presentation.state to presented | upcoming | answered | withdrawn.
      * For answered or withdrawn, set endedAt. For withdrawn, also set reason.
+     * ticket.mayWithdrawOn: the ticket YAML may_withdraw_on IDs as plain strings (history; not used for state).
+     * presentation.unsettled: when this data is written, set at to the ISO time and checks to
+     * [{ id, title, status }] for the listed tickets not resolved or cancelled (status null when
+     * unreadable), empty when none; shown only when live status is unavailable.
      */
     const askPageData = {
-      templateVersion: 2,
+      templateVersion: 4,
       run: {
         id: "RUN-ID",
         name: "Run name",
@@ -36,13 +40,15 @@
         type: "Discuss",
         path: "../tickets/T-000-DIS.md",
         href: "../tickets/T-000-DIS.md",
-        covered: []
+        covered: [],
+        mayWithdrawOn: []
       },
       presentation: {
         state: "upcoming",
         presentedAt: "",
         endedAt: "",
-        reason: ""
+        reason: "",
+        unsettled: { at: "", checks: [] }
       },
       ask: {
         title: "Ask title",
@@ -129,6 +135,15 @@
     .notice.upcoming { color: var(--warning); background: var(--warning-soft); }
     .notice.answered { color: var(--success); background: var(--success-soft); }
     .notice.withdrawn, .notice.error { color: var(--danger); background: var(--danger-soft); }
+    .notice.unsettled { color: var(--warning); background: var(--warning-soft); }
+    .notice.unsettled strong { display: block; font-size: 14px; }
+    .notice.unsettled p { margin: 6px 0 0; color: var(--text); }
+    .notice.unsettled ul { display: grid; gap: 6px; margin: 10px 0 0; padding: 0; list-style: none; }
+    .notice.unsettled li { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; color: var(--text); }
+    .notice.unsettled code { display: inline; margin: 0; padding: 0; border: 0; background: transparent; font-weight: 650; }
+    .notice.unsettled .unreadable { color: var(--danger); }
+    .notice.unsettled .check-status { padding: 0 8px; border: 1px solid currentColor; border-radius: 999px; color: var(--warning); font-size: 11px; font-weight: 650; }
+    .reply-warning { display: flex; gap: 8px; align-items: baseline; margin: 0 0 10px; color: var(--warning); font-size: 13px; font-weight: 650; }
     .top {
       display: grid;
       grid-template-columns: minmax(0, 1fr) 240px;
@@ -300,6 +315,7 @@
       }
       .meta-row { margin: 0; }
       .side { order: -1; }
+      .notice.unsettled { display: none; }
     }
     @media print {
       :root { --bg: #fff; --surface: #fff; --text: #111; --muted: #555; --line: #ccc; }
@@ -312,6 +328,7 @@
     <a class="back" id="back-link" href="/"><span aria-hidden="true">←</span> Action ledger</a>
     <p class="notice error" id="render-error" hidden>Unable to render this ask page. Use the complete ask in chat or open the ticket.</p>
     <p class="notice" id="lifecycle-notice" hidden></p>
+    <div class="notice unsettled" id="unsettled-notice" hidden></div>
 
     <section class="top">
       <div>
@@ -335,6 +352,7 @@
         </section>
         <div id="ask-sections"></div>
         <section class="reply" id="expected-reply">
+          <p class="reply-warning" id="reply-warning" role="status" hidden></p>
           <h2 id="reply-heading">Your reply</h2>
           <p id="reply-body">State the expected reply, result, or evidence.</p>
           <div class="response-examples" id="reply-examples" hidden></div>
@@ -577,6 +595,122 @@
       } catch (error) {
         byId("render-error").hidden = false;
         console.error("Ask page render failed", error);
+      }
+
+      // Unsettled checks (modes: live, not-served, gone, unavailable). Text only, via textContent.
+      const unsettledBox = byId("unsettled-notice");
+      const replyWarning = byId("reply-warning");
+      const reloadLine = "This ask has changed. Reload this page to see its current state.";
+      let renderedKey = "";
+      const cleanChecks = (list) => (Array.isArray(list) ? list : [])
+        .filter((entry) => entry && typeof entry === "object")
+        .map((entry) => ({ id: text(entry.id, "Unknown ticket"), title: text(entry.title), status: text(entry.status) || null }));
+      const plural = (count, one, many) => (count === 1 ? one : many);
+      const explanation = (entries) => {
+        const unreadable = entries.filter((entry) => entry.status === null).length;
+        if (unreadable) {
+          const which = unreadable === 1 ? "one cannot be read" : `${unreadable} cannot be read`;
+          return `Checks are still finishing, and ${which}. You can reply now, but treat this ask as unsettled until the notice goes away.`;
+        }
+        const count = entries.length;
+        return `${count} ${plural(count, "check is", "checks are")} still finishing. You can reply now. If a check finds a problem, this ask may be withdrawn and replaced. This notice goes away when ${plural(count, "it finishes", "they finish")}.`;
+      };
+      const renderUnsettled = (mode, entries) => {
+        const embedded = askPageData.presentation?.state;
+        const lifecycle = byId("lifecycle-notice");
+        const reply = byId("expected-reply");
+        const list = cleanChecks(entries);
+        const line = mode === "not-served"
+          ? `This copy is not live. It shows the checks as of ${formatDate(askPageData.presentation?.unsettled?.at)}. Open the Action ledger for current status.`
+          : mode === "unavailable" ? "Live status is unavailable right now. These are the last known checks." : "";
+        const show = embedded === "presented" && mode !== "gone" && list.length > 0;
+        const key = embedded !== "presented" ? "off" : mode === "gone" ? "gone"
+          : !show ? "none" : JSON.stringify([mode, line, list]);
+        if (key === renderedKey) return;
+        renderedKey = key;
+        if (embedded !== "presented") {
+          unsettledBox.hidden = true;
+          replyWarning.hidden = true;
+          return;
+        }
+        if (mode === "gone") {
+          unsettledBox.hidden = true;
+          replyWarning.hidden = true;
+          reply.hidden = true;
+          lifecycle.textContent = reloadLine;
+          lifecycle.className = "notice upcoming";
+          lifecycle.hidden = false;
+          return;
+        }
+        if (lifecycle.textContent === reloadLine) {
+          lifecycle.textContent = "";
+          lifecycle.hidden = true;
+        }
+        reply.hidden = false;
+        if (!show) {
+          unsettledBox.hidden = true;
+          replyWarning.hidden = true;
+          return;
+        }
+        const rows = element("ul");
+        for (const entry of list) {
+          const row = document.createElement("li");
+          row.append(element("code", "", entry.id));
+          row.append(element("span", entry.status === null ? "unreadable" : "", entry.status === null ? "status unavailable" : text(entry.title, "Untitled ticket")));
+          row.append(element("span", "check-status", entry.status === null ? "unknown" : entry.status));
+          rows.append(row);
+        }
+        unsettledBox.replaceChildren(element("strong", "", "This ask may change"), element("p", "", explanation(list)));
+        if (line) unsettledBox.append(element("p", "", line));
+        unsettledBox.append(rows);
+        unsettledBox.hidden = false;
+        const icon = element("span", "", "\u26A0\uFE0E");
+        icon.setAttribute("aria-hidden", "true");
+        replyWarning.replaceChildren(icon, element("span", "", "This ask may change."));
+        replyWarning.hidden = false;
+      };
+
+      try {
+        const snapshot = askPageData.presentation?.unsettled?.checks;
+        const found = location.pathname.match(/^\/r\/([^/]+)\/asks\/[^/]+\.html$/);
+        const served = ["http:", "https:"].includes(location.protocol) && found;
+        if (!served) {
+          renderUnsettled("not-served", snapshot);
+        } else {
+          renderUnsettled("unavailable", snapshot);
+          if (askPageData.presentation?.state === "presented") {
+            let lastLive = null;
+            const poll = async () => {
+              try {
+                let runs;
+                try {
+                  const reply = await fetch("/runs", { cache: "no-store" });
+                  if (!reply.ok) throw new Error(reply.statusText);
+                  runs = await reply.json();
+                  if (!Array.isArray(runs)) throw new Error("Unexpected /runs reply");
+                } catch {
+                  return renderUnsettled("unavailable", lastLive ?? snapshot);
+                }
+                const key = decodeURIComponent(found[1]);
+                const run = runs.find((candidate) => candidate?.key === key);
+                const entry = (Array.isArray(run?.asks) ? run.asks : []).find((ask) => ask?.id === askPageData.ticket?.id);
+                if (!entry || entry.presentation !== "presented" || entry.presentedAt !== askPageData.presentation.presentedAt) {
+                  return renderUnsettled("gone", []);
+                }
+                if (!Array.isArray(entry.checks)) return renderUnsettled("unavailable", lastLive ?? snapshot);
+                lastLive = entry.checks;
+                renderUnsettled("live", lastLive);
+              } catch (error) {
+                console.error("Ask page poll failed", error);
+              }
+            };
+            setInterval(poll, 5000);
+            document.addEventListener("visibilitychange", () => { if (!document.hidden) poll(); });
+            poll();
+          }
+        }
+      } catch (error) {
+        console.error("Ask page unsettled render failed", error);
       }
     })();
   </script>

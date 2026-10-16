@@ -76,6 +76,8 @@ tickets under orchestrated-run's Reconciliation rules and dispatch boundary
 validation, but keep the human inspection upcoming until the dedicated product
 check and that boundary validation return. Build the ask only from recorded evidence. This is
 presentation scheduling, not a substitute for either ticket.
+`may_withdraw_on` never shortens this hold. List only tickets still open
+after it, and handle provisional acceptance under orchestrated-run.
 
 ## Bootstrap and goals
 
@@ -367,7 +369,10 @@ unusable, move each covered defect to `blocked` with
 `resume_status: awaiting user review`. After preparation returns, recompute the
 projection, clear `resume_status`, and return it to `awaiting user review`.
 When validation or another finding invalidates the result, use `failed review`
-and the failed-cycle rules instead.
+and the failed-cycle rules instead. A listed ticket whose result invalidates the
+result uses `failed review`, as any invalidating finding does. A provisional
+acceptance follows orchestrated-run's coverage and verification limits for
+provisional answers.
 
 User-requested changes move the named defects to `failed review`. For a grouped
 reply that accepts some defects and rejects others, do not resolve the

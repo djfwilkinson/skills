@@ -412,7 +412,7 @@ Related:
 Avoid:
 - running two tickets for one persona at once, except `locator` tickets, one per survey area, which orchestrated-plan's and orchestrated-product-run's persona files allow
 - giving one ticket units that need different personas
-- naming specific models in persona definitions
+- naming specific models in persona definitions, other than in its models rule
 
 ### Work type
 
@@ -420,11 +420,34 @@ The kind of work a persona does: `coding`, `research`, `tooling`, `review`, or `
 
 ### Complexity
 
-How hard a persona's work is, from `lowest`, `low`, `medium`, `high`, and `highest`. Each maps to a target score for the persona's work type, as a percentage of the frontier: 0%, 50%, 65%, 80%, and 90%. A persona takes the cheapest offered model that meets its target, or the highest-scoring one when none does. A model up to two points below the target counts as meeting it, near target, when it costs at most two-thirds of the cheapest model that meets it.
+How hard a persona's work is, from `lowest`, `low`, `medium`, `high`, `higher`, and `highest`. Each maps to a target score for the persona's work type, as a percentage of the frontier: 0%, 50%, 65%, 80%, 85%, and 90%. A persona takes the cheapest model it is allowed that is offered and meets its target, or the highest-scoring one when none does. `highest` belongs to the core personas only. A model up to two points below the target counts as meeting it, near target, when it costs at most two-thirds of the cheapest model that meets it.
+
+### Core persona
+
+One of the two personas allowed the most capable models: the `lead-architect`, which writes the run's one upfront core plan, and the `principal-reviewer`, which does the run's one core review, the pre-completion review. They are the only personas at `highest` in `orchestrated-run`; every other persona excludes those models through its models rule.
+
+Related:
+- models rule
+- complexity
+
+Avoid:
+- giving a core persona escalated or module-level work
+- calling any other highest-complexity persona core
+
+### Models rule
+
+A persona's optional `Models` entry in a persona table: `only <model>[, <model>]` considers just those models, `not <model>[, <model>]` considers every other model, and blank allows every model. A name matches the start of a model name, so it covers every effort of that model. A persona uses one form, never both. A pin or `Models` working hint overrides it.
+
+Related:
+- persona
+- model database
+
+Avoid:
+- naming models in a persona's definition or brief; the models rule is the one place a persona table names them
 
 ### High-risk surface
 
-A schema, persistence layer, public API, protocol, data migration, or security, authentication, or secrets handling. Work touches one when its proposing ticket, change plan, or worker names it. Touching one sends planning to `principal-architect`, implementation to `senior-engineer`, the consequences lens to `principal-critic`, and module review to `principal-reviewer`.
+A schema, persistence layer, public API, protocol, data migration, or security, authentication, or secrets handling. Work touches one when its proposing ticket, change plan, or worker names it. Touching one sends planning to `principal-architect`, implementation to `senior-engineer`, the consequences lens to `principal-critic`, and module review to `senior-reviewer`.
 
 ### Escalation
 
@@ -433,6 +456,7 @@ Moving work to a higher-complexity persona on a worker's evidence, recorded on t
 Avoid:
 - escalating to save effort rather than on evidence
 - escalating the pre-completion review, which is always `principal-reviewer`'s
+- escalating to `highest`, which only the core personas hold
 
 ### Model database
 
@@ -719,7 +743,28 @@ Avoid:
 
 ### Presentation state
 
-Orchestrator-owned ticket YAML field `presentation`: `upcoming` before an ask is shown, `presented` while the current ask awaits a response, `withdrawn` when that ask is no longer actionable, and `answered` after the user responds. Agent tickets use `null`. A withdrawn ask cannot complete the ticket. After preparation resolves, the human ticket returns to `upcoming` and must be presented again.
+Orchestrator-owned ticket YAML field `presentation`: `upcoming` before an ask is shown, `presented` while the current ask awaits a response, `withdrawn` when that ask is no longer actionable, and `answered` after the user responds. Agent tickets use `null`. A withdrawn ask cannot complete the ticket. After preparation resolves, the human ticket returns to `upcoming` and must be presented again. Being unsettled is derived from other tickets, not a presentation value.
+
+### Unsettled ask
+
+A presented ask while any ticket in its `may_withdraw_on` is not `resolved` or `cancelled`, or cannot be read. `may_withdraw_on` is the orchestrator-owned ticket YAML field on a human ticket: a one-line inline list of full same-run agent-ticket IDs whose result could withdraw that exact ask. The ledger derives the state from current ticket statuses. The user sees a "This ask may change" notice and reply warning on the served ask page, a "May change" tag on the ask index row, and a second notification when it clears. Clearing writes nothing to the page or ticket.
+
+Related:
+- presentation state
+- ledger server
+- provisional answer
+
+Avoid:
+- **tentative ask** or **may change** as a presentation state
+- counting `execution_result: completed` as settling a link
+- treating unsettled as withdrawn
+
+### Provisional answer
+
+A reply to a presented Discuss or Human Task ask, accepted while that ask was unsettled. A Human and Agent Task interaction is never provisional. The ticket is marked answered and reconciled so dependents may proceed, but the reply gives no human acceptance, implementation coverage, or goal verification until `provisional cleared` is recorded, after every listed ticket is `resolved` or `cancelled` without invalidating it. A linked result that invalidates the ask supersedes it.
+
+Related:
+- unsettled ask
 
 ### Execution result
 
@@ -961,11 +1006,11 @@ Orchestrator-owned human-ticket section that points to the current ask source an
 
 ### Ask page
 
-An orchestrator-written, self-contained HTML copy of one current return-to-user ask under the run's `asks/` directory. It is instantiated from the bundled detail template and updated through its single structured data object. It is a derived artifact, not a run file, and comes from Objective or the latest Interaction log entry plus Presentation. The ticket remains authoritative. First presentation still happens completely in chat. An ask page is not a prepared human environment and never contains secret values.
+An orchestrator-written, self-contained HTML copy of one current return-to-user ask under the run's `asks/` directory. It is instantiated from the bundled detail template and updated through its single structured data object. A page the ledger serves polls for its unsettled checks; a file or copy is not live and shows the snapshot from when its data was written. It is a derived artifact, not a run file, and comes from Objective or the latest Interaction log entry plus Presentation. The ticket remains authoritative. First presentation still happens completely in chat. An ask page is not a prepared human environment and never contains secret values.
 
 ### Ask index
 
-The device-level action ledger page shared by every orchestrated run on the machine. The bundled ledger script copies it from the index template into the action ledger directory when it is missing or its `ledger-version` is older, and serves it from a local ledger server. It polls the ledger server, which derives each registered run's asks from its ticket YAML and ask pages, lists each run in its own section and, when the user opts in, sends a browser notification for each new presented ask found while it is in the background. Each live row names the requested action and why it exists and links the ticket and ask page. It is a derived artifact, not a run file, presentation state or a source for compaction recovery. Withdrawn, answered and upcoming asks are not live rows; upcoming involvement may appear separately without presenting its ask.
+The device-level action ledger page shared by every orchestrated run on the machine. The bundled ledger script copies it from the index template into the action ledger directory when it is missing or its `ledger-version` is older, and serves it from a local ledger server. It polls the ledger server, which derives each registered run's asks from its ticket YAML and ask pages, lists each run in its own section and, when the user opts in, sends a browser notification for each new presented ask found while it is in the background, and one more when an unsettled ask clears. A presented row whose ask is unsettled carries a "May change" tag and a check count. Each live row names the requested action and why it exists and links the ticket and ask page. It is a derived artifact, not a run file, presentation state or a source for compaction recovery. Withdrawn, answered and upcoming asks are not live rows; upcoming involvement may appear separately without presenting its ask.
 
 ### Ledger registration
 
@@ -976,14 +1021,14 @@ Avoid:
 
 ### Ledger server
 
-The local web server the bundled ledger script starts in the background to serve the ask index, the asks it derives for each registered run, and that run's ask pages and tickets. It listens on the loopback address only, keeps the port it last used, and moves to another free port in its range when that port is taken by another program. Starting the ledger replaces an older server version. It skips a registered run whose directory is gone and marks one as looking complete when every goal is achieved or abandoned and no ask is open. For such a run only, the index offers the user a button that asks the server to remove its registration.
+The local web server the bundled ledger script starts in the background to serve the ask index, the asks it derives for each registered run, and that run's ask pages and tickets. It listens on the loopback address only, keeps the port it last used, and moves to another free port in its range when that port is taken by another program. It derives each presented ask's open links from `may_withdraw_on`. Starting the ledger replaces an older server version. It skips a registered run whose directory is gone and marks one as looking complete when every goal is achieved or abandoned and no ask is open. For such a run only, the index offers the user a button that asks the server to remove its registration.
 
 Avoid:
 - treating the ledger server as a prepared human environment
 
 ### Ask template
 
-One of the HTML skeletons stored under the orchestrated-run skill's `templates/` directory. The detail template keeps mutable presentation data in one `ORCHESTRATOR DATA` object and keeps layout and rendering code stable; run pages are copies populated from authoritative tickets and Presentation, not references to the library files. The index template holds no run data and is copied to each device as the ask index; raising its `ledger-version` makes the ledger script replace older copies.
+One of the HTML skeletons stored under the orchestrated-run skill's `templates/` directory. The detail template keeps mutable presentation data in one `ORCHESTRATOR DATA` object and keeps layout and rendering code stable; run pages are copies populated from authoritative tickets and Presentation, not references to the library files. The index template holds no run data and is copied to each device as the ask index; raising its `ledger-version` makes the ledger script replace older copies. Raising the detail template's `templateVersion` makes the orchestrator rebuild older run pages on their next update.
 
 Avoid:
 - **reports folder** or **reviews folder** for `asks/`

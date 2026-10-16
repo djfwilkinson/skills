@@ -225,7 +225,8 @@ run is in full-delivery mode:
      `smart` routing in `LOG.md`.
    - If a change set spans multiple areas, needs interface/state design, touches
      a high-risk surface, or carries a user-approved refactor, create a `Plan`
-     ticket (`frontend-planner`, `architect`, or `principal-architect`) and
+     ticket (`frontend-planner`, `architect`, or `principal-architect`; the
+     run's first Plan goes to `lead-architect`) and
      choose `0`, `1` (`consequences` or `product`), or `2` `Plan Review` lenses
      upfront. Always include `principal-critic` for high-risk surfaces or
      approved large refactors, and `product-critic` when product criteria or
@@ -249,7 +250,9 @@ run is in full-delivery mode:
      `ux-ui-reviewer` on the module's `Adversarial Review` Reads.
    - Hold the human boundary inspection `upcoming` until implementation,
      `validator`, and `scenario-tester` return with no material issue requiring
-     remediation.
+     remediation. `may_withdraw_on` never shortens this hold. List only tickets
+     still open after it, and handle provisional acceptance under
+     orchestrated-run.
 
 ### 5. Product Owner acceptance
 

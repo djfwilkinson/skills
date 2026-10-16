@@ -40,8 +40,8 @@ and continue the global number sequence.
 
 ## Ticket ownership and schema
 
-`status`, `owner`, `persona`, `presentation`, `plans`, and `reviews` are
-orchestrator-owned, and so are Objective, Reads, Completion, and Work units.
+`status`, `owner`, `persona`, `presentation`, `plans`, `reviews`, and
+`may_withdraw_on` are orchestrator-owned, and so are Objective, Reads, Completion, and Work units.
 `execution_result` is worker-owned and unset until execution ends.
 
 While a ticket is active, the worker may update only:
@@ -90,6 +90,7 @@ modules: []
 plans: []
 reviews: []
 depends_on: []
+may_withdraw_on: []
 owner: null
 ---
 
@@ -148,6 +149,15 @@ inspection freeze when applicable>
 it is `null` on human tickets. `plans` holds the Plan ticket IDs for change
 plans that govern the ticket. `reviews` is used only on a Plan ticket and holds
 the current round's Plan Review ticket IDs.
+
+`may_withdraw_on` is used only on human tickets. It lists the same-run
+agent-ticket IDs whose result could withdraw the current ask, as a one-line
+inline list such as `may_withdraw_on: [T-011-REV, T-012-VAL]`. Entries are full
+ticket IDs; the numeric shorthand valid elsewhere matches no ticket here and
+reads as status unavailable. The ledger treats a listed ticket as no longer
+able to withdraw the ask only when its status is `resolved` or `cancelled`;
+`execution_result` never counts. The rules for setting and reading it live
+under Unsettled asks in `HUMAN-ASKS.md`.
 
 Ticket statuses:
 
@@ -652,7 +662,9 @@ change set at `plans/<plan-ticket-id>.md`. Its path is stable. The active Plan
 worker owns its content; otherwise only the orchestrator may change its Status
 and revisions banner. A Plan ticket has one unit. The `architect`,
 `principal-architect`, or `frontend-planner` session takes the next Plan ticket
-for that persona while critics review the last one.
+for that persona while critics review the last one. The one `lead-architect`
+Plan ticket of the run is the first; its session writes only that plan and its
+revisions.
 
 Assignment prompt, after the shared agent rules:
 
