@@ -1,37 +1,46 @@
 #!/usr/bin/env python3
-"""Rate the model database against its frontier and choose models for personas.
+"""Rate the model database against its frontier and choose models for persona levels.
 
 model_setup.py [--db PATH] [--choices PATH] [--ratings]
                [--client NAME... | --available MODEL=EFFORT[,EFFORT]...]
-               [--multi MODEL]... [--weight PERSONA=N]... [--top N]
-               [--write target] [--pin PERSONA=MODEL@EFFORT]... [--unpin PERSONA]...
+               [--multi MODEL]... [--weight SLOT=N]... [--top N]
+               [--write target] [--pin SLOT=MODEL@EFFORT]... [--unpin SLOT]...
                [--personas PATH]...
 
 Scores every database row per work type as a percentage of the database's
-frontier, prices it under the database's cost plan, then finds the best setup:
-each model at one effort, or at any set of efforts for a model named with
---multi. Each persona takes the cheapest offered row whose score for its work
-type reaches its complexity's target, or the highest-scoring row when none
-does, as under Choosing a model in PERSONAS.md. A row within two points below
-the target counts as meeting it when it costs at most two-thirds of the
-cheapest row that does; it is marked near target. Setups rank by total
-shortfall below target, then by mean cost per task, weighted by --weight,
-default 1.
+frontier and prices it under the database's cost plan. Models are chosen per
+slot: a work type at a level, such as coding/senior, shared by every persona of
+that work type that may run at that level. A persona with a Models rule gets
+its own slots, such as ux-reviewer/standard. The persona table in PERSONAS.md,
+and in every --personas file, gives each persona's Work, its Levels and an
+optional Models rule.
 
---personas adds the personas in another Markdown file with the same Persona,
-Work and Complexity table as PERSONAS.md, for a skill that defines its own.
-They are scored, chosen, pinned and weighted like the built-in ones.
+Each level has a target score and a cost ceiling per task. A slot takes the
+cheapest offered row at or under its ceiling whose score for its work type
+reaches the target; otherwise the highest-scoring row under the ceiling,
+marked below target; otherwise, when no row is under the ceiling, the cheapest
+row, marked over ceiling. A row within two points below the target counts as
+meeting it when it costs at most two-thirds of the cheapest row that does; it
+is marked near target.
+
+The best setup offers each model at one effort, or at any set of efforts for a
+model named with --multi, and ranks setups by total shortfall below target,
+then by mean cost per task, weighted by --weight, default 1.
+
+A Models rule is "only <model>[, <model>]", which considers just those models,
+or "not <model>[, <model>]", which considers every other model; each name
+matches the start of a model name. A pin overrides it.
 
 --client takes the client's model names as it lists them, such as
 claude-haiku-5-5-thinking-high or grok-4.7-high, and skips fast variants;
 --available gives models and efforts directly. Either adds the assignment the
-client's models give now, using each persona's pin when the client offers it,
+client's models give now, using each slot's pin when the client offers it,
 and the swaps that would reach the best setup.
 
 The machine model choices file, ~/.agent-runs/model-choices.md unless
 --choices is given, holds pins the user chose and a target, the best setup.
 --write target saves the best setup as the target, keeping pins. --pin and
---unpin change one persona's pin. --ratings prints every row's scores. The
+--unpin change one slot's pin. --ratings prints every row's scores. The
 database defaults to ~/.agent-runs/models.json, or the skill's
 templates/models.json when that is missing.
 """
@@ -58,13 +67,17 @@ SUPPORTS = {"coding": ["terminalBench21"], "tooling": ["tauBanking", "tau2", "if
             "visual": ["mmmuPro"]}
 # MMMU-Pro is near saturation for frontier models, so it never rates visual work alone.
 SUPPORT_ONLY = {"coding", "tooling"}
-# Persona complexity: the lowest score, as a share of the frontier, that meets it.
-TARGETS = {"lowest": 0.0, "low": 0.50, "medium": 0.65, "high": 0.80, "highest": 0.90}
+# Levels: the lowest score, as a share of the frontier, that meets one, and the
+# most a row may cost per task. The model database's "levels" overrides these.
+LEVELS = {"junior": dict(target=0.45, ceiling=0.40), "standard": dict(target=0.60, ceiling=0.80),
+          "senior": dict(target=0.75, ceiling=1.50), "principal": dict(target=0.88, ceiling=4.00)}
 EFFORTS = ["non-reasoning", "low", "medium", "high", "xhigh", "max"]
 Z90 = 1.645
 MARGIN = 0.03
 # A row this far below target ranks as meeting it at this multiple of its cost.
 NEAR, NEAR_PRICE = 0.02, 1.5
+# A row over the ceiling ranks after every row under it, cheapest first.
+OVER = 10.0
 
 
 def win(elo, median):
@@ -163,21 +176,47 @@ def table(path, *columns):
     sys.exit(f"{path}: no table with {', '.join(columns)}")
 
 
+def models_rule(name, text):
+    text = text.strip()
+    if not text or text == "-":
+        return None
+    mode, _, names = text.partition(" ")
+    if mode not in ("only", "not") or not names.strip():
+        sys.exit(f"persona {name}: Models must be blank, 'only <model>[, <model>]' or 'not <model>[, <model>]'")
+    return mode, tuple(n.strip() for n in names.split(",") if n.strip())
+
+
 def personas(extra=()):
-    found = table(SKILL / "PERSONAS.md", "Persona", "Work", "Complexity")
+    found = table(SKILL / "PERSONAS.md", "Persona", "Work", "Levels")
     for path in extra:
-        found += table(Path(path), "Persona", "Work", "Complexity")
+        found += table(Path(path), "Persona", "Work", "Levels")
     seen, unique = {}, []
     for p in found:
-        spec = (p["Work"], p["Complexity"])
+        levels = tuple(l.strip().strip("`") for l in p["Levels"].split(",") if l.strip())
+        bad = [l for l in levels if l not in LEVELS]
+        if bad or not levels:
+            sys.exit(f"persona {p['Persona']}: unknown level {', '.join(bad) or '(none)'}")
+        spec = dict(name=p["Persona"], work=p["Work"], levels=levels, models=models_rule(p["Persona"], p.get("Models", "")))
         if p["Persona"] in seen:
             if seen[p["Persona"]] != spec:
-                sys.exit(f"persona {p['Persona']} is defined twice with different Work or Complexity")
+                sys.exit(f"persona {p['Persona']} is defined twice differently")
             continue
         seen[p["Persona"]] = spec
-        unique.append(p)
-    return [dict(name=p["Persona"], work=p["Work"], level=p["Complexity"], target=TARGETS[p["Complexity"]])
-            for p in unique]
+        unique.append(spec)
+    return unique
+
+
+def slots(people, levels):
+    found = {}
+    for p in people:
+        for level in p["levels"]:
+            name = f"{p['name'] if p['models'] else p['work']}/{level}"
+            slot = found.setdefault(name, dict(name=name, work=p["work"], level=level, models=p["models"],
+                                               target=levels[level]["target"], ceiling=levels[level]["ceiling"],
+                                               personas=[]))
+            slot["personas"].append(p["name"])
+    order = list(levels)
+    return sorted(found.values(), key=lambda s: (list(WORK).index(s["work"]), order.index(s["level"]), s["name"]))
 
 
 def client_names(names, rows):
@@ -211,7 +250,7 @@ def read_choices(path):
     section = text.split("## Pins", 1)[1].split("\n## ", 1)[0]
     for line in section.splitlines():
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if line.startswith("|") and len(cells) >= 3 and cells[0] not in ("Persona",) and not set(line) <= set("|-: "):
+        if line.startswith("|") and len(cells) >= 3 and cells[0] not in ("Slot", "Persona") and not set(line) <= set("|-: "):
             pins[cells[0]] = dict(model=cells[1], effort=cells[2], reason=cells[3] if len(cells) > 3 else "")
     return pins
 
@@ -222,22 +261,22 @@ def write_choices(path, pins, target, db_path, db):
     kept = old.split("## Target", 1)[1] if "## Target" in old and target is None else None
     lines = ["# Model choices", "", f"Written: {stamp} by scripts/model_setup.py", "",
              "## Pins", "",
-             "Models the user chose for a persona. A run uses a pin when the client offers it,",
-             "and otherwise chooses that persona from the model database.", "",
-             "| Persona | Model | Effort | Reason |", "| --- | --- | --- | --- |"]
+             "Models the user chose for a slot, a work type at a level. A run uses a pin when",
+             "the client offers it, and otherwise chooses that slot from the model database.", "",
+             "| Slot | Model | Effort | Reason |", "| --- | --- | --- | --- |"]
     lines += [f"| {k} | {v['model']} | {v['effort']} | {v['reason']} |" for k, v in pins.items()]
     lines += ["", "## Target"]
     if target is not None:
-        rule, offer, people, weights = target
+        rule, offer, seats, weights = target
         lines += ["", "The best setup if the client's efforts could be changed. Runs do not choose",
                   "from it; the models question names swaps toward it.", "",
                   f"Database: {db_path}, version {db.get('version')}, rated {db.get('rated')}",
-                  f"Rule: {rule}", f"Setup: {summary(offer, people, weights)}", "",
-                  "| Persona | Work | Target | Model | Effort | Score | Cost per task |",
+                  f"Rule: {rule}", f"Setup: {summary(offer, seats, weights)}", "",
+                  "| Slot | Target | Ceiling | Model | Effort | Score | Cost per task |",
                   "| --- | --- | --- | --- | --- | --- | --- |"]
-        lines += [f"| {p['name']} | {p['work']} | {p['level']} {p['target']:.0%} | {pick['model']} | {pick['effort']} | "
-                  f"{pick['score'][p['work']]:.0%} | ${pick['usd']:.2f} |"
-                  for p, pick, _ in assign(offer, people) if pick]
+        lines += [f"| {s['name']} | {s['target']:.0%} | ${s['ceiling']:.2f} | {pick['model']} | {pick['effort']} | "
+                  f"{pick['score'][s['work']]:.0%} | ${pick['usd']:.2f} |"
+                  for s, pick, _ in assign(offer, seats) if pick]
         text = "\n".join(lines) + "\n"
     else:
         text = "\n".join(lines) + (kept if kept is not None else "\n\nNone written yet.\n")
@@ -250,43 +289,57 @@ def label(row):
     return f"{row['model']} {row['effort']}"
 
 
-def key(row, person):
-    s = row["score"][person["work"]]
-    if s is None or not row["usd"]:
+def allowed(row, slot):
+    rule = slot.get("models")
+    if not rule:
+        return True
+    mode, names = rule
+    listed = any(row["model"].startswith(n) for n in names)
+    return listed if mode == "only" else not listed
+
+
+def key(row, slot):
+    s = row["score"][slot["work"]]
+    if s is None or not row["usd"] or not allowed(row, slot):
         return math.inf, math.inf
-    short = max(0.0, person["target"] - s)
+    if row["usd"] > slot["ceiling"] + 1e-9:
+        return OVER, row["usd"]
+    short = max(0.0, slot["target"] - s)
     if 0 < short <= NEAR:
         return 0.0, row["usd"] * NEAR_PRICE
     return short, row["usd"]
 
 
-def standing(score, person):
-    if score is None or score >= person["target"]:
+def standing(pick, slot):
+    if pick["usd"] > slot["ceiling"] + 1e-9:
+        return " over ceiling"
+    score = pick["score"][slot["work"]]
+    if score is None or score >= slot["target"]:
         return ""
-    return " near target" if person["target"] - score <= NEAR else " below target"
+    return " near target" if slot["target"] - score <= NEAR else " below target"
 
 
-def ranked(offer, person):
-    return sorted((r for r in offer if key(r, person)[0] != math.inf), key=lambda r: key(r, person))
+def ranked(offer, slot):
+    return sorted((r for r in offer if key(r, slot)[0] != math.inf), key=lambda r: key(r, slot))
 
 
-def assign(offer, people, pins=None):
+def assign(offer, seats, pins=None):
     out = []
-    for p in people:
-        found = ranked(offer, p)
+    for s in seats:
+        found = ranked(offer, s)
         pick = found[0] if found else None
-        pin = (pins or {}).get(p["name"])
+        pin = (pins or {}).get(s["name"])
         pinned = next((r for r in offer if pin and (r["model"], r["effort"]) == (pin["model"], pin["effort"])), None)
         if pinned:
             pick = dict(pinned, pinned=True)
         other = next((r for r in found if pick and r["provider"] != pick["provider"]
-                      and key(r, p)[0] <= key(pick, p)[0]), None)
-        out.append((p, pick, other))
+                      and key(r, s)[0] <= key(pick, s)[0]), None)
+        out.append((s, pick, other))
     return out
 
 
-def keys(offer, people):
-    return [min((key(r, p) for r in offer), default=(math.inf, math.inf)) for p in people]
+def keys(offer, seats):
+    return [min((key(r, s) for r in offer), default=(math.inf, math.inf)) for s in seats]
 
 
 def score(vector, weights):
@@ -304,7 +357,7 @@ def undominated(rows):
     return [a for a in rows if a["usd"] and not any(beats(b, a) for b in rows if b["usd"])]
 
 
-def search(rows, people, weights, multi, top):
+def search(rows, seats, weights, multi, top):
     options = []
     for m in sorted({r["model"] for r in rows}):
         own = undominated([r for r in rows if r["model"] == m])
@@ -312,9 +365,9 @@ def search(rows, people, weights, multi, top):
             options.append([list(s) for k in range(1, len(own) + 1) for s in itertools.combinations(own, k)])
         elif own:
             options.append([[r] for r in own])
-    vectors = [[keys(o, people) for o in opts] for opts in options]
-    none = [(math.inf, math.inf)] * len(people)
-    floor = [[min(v[i] for v in vs) for i in range(len(people))] for vs in vectors] + [none]
+    vectors = [[keys(o, seats) for o in opts] for opts in options]
+    none = [(math.inf, math.inf)] * len(seats)
+    floor = [[min(v[i] for v in vs) for i in range(len(seats))] for vs in vectors] + [none]
     for k in range(len(options) - 1, -1, -1):
         floor[k] = [min(a, b) for a, b in zip(floor[k], floor[k + 1])]
     best = {}
@@ -326,7 +379,7 @@ def search(rows, people, weights, multi, top):
     def walk(k, chosen, vector):
         if k == len(options):
             offer = [r for o in chosen for r in o]
-            used = frozenset(label(pick) for _, pick, _ in assign(offer, people) if pick)
+            used = frozenset(label(pick) for _, pick, _ in assign(offer, seats) if pick)
             s = score(vector, weights)
             if used not in best or s < best[used][0]:
                 best[used] = (s, offer)
@@ -342,47 +395,46 @@ def search(rows, people, weights, multi, top):
     return sorted(best.values(), key=lambda b: b[0])[:top]
 
 
-def used_rows(offer, people, pins=None):
-    found = {label(pick): pick for _, pick, _ in assign(offer, people, pins) if pick}
+def used_rows(offer, seats, pins=None):
+    found = {label(pick): pick for _, pick, _ in assign(offer, seats, pins) if pick}
     return [found[k] for k in sorted(found)]
 
 
-def summary(offer, people, weights, pins=None):
-    picks = assign(offer, people, pins)
-    vector = [(key(pick, p)[0], pick["usd"]) if pick else (math.inf, math.inf) for p, pick, _ in picks]
-    short, mean = score(vector, weights)
-    marks = [standing(pick["score"][p["work"]], p) if pick else " below target" for p, pick, _ in picks]
-    below, near = marks.count(" below target"), marks.count(" near target")
+def summary(offer, seats, weights, pins=None):
+    picks = assign(offer, seats, pins)
+    vector = [(key(pick, s)[0], pick["usd"]) if pick else (math.inf, math.inf) for s, pick, _ in picks]
+    _, mean = score(vector, weights)
+    marks = [standing(pick, s) if pick else " below target" for s, pick, _ in picks]
+    counts = [f"{marks.count(' ' + m)} {m}" for m in ("below target", "near target", "over ceiling") if marks.count(" " + m)]
     by_model = {}
-    for r in used_rows(offer, people, pins):
+    for r in used_rows(offer, seats, pins):
         by_model.setdefault(r["model"], []).append(r["effort"])
     text = ", ".join(f"{m} {' and '.join(e)}" for m, e in by_model.items())
-    return (f"${mean:.2f} mean cost per task" + (f", {below} personas below target" if below else "")
-            + (f", {near} near target" if near else "") + f": {text}")
+    return f"${mean:.2f} mean cost per task" + "".join(f", {c}" for c in counts) + f": {text}"
 
 
-def show(title, offer, people, weights, pins=None):
-    print(f"\n## {title}\n\n{summary(offer, people, weights, pins)}\n")
-    print("| Persona | Work | Target | Model | Effort | Score | Cost per task | Cheapest other provider |")
-    print("| --- | --- | --- | --- | --- | --- | --- | --- |")
-    for p, pick, other in assign(offer, people, pins):
-        target = f"{p['level']} {p['target']:.0%}"
+def show(title, offer, seats, weights, pins=None):
+    print(f"\n## {title}\n\n{summary(offer, seats, weights, pins)}\n")
+    print("| Slot | Personas | Target | Ceiling | Model | Effort | Score | Cost per task | Cheapest other provider |")
+    print("| --- | --- | --- | --- | --- | --- | --- | --- | --- |")
+    for s, pick, other in assign(offer, seats, pins):
+        head = f"| {s['name']} | {', '.join(s['personas'])} | {s['target']:.0%} | ${s['ceiling']:.2f}"
         if pick:
-            s = pick["score"][p["work"]]
+            v = pick["score"][s["work"]]
             mark = " (pinned)" if pick.get("pinned") else ""
-            got = "-" if s is None else f"{s:.0%}" + standing(s, p)
+            got = ("-" if v is None else f"{v:.0%}") + standing(pick, s)
             chosen = f"{pick['model']} | {pick['effort']}{mark} | {got} | ${pick['usd']:.2f}"
         else:
             chosen = "none | - | - | -"
-        alternative = f"{label(other)} {other['score'][p['work']]:.0%} ${other['usd']:.2f}" if other else "-"
-        print(f"| {p['name']} | {p['work']} | {target} | {chosen} | {alternative} |")
-    shaky = [f"{label(pick)} for {p['name']} ({p['work']} {pick['score'][p['work']]:.0%}, target {p['target']:.0%})"
-             for p, pick, _ in assign(offer, people, pins)
-             if pick and not pick.get("pinned") and pick["score"][p["work"]] is not None
-             and 0 <= pick["score"][p["work"]] - p["target"] < MARGIN]
+        alternative = f"{label(other)} {other['score'][s['work']]:.0%} ${other['usd']:.2f}" if other else "-"
+        print(f"{head} | {chosen} | {alternative} |")
+    shaky = [f"{label(pick)} for {s['name']} ({s['work']} {pick['score'][s['work']]:.0%}, target {s['target']:.0%})"
+             for s, pick, _ in assign(offer, seats, pins)
+             if pick and not pick.get("pinned") and pick["score"][s["work"]] is not None
+             and 0 <= pick["score"][s["work"]] - s["target"] < MARGIN]
     if shaky:
-        print(f"\nWithin {MARGIN:.0%} above the persona's target: " + "; ".join(shaky))
-    notes = sorted({f"{label(r)}: {', '.join(r['notes'])}" for r in used_rows(offer, people, pins) if r["notes"]
+        print(f"\nWithin {MARGIN:.0%} above the slot's target: " + "; ".join(shaky))
+    notes = sorted({f"{label(r)}: {', '.join(r['notes'])}" for r in used_rows(offer, seats, pins) if r["notes"]
                     and any("discount" not in n for n in r["notes"])})
     if notes:
         print("\nNotes: " + "; ".join(notes))
@@ -393,12 +445,12 @@ def show(title, offer, people, weights, pins=None):
             print("\nPins the client does not offer, chosen from the database instead: " + ", ".join(lost))
 
 
-def swaps(now, best, people):
+def swaps(now, best, seats):
     have = {}
-    for r in used_rows(now, people):
+    for r in used_rows(now, seats):
         have.setdefault(r["model"], []).append(r["effort"])
     want = {}
-    for r in used_rows(best, people):
+    for r in used_rows(best, seats):
         want.setdefault(r["model"], []).append(r["effort"])
     lines = []
     for m in sorted(set(have) | set(want)):
@@ -422,6 +474,23 @@ def ratings(rows):
         usd = f"${r['usd']:.2f}" if r["usd"] else "-"
         basis = "; ".join([r["basis"]] + r["notes"])
         print(f"| {r['model']} | {r['effort']} | {r['provider']} | " + " | ".join(cells) + f" | {usd} | {basis} |")
+
+
+def levels_of(db):
+    out = {k: dict(v) for k, v in LEVELS.items()}
+    for k, v in db.get("levels", {}).items():
+        if k not in out:
+            sys.exit(f"model database: unknown level {k}")
+        out[k].update(v)
+    return out
+
+
+def setup(db_path=None, extra=()):
+    machine = AGENT_RUNS / "models.json"
+    db_path = db_path or (machine if machine.exists() else SKILL / "templates" / "models.json")
+    db, rows = load(db_path)
+    levels = levels_of(db)
+    return db_path, db, rows, levels, slots(personas(extra), levels)
 
 
 def main(args):
@@ -454,9 +523,9 @@ def main(args):
         elif flag == "--write" and value == "target":
             write = True
         elif flag == "--pin":
-            persona, _, spec = value.partition("=")
+            name, _, spec = value.partition("=")
             model, _, eff = spec.rpartition("@")
-            pin[persona] = dict(model=model, effort=eff, reason="user choice")
+            pin[name] = dict(model=model, effort=eff, reason="user choice")
         elif flag == "--unpin":
             unpin.append(value)
         elif flag == "--choices":
@@ -465,30 +534,30 @@ def main(args):
             extra.append(value)
         else:
             sys.exit(__doc__)
-    machine = AGENT_RUNS / "models.json"
-    db_path = db_path or (machine if machine.exists() else SKILL / "templates" / "models.json")
+    db_path, db, rows, levels, seats = setup(db_path, extra)
     choices = choices or AGENT_RUNS / "model-choices.md"
-    db, rows = load(db_path)
-    people = personas(extra)
-    names = {p["name"] for p in people}
-    for persona in list(pin) + unpin:
-        if persona not in names:
-            sys.exit(f"unknown persona {persona}")
+    names = {s["name"] for s in seats}
+    for name in list(pin) + unpin + list(weight):
+        if name not in names:
+            sys.exit(f"unknown slot {name}; slots are {', '.join(sorted(names))}")
     pins = {k: v for k, v in {**read_choices(choices), **pin}.items() if k not in unpin}
-    weights = [weight.get(p["name"], 1) for p in people]
+    weights = [weight.get(s["name"], 1) for s in seats]
     print(f"Database: {db_path}, version {db.get('version')}, rated {db.get('rated')}, {len(rows)} rows")
     print(f"Cost plan: {db.get('plan', {}).get('description', 'list prices')}")
+    print("Levels: " + ", ".join(f"{k} {v['target']:.0%} up to ${v['ceiling']:.2f}" for k, v in levels.items())
+          + (" (from the database)" if db.get("levels") else ""))
     print(f"Choices: {choices}" + (f", pins for {', '.join(pins)}" if pins else ", no pins"))
-    print(f"Personas: {len(people)} from PERSONAS.md" + (f" and {', '.join(extra)}" if extra else "") + (f", weighted {weight}" if weight else ", equally weighted"))
+    print(f"Slots: {len(seats)} from PERSONAS.md" + (f" and {', '.join(extra)}" if extra else "")
+          + (f", weighted {weight}" if weight else ", equally weighted"))
     if show_ratings:
         ratings(rows)
 
-    results = search(rows, people, weights, multi, top)
+    results = search(rows, seats, weights, multi, top)
     best = results[0][1]
     rule = "one effort per model" + (f", any set of efforts for {', '.join(sorted(multi))}" if multi else "")
-    show(f"Best setup, {rule}", best, people, weights)
+    show(f"Best setup, {rule}", best, seats, weights)
     if len(results) > 1:
-        print("\nNext best:\n" + "\n".join(f"- {summary(o, people, weights)}" for _, o in results[1:]))
+        print("\nNext best:\n" + "\n".join(f"- {summary(o, seats, weights)}" for _, o in results[1:]))
 
     if client:
         found, skipped = client_names(client, rows)
@@ -500,15 +569,15 @@ def main(args):
         now = [r for r in rows if r["effort"] in available.get(r["model"], [])]
         missing = [f"{m} {e}" for m, es in available.items() for e in es
                    if not any(r["model"] == m and r["effort"] == e for r in rows)]
-        show("Available now", now, people, weights, pins)
+        show("Available now", now, seats, weights, pins)
         if missing:
             print("\nNot rated, or excluded, in the database: " + ", ".join(missing))
-        lines = swaps(now, best, people)
+        lines = swaps(now, best, seats)
         if lines:
             print("\n## Swaps from available now to the best setup\n\n" + "\n".join(lines))
 
     if write or pin or unpin:
-        write_choices(choices, pins, (rule, best, people, weights) if write else None, db_path, db)
+        write_choices(choices, pins, (rule, best, seats, weights) if write else None, db_path, db)
 
 
 if __name__ == "__main__":

@@ -10,11 +10,11 @@ own.
 
 ## Persona table
 
-| Persona | Ticket type | Use for | Work | Complexity |
-| --- | --- | --- | --- | --- |
-| `locator` | Research | survey units: sweeping one survey area (a named source or part of one), such as a codebase area, a documentation set, or a tracker, for locations that may be relevant to a stated topic, and listing them without interpreting them | research | lowest |
-| `plan-author` | Agent Task | drafting and amending a plan file whose result is a document for the user and for agents, from research already on tickets | coding | highest |
-| `plan-reviewer` | Adversarial Review | a first pass or full plan file: whether its direction is sound, its claims hold against the project, agents could follow it, and the user could read it | review | highest |
+| Persona | Ticket type | Use for | Work | Complexity | Models |
+| --- | --- | --- | --- | --- | --- |
+| `locator` | Research | survey units: sweeping one survey area (a named source or part of one), such as a codebase area, a documentation set, or a tracker, for locations that may be relevant to a stated topic, and listing them without interpreting them | research | lowest | not claude-opus-5-5 |
+| `plan-author` | Agent Task | drafting and amending a plan file whose result is a document for the user and for agents, from research already on tickets | coding | highest |  |
+| `plan-reviewer` | Adversarial Review | a first pass or full plan file: whether its direction is sound, its claims hold against the project, agents could follow it, and the user could read it | review | highest |  |
 
 Work types and complexities mean what they mean in `orchestrated-run`.
 

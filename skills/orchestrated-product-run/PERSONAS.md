@@ -10,12 +10,12 @@ does for its own.
 
 ## Persona table
 
-| Persona | Ticket type | Use for | Work | Complexity |
-| --- | --- | --- | --- | --- |
-| `locator` | Research | survey units when an unfamiliar codebase or doc set is too large for one discovery pass: sweeping one survey area and listing locations without interpreting them | research | lowest |
-| `product-partner` | Research | problem and adjacent-space discovery: separating settled facts, known unknowns, cross-space knock-ons, optional extras, and `fog` (unknown unknowns), and drafting minimal-complete wholesale product proposals and acceptance criteria | research | high |
-| `product-designer` | Explore Options | user flows, information hierarchy, interaction states, and quick wireframe or concept mocks in `<run-dir>/mocks/` when a choice is directional or visual; works within the project's UI setup and suggests a design system only when the project and planned work clearly benefit | visual | high |
-| `prototyper` | Explore Options | interactive HTML/CSS/JS prototypes and production-styled sign-off mocks in `<run-dir>/mocks/` that pull in or mirror the project's production CSS, tokens, and markup so the user can judge exact form or compare live variants | coding | medium |
+| Persona | Ticket type | Use for | Work | Complexity | Models |
+| --- | --- | --- | --- | --- | --- |
+| `locator` | Research | survey units when an unfamiliar codebase or doc set is too large for one discovery pass: sweeping one survey area and listing locations without interpreting them | research | lowest | not claude-opus-5-5 |
+| `product-partner` | Research | problem and adjacent-space discovery: separating settled facts, known unknowns, cross-space knock-ons, optional extras, and `fog` (unknown unknowns), and drafting minimal-complete wholesale product proposals and acceptance criteria | research | high | not claude-opus-5-5 |
+| `product-designer` | Explore Options | user flows, information hierarchy, interaction states, and quick wireframe or concept mocks in `<run-dir>/mocks/` when a choice is directional or visual; works within the project's UI setup and suggests a design system only when the project and planned work clearly benefit | visual | high | not claude-opus-5-5 |
+| `prototyper` | Explore Options | interactive HTML/CSS/JS prototypes and production-styled sign-off mocks in `<run-dir>/mocks/` that pull in or mirror the project's production CSS, tokens, and markup so the user can judge exact form or compare live variants | coding | medium | not claude-opus-5-5 |
 
 Work types and complexities mean what they mean in `orchestrated-run`.
 
@@ -31,12 +31,14 @@ Work types and complexities mean what they mean in `orchestrated-run`.
 - Non-UI technical spikes or performance experiments stay with
   `options-analyst` from `orchestrated-run`.
 - Technical change plans under `smart` or `reviewed planning` go to
-  `frontend-planner`, `architect`, or `principal-architect`, and their reviews
-  go to `consequences-critic`, `principal-critic`, and `product-critic`.
+  `frontend-planner`, `architect`, or `principal-architect`, with the run's
+  first Plan going to `lead-architect`, and their reviews go to
+  `consequences-critic`, `principal-critic`, and `product-critic`.
 - Implementation, code inspection, boundary validation, live product checks,
   UX/UI review, and adversarial review use `fixer`, `builder`,
   `senior-engineer`, `inspector`, `validator`, `scenario-tester`,
-  `ux-reviewer`, `reviewer`, and `principal-reviewer` from `orchestrated-run`.
+  `ux-reviewer`, `reviewer`, `senior-reviewer`, and `principal-reviewer` from
+  `orchestrated-run`.
 
 ## Parallel locators
 

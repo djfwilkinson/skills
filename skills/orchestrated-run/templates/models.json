@@ -1,17 +1,21 @@
 {
-  "version": 1,
+  "version": 2,
   "rated": "2026-10-14",
   "source": "Artificial Analysis leaderboard, under RATING-MODELS.md",
   "plan": {
-    "description": "Cursor Teams and Enterprise: $0.25 per 1M tokens on third-party models, Grok and Composer exempt; Grok at 40% of list cost, a user estimate of the Enterprise rate",
+    "description": "Cursor Teams and Enterprise: $0.25 per 1M tokens on third-party models, Grok and Composer exempt; no discounts",
     "tokenRatePerMillion": 0.25,
     "exempt": [
       "grok-",
       "composer-"
     ],
-    "discounts": {
-      "grok-": 0.6
-    }
+    "discounts": {}
+  },
+  "levels": {
+    "junior": {"target": 0.45, "ceiling": 0.40},
+    "standard": {"target": 0.60, "ceiling": 0.80},
+    "senior": {"target": 0.75, "ceiling": 1.50},
+    "principal": {"target": 0.88, "ceiling": 4.00}
   },
   "excluded": [],
   "rows": [

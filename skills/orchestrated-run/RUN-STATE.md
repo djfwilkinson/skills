@@ -191,7 +191,7 @@ Model choices: <machine model choices path, or none>
 
 | Persona | Work | Complexity | Model | Effort | Cost | Basis |
 | --- | --- | --- | --- | --- | --- | --- |
-| senior-engineer | coding | highest | <model or inherit> | <effort or default> | <cost per task> | pin / model database / near target / below target / working hint / stand-in |
+| senior-engineer | coding | higher | <model or inherit> | <effort or default> | <cost per task> | pin / model database / near target / below target / working hint / stand-in |
 
 ## Sessions
 

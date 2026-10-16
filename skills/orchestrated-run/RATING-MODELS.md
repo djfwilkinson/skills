@@ -61,7 +61,7 @@ user says so.
    evidence.
 5. Report to the user, before keeping anything: every row's score and 90%
    interval per work type, and its cost per task; every score that moved
-   across a persona target and why;
+   across a level's target and why;
    every interpolated, partial, or unrated cell; every conflict between core
    and supporting evaluations; and the setup analysis below.
 6. On the user's agreement, keep the database and raise its `version` when it
@@ -70,12 +70,14 @@ user says so.
 ## Setup analysis
 
 A client usually offers each model at one effort, so the efforts it offers
-decide which personas get cheap rows. `scripts/model_setup.py` rates the
-database, reads the persona table in `PERSONAS.md`, and reports:
+decide which slots get cheap rows. A slot is one work type at one level, such
+as `coding/senior`, shared by the personas that may run at it.
+`scripts/model_setup.py` rates the database, builds the slots from the persona
+table in `PERSONAS.md`, and reports:
 
 - the best setup: every combination of one effort per model searched for the
-  fewest personas without a row, then the lowest mean cost per task, with each
-  persona assigned as Choosing a model does;
+  least shortfall below target, then the lowest mean cost per task, with each
+  slot assigned as Choosing a model does;
 - with `--client <name>...`, the client's model names as it lists them, such
   as `claude-haiku-5-5-thinking-high` or `grok-4.7-high`, the assignment those
   give now, using the user's pins, and the swaps from them to the best setup.
@@ -87,19 +89,20 @@ Options:
   for a client that offers more than one effort of that model. Clients
   usually offer one effort per model, Grok included. The report names the
   efforts chosen.
-- `--weight <persona>=<n>` sets how often a persona works relative to the
-  others; personas weigh equally otherwise.
+- `--weight <slot>=<n>` sets how often a slot works relative to the others;
+  slots weigh equally otherwise. `scripts/run_usage.py` shows how often each
+  persona and level worked in past runs.
 - `--write target` saves the best setup as the target in the machine model
   choices, `~/.agent-runs/model-choices.md`, keeping its pins. `--pin
-  <persona>=<model>@<effort>` and `--unpin <persona>` change a pin. Run them
-  only when the user asks.
+  <slot>=<model>@<effort>` and `--unpin <slot>` change a pin. Run them only when
+  the user asks.
 
-Report each suggested swap, its saving, and which personas it moves. Flag a
-swap that rests on a score within 3 points of a persona's complexity threshold,
-which the script lists, on an interpolated row, or on an estimated cost. The
-analysis ignores provider diversity, vision, and long context, which Choosing a
-model weighs per ticket; its table shows the cheapest other-provider row for
-each persona so the user can judge review independence.
+Report each suggested swap, its saving, and which slots it moves. Flag a swap
+that rests on a score within 3 points of a level's target, which the script
+lists, on an interpolated row, or on an estimated cost. The analysis ignores
+provider diversity, vision, and long context, which Choosing a model weighs per
+ticket; its table shows the cheapest other-provider row for each slot so the
+user can judge review independence.
 
 ## Usage across runs
 
@@ -107,10 +110,12 @@ each persona so the user can judge review independence.
 whether targets and routing send work where they should. It reads every run
 registered in the device action ledger, or the runs and projects given as
 paths, and reports per run its tickets, human tickets, fix tickets, and units
-per agent ticket; and per persona and per model, tickets and share of cost.
-Each persona's model comes from the run's `ROSTER.md`, or, with `--client` or
-`--available`, from what Choosing a model gives for the client's models now.
+per agent ticket; and per persona and level and per model, tickets and share of
+cost. Each ticket's model comes from the run's `ROSTER.md`, or, with `--client`
+or `--available`, from what Choosing a model gives for the client's models now.
 Only personas recorded in ticket YAML count; it lists the rest by ticket type.
+Persona names from before levels are reported as the persona and level they
+became.
 
 ## Scoring
 
@@ -146,24 +151,34 @@ The uncertainty of each evaluation is the binomial standard error over its
 task count, from the Artificial Analysis methodology page, scaled the same
 way. A WebDev Arena rating's uncertainty comes from its published 95%
 interval. A work type's 90% interval is its score ± 1.645 combined standard errors.
-Compare the score, not the interval's lower end, with a persona's target, and
+Compare the score, not the interval's lower end, with a level's target, and
 report the interval so the user can see which targets the evidence cannot
 separate.
 
-A persona's complexity maps to a target score, set in `scripts/model_setup.py`:
+Each level has a target score and a cost ceiling per task, set in
+`scripts/model_setup.py` and overridable under `levels` in the model database:
 
-| Complexity | Target, percentage of the frontier |
-| --- | --- |
-| `highest` | 90% |
-| `high` | 80% |
-| `medium` | 65% |
-| `low` | 50% |
-| `lowest` | 0% |
+| Level | Target, percentage of the frontier | Ceiling, cost per task |
+| --- | --- | --- |
+| `principal` | 88% | $4.00 |
+| `senior` | 75% | $1.50 |
+| `standard` | 60% | $0.80 |
+| `junior` | 45% | $0.40 |
 
-`highest` starts about the frontier's own 90% interval below it, so a row that
-meets it cannot be told apart from the frontier. Each lower step is at least
-that wide, so neighbouring targets are separable; the lower steps are wider so
-cheaper models can meet them.
+`principal` starts about the frontier's own 90% interval below it, so a row
+that meets it cannot be told apart from the frontier. The lower targets are
+wide enough apart that neighbouring levels are separable and cheaper models can
+meet them.
+
+The ceiling, not the target, keeps the most capable and costly rows for
+`principal`: such models are often cheaper at a medium or high effort than a
+weaker model at its highest, so a target alone would hand them every level they
+can meet. A slot takes the cheapest offered row under its ceiling that meets the
+target; otherwise the highest-scoring row under the ceiling, marked below
+target; otherwise, when no row is under the ceiling, the cheapest row, marked
+over ceiling. Ceilings are in the same unit as cost per task, so check them when
+a refresh moves costs as a whole, such as when Artificial Analysis changes its
+index.
 
 A row up to two points below a target counts as meeting it, marked near
 target, when it costs at most two-thirds of the cheapest offered row that meets
@@ -188,9 +203,8 @@ Adjust cost for the plan the user's client bills under, in the database's
   an Enterprise plan, goes in `discounts` as a model prefix and the fraction
   taken off. Never guess a discount that is not published or stated by the
   user.
-- Cursor does not publish Enterprise Grok pricing. The user estimates it at 40%
-  of list cost, so the default plan takes `0.6` off `grok-` rows until the
-  user gives a better figure.
+- Cursor does not publish Enterprise Grok pricing. The default plan applies no
+  Grok discount; add one under `discounts` only when the user gives a figure.
 
 ## Missing and conflicting evidence
 
