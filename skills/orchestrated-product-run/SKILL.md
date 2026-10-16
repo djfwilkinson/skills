@@ -20,8 +20,8 @@ settings under Run settings.
 
 Read these before acting:
 
-- [PERSONAS.md](PERSONAS.md): the personas this skill adds to
-  `orchestrated-run`'s, read before building the roster.
+- [PERSONAS.md](PERSONAS.md): which `orchestrated-run` personas product work
+  goes to, read before building the roster.
 - [PROMPTS.md](PROMPTS.md): the unit prompts and assignment extensions to copy
   into assignments.
 - the `grill-to-done` skill file, before the first questioning round.
@@ -53,15 +53,14 @@ confirms them.
   `Plan` ticket is needed and whether it takes `0`, `1` (`consequences` or
   `product`), or `2` `Plan Review` lenses, logging the choice and reason in
   `LOG.md`. Any change set that touches a high-risk surface or carries a
-  user-approved large refactor must use a `Plan` and at least
-  `principal-critic` (plus `product-critic` when product criteria are
+  user-approved large refactor must use a `Plan` and at least the
+  `consequences` lens (plus the `product` lens when product criteria are
   non-trivial).
-- **Models question.** Run `scripts/model_setup.py --client <name>... --personas
-  <path to this skill's PERSONAS.md>`. When the client can choose models per
-  subagent, the machine database is current, and every persona gets a model at
+- **Models question.** Run `scripts/model_setup.py --client <name>...`. When the client can choose models per
+  subagent, the machine database is current, and every slot gets a model at
   or near its target without missing pins, confirm `ROSTER.md` automatically
   from the machine setup and log it without asking the models question. Ask the
-  models question only when a persona is below target, a pin is unavailable, the
+  models question only when a slot is below target, a pin is unavailable, the
   skill's default database is newer than the machine database, or the user
   mentions models.
 - **Minimal non-hacky solutions.** Every planner, implementer, and reviewer
@@ -70,7 +69,7 @@ confirms them.
   surface them separately in wholesale proposals for the user to opt into.
   Never default to a large refactor; if a minimal change fails, record why and
   put the choice to the user in `Discuss/Gather Inputs`.
-- **First-party mocks and scoped mock contracts.** Use `product-designer` (for
+- **First-party mocks and scoped mock contracts.** Use `designer` (for
   fast wireframes and flow concepts) or `prototyper` (for interactive mocks
   that pull in production CSS and tokens for exact sign-off) under
   `<run-dir>/mocks/` before asking the user to commit to a large or complex
@@ -126,7 +125,7 @@ Start the run under `orchestrated-run` and create `<run-dir>/mocks/`.
      an earlier answer, a technical spike, or a visual mock settles what is
      possible.
   4. **Mocks needed:** which decisions or complex changes need a rough wireframe
-     concept (`product-designer`) or a production-styled interactive sign-off
+     concept (`designer`) or a production-styled interactive sign-off
      mock (`prototyper`) before the user is asked to commit.
   5. **Recommended minimal-complete baseline and optional extras:** the
      smallest clean product change that solves the user's problem, separated
@@ -145,7 +144,7 @@ product change, or for any decision where a UI, flow, or state model could be
 built in meaningfully different ways, create an `Explore Options` ticket to
 produce a concrete mock or concept under `<run-dir>/mocks/`:
 
-- Choose `product-designer` with the Concept and wireframe mock prompt when the
+- Choose `designer` with the Concept and wireframe mock prompt when the
   choice is directional: user flow, information hierarchy, screen structure, or
   comparing 2 to 3 layout approaches quickly.
 - Choose `prototyper` with the Production sign-off mock prompt when the user
@@ -221,15 +220,14 @@ run is in full-delivery mode:
 2. **Apply `smart` planning depth:**
    - If a change set is straightforward or already fully specified by the
      settled proposal and accepted mock, create implementation `Agent Task`
-     tickets directly (`fixer`, `builder`, or `senior-engineer`) and log the
+     tickets directly for the `engineer` and log the
      `smart` routing in `LOG.md`.
    - If a change set spans multiple areas, needs interface/state design, touches
      a high-risk surface, or carries a user-approved refactor, create a `Plan`
-     ticket (`frontend-planner`, `architect`, or `principal-architect`; the
-     run's first Plan goes to `lead-architect`) and
-     choose `0`, `1` (`consequences` or `product`), or `2` `Plan Review` lenses
-     upfront. Always include `principal-critic` for high-risk surfaces or
-     approved large refactors, and `product-critic` when product criteria or
+     ticket for the `planner` and choose `0`, `1` (`consequences` or
+     `product`), or `2` `Plan Review` lenses upfront. Always include the
+     `consequences` lens for high-risk surfaces or approved large refactors,
+     and the `product` lens when product criteria or
      mock contracts are non-trivial. Never ask the user to review or accept a
      change plan.
 3. **Bind downstream units:** Put the governing goals, working hints, and

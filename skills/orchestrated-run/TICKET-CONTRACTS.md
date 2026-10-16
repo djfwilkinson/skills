@@ -40,7 +40,7 @@ and continue the global number sequence.
 
 ## Ticket ownership and schema
 
-`status`, `owner`, `persona`, `presentation`, `plans`, `reviews`, and
+`status`, `owner`, `persona`, `level`, `presentation`, `plans`, `reviews`, and
 `may_withdraw_on` are orchestrator-owned, and so are Objective, Reads, Completion, and Work units.
 `execution_result` is worker-owned and unset until execution ends.
 
@@ -79,7 +79,8 @@ fill sections with padding.
 id: T-001-RES
 title: Understand the user prompt
 type: Research
-persona: scout
+persona: researcher
+level: junior
 status: ready
 execution_result: null
 presentation: null
@@ -145,8 +146,9 @@ inspection freeze when applicable>
 <worker-maintained: proposals for the orchestrator; leave empty when none>
 ```
 
-`persona` names the persona from `PERSONAS.md` that executes an agent ticket;
-it is `null` on human tickets. `plans` holds the Plan ticket IDs for change
+`persona` names the persona from `PERSONAS.md` that executes an agent ticket,
+and `level` the level it runs at (`junior`, `standard`, `senior`, or
+`principal`); both are `null` on human tickets. `plans` holds the Plan ticket IDs for change
 plans that govern the ticket. `reviews` is used only on a Plan ticket and holds
 the current round's Plan Review ticket IDs.
 
@@ -224,7 +226,7 @@ Changed paths:
 Checks: <this unit's Completion checks and results>
 Includes: <inbox item IDs this checkpoint carries, or none>
 For review: <what an inspector or reviewer needs, or none>
-Escalate: <persona this unit needs, and the evidence, or none>
+Escalate: <level this unit needs, and the evidence, or none>
 Next: <next unit or fix, or none>
 ```
 
@@ -281,7 +283,7 @@ orchestrator decides how to split, replace, or reassign the rest. A reassigned
 Objective names what earlier checkpoints already cover so the next worker does
 not repeat it.
 
-An agent ticket is not `ready` until it names a persona and every unit is
+An agent ticket is not `ready` until it names a persona and level and every unit is
 ready by its type's rules. Its ticket-level Objective and Completion state what
 the units add up to and that every unit must be finished. A unit added through
 the inbox meets the same readiness, dependency, conflict, Exclusive scope, and
@@ -352,7 +354,7 @@ and placed fix has a `done` or `blocked` checkpoint and every inbox item has a
 response. Send `closing` once every covered ID on it with non-product parts has
 a current `accepted` agent inspection verdict, and its batch's boundary
 validation has returned with every issue routed. When another ticket for the
-same persona is `ready` and its units cannot join this one under Grouping in
+same persona and level is `ready` and its units cannot join this one under Grouping in
 `SKILL.md`, send `closing` as soon as no fix request is pending, and place later
 fixes as for an ended ticket.
 
@@ -483,8 +485,8 @@ severable work that stays correct under every option. Record the smallest
 decision, options, recommendation, completed work, and withheld boundary in
 Blockers / follow-ups and checkpoint that unit blocked.
 
-If a unit needs more than your persona brief covers, record the label and
-why, name the persona it needs and the evidence on the checkpoint's Escalate
+If a unit needs more than you can reasonably give it, record the label and
+why, name the level it needs and the evidence on the checkpoint's Escalate
 line, and checkpoint it blocked. A review unit records its findings first and
 escalates a done unit when its brief says to.
 ```
@@ -499,7 +501,7 @@ Reads. A resumed session already has its brief and rules.
 Close knowledge gaps, one per unit, at the `triage`, `surface`, or `deep`
 depth each unit's Objective and Completion choose. Prefer `surface` to
 standalone triage. Research drafts and classifies follow-up Agent Tasks at
-either planning depth. The unit depths decide the persona under `PERSONAS.md`,
+either planning depth. The unit depths decide the level under `PERSONAS.md`,
 so one ticket's units share a depth class.
 
 Assignment prompt, after the shared agent rules:
@@ -660,11 +662,9 @@ Record on the ticket, per unit:
 Under `reviewed planning` or `smart`, write one agent-facing change plan for one
 change set at `plans/<plan-ticket-id>.md`. Its path is stable. The active Plan
 worker owns its content; otherwise only the orchestrator may change its Status
-and revisions banner. A Plan ticket has one unit. The `architect`,
-`principal-architect`, or `frontend-planner` session takes the next Plan ticket
-for that persona while critics review the last one. The one `lead-architect`
-Plan ticket of the run is the first; its session writes only that plan and its
-revisions.
+and revisions banner. A Plan ticket has one unit. The `planner` session at a
+level takes the next Plan ticket at that level while critics review the last
+one.
 
 Assignment prompt, after the shared agent rules:
 
@@ -729,8 +729,8 @@ per ticket, named in Objective. Exactly two lenses exist: `consequences` and
 
 Neither lens depends on the other. When a round has both and both are
 `ready`, dispatch them together; their shared read is not a conflict. The
-`consequences-critic` or `principal-critic` owns the consequences lens, and
-the `product-critic` owns the product lens. A Plan Review ticket has one
+`consequences-critic` owns the consequences lens, and the `product-critic`
+owns the product lens. A Plan Review ticket has one
 unit. The orchestrator does not review, reviewers do not write the plan, and
 Adversarial Review does not replace this type.
 

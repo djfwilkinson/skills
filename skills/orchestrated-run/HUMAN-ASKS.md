@@ -371,8 +371,8 @@ below; each list is the extra payload that type carries, not a substitute:
   `Binding` versus `Context only` boundary, expected reply (including `accept`
   / `recs` and `detail <item>` where applicable), and ticket path.
 - Model ask: the payload under The model ask in `PERSONAS.md`, with the
-  personas as one ordered section, one complete reply example each for `lean`,
-  `quality`, naming a model and effort for a persona, and excluding a model,
+  slots as one ordered section, one complete reply example each for `lean`,
+  `quality`, naming a model and effort for a slot, and excluding a model,
   and the ticket path.
 - Acceptance: exact result or path, inspection method, successful and
   change-needed observations, acceptance basis, request to accept or describe

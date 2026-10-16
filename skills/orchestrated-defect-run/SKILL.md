@@ -155,7 +155,7 @@ that defect when they exist.
 
 Each unit's Objective and Completion say Research depth `surface` with deep
 escalation pre-authorised when meeting Completion requires codebase hunting,
-so the ticket goes to the `investigator`. Never use Research depth `triage` for
+so the ticket goes to the `researcher` at `standard`. Never use Research depth `triage` for
 this work. Before dispatching the ticket or sending a unit through its inbox,
 record the ticket and unit ID under Orchestrated-run links for the defect's
 current cycle.

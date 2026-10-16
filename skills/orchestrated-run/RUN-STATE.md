@@ -176,8 +176,8 @@ when only those entries apply. Do not add growing run files by default.
 
 ## Roster
 
-`ROSTER.md` records which model each persona uses and the state of each
-persona session. `PERSONAS.md` owns how models are chosen, confirmed, and
+`ROSTER.md` records which model each slot, a work type at a level, uses and
+the state of each persona session. `PERSONAS.md` owns how models are chosen, confirmed, and
 changed.
 
 ```md
@@ -189,24 +189,24 @@ Confirmed: <ISO time>
 Model database: <machine model database path and version>
 Model choices: <machine model choices path, or none>
 
-| Persona | Work | Complexity | Model | Effort | Cost | Basis |
-| --- | --- | --- | --- | --- | --- | --- |
-| senior-engineer | coding | higher | <model or inherit> | <effort or default> | <cost per task> | pin / model database / near target / below target / working hint / stand-in |
+| Slot | Personas | Model | Effort | Cost | Basis |
+| --- | --- | --- | --- | --- | --- |
+| coding/standard | engineer, planner | <model or inherit> | <effort or default> | <cost per task> | pin / model database / near target / below target / over ceiling / working hint / stand-in |
 
 ## Sessions
 
-### builder
+### engineer/standard
 Session: <client agent ID, or none>
 State: running | parked | idle | closed
 Ticket: <active ticket ID, or none>
 Model: <model and effort the session started with>
-Chosen by: pin | model database | near target | below target | working hint | stand-in
+Chosen by: pin | model database | near target | below target | over ceiling | working hint | stand-in
 Tickets carried: <count>
 ```
 
-Keep one Sessions entry per persona that has had a session. Update it on every
-dispatch, resume, checkpoint return, and ticket return. A session that
-starts on a model other than its persona's roster entry, or a user change,
+Keep one Sessions entry per persona and level that has had a session. Update it
+on every dispatch, resume, checkpoint return, and ticket return. A session that
+starts on a model other than its slot's roster entry, or a user change,
 adds a row note with its time and reason, and a `LOG.md` entry.
 
 ## Ticket inboxes

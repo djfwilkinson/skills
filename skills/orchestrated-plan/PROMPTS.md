@@ -5,8 +5,8 @@ or assigning any ticket for this skill. It is not a skill and must not be
 invoked. Never put it on a subagent's Reads.
 
 Each block is a unit prompt. In an assignment, put it after the persona brief
-(from this skill's `PERSONAS.md` for `locator`, `plan-author` and
-`plan-reviewer`, otherwise from `orchestrated-run`),
+(from this skill's `PERSONAS.md` for `plan-author` and `plan-reviewer`,
+otherwise from `orchestrated-run`),
 the shared agent rules and the type prompt from `TICKET-CONTRACTS.md`, in that
 order. Put the unit's own Objective, Completion and Reads in the ticket as
 usual. Where a block says to include a section of `PLAN-FILE.md`, copy that
@@ -20,7 +20,7 @@ credential prompt. If a source needs one, stop that source, record exactly
 what needed authorizing on the ticket, checkpoint the unit blocked, and return.
 ```
 
-## Bootstrap (scout, Research)
+## Bootstrap (researcher, Research)
 
 Objective for the bootstrap ticket: inventory the sources the request touches
 and propose how to survey them.
@@ -80,7 +80,7 @@ Record on the ticket, per unit, with these headings:
   the topic's own term or symbol appears in code, configuration, a schema, a
   heading or a title there; anything else is `maybe`. Order strong first. List
   at most sixty. If there are more, record the rest as
-  `overflow: <count> more in <directory or section>`; the investigator treats
+  `overflow: <count> more in <directory or section>`; the researcher treats
   every overflow line as a gap to re-sweep.
 - Search record: the terms and patterns used, the places swept, and the places
   skipped and why.
@@ -89,7 +89,7 @@ Record on the ticket, per unit, with these headings:
 - Could not judge: anything you could not tell was relevant, with where it is.
 ```
 
-## Synthesis (investigator, Research)
+## Synthesis (researcher, Research)
 
 One ticket, after every survey ticket in the wave has returned.
 
@@ -252,7 +252,7 @@ shared test. Record the checks that found nothing and the remaining
 uncertainty.
 ```
 
-## Publish (fixer, Agent Task)
+## Publish (engineer, Agent Task)
 
 Objective names the plan workspace path, the plans location found at
 bootstrap or `none`, and the project's naming convention if any.

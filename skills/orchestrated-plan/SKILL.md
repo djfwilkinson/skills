@@ -19,8 +19,9 @@ completion, except for the settings under Run settings.
 
 Read these before acting:
 
-- [PERSONAS.md](PERSONAS.md): the three personas this skill adds to
-  `orchestrated-run`'s, read before building the roster.
+- [PERSONAS.md](PERSONAS.md): the two personas this skill adds to
+  `orchestrated-run`'s and the levels this run uses, read before building the
+  roster.
 - [PLAN-FILE.md](PLAN-FILE.md): the plan file's two parts and layout.
 - [PROMPTS.md](PROMPTS.md): the unit prompts to copy into assignments.
 - the `grill-to-done` skill file, before the first question round.
@@ -65,7 +66,7 @@ confirms them.
   its own link check.
 - **Review.** The `plan-reviewer`'s rounds are this run's Adversarial Review.
   This replaces the base module-boundary and pre-completion scheduling: use
-  no `reviewer` or `principal-reviewer` ticket, and treat the last full review
+  no `reviewer` ticket, and treat the last full review
   as the pre-completion review. Each review unit's `Covers` line names the plan
   file and its Reads name workspace paths.
 - **Streaming.** The `plan-author` and `plan-reviewer` tickets stay open after
@@ -75,10 +76,9 @@ confirms them.
 - **Writing.** The `user-response` skill governs the user's part of the plan
   file, and the draft and ask text built from it, and `public-docs` does not. A
   part for agents is engine text.
-- **Personas.** `PERSONAS.md` in this skill adds `locator`, `plan-author` and
-  `plan-reviewer`, with how to score them (`--personas`) and the one
-  parallel-session exception for `locator`. `orchestrated-run`'s own persona
-  file is unchanged.
+- **Personas.** `PERSONAS.md` in this skill adds `plan-author` and
+  `plan-reviewer`, with their levels, how to score them (`--personas`) and the
+  one parallel-session exception for `locator`.
 - **Recovery.** Put the paths of this skill file, `PERSONAS.md`,
   `PLAN-FILE.md`, `PROMPTS.md` and the `grill-to-done` skill file in
   `WORKINGHINTS.md` as required reads. A recovering orchestrator reads all five
@@ -101,7 +101,7 @@ finishes when its inputs are ready and tickets allow it.
 ### 1. Bootstrap
 
 Use the orchestrated-run Start. The bootstrap Research ticket is for the
-`scout` and uses the Bootstrap prompt. Its result is the source inventory, the
+`researcher` at `junior` and uses the Bootstrap prompt. Its result is the source inventory, the
 proposed survey areas, where the project keeps plans, the end user and the
 canonical docs. Reconcile it under the normal rules, set `G-001` active and
 write the run settings.
@@ -123,16 +123,16 @@ reconcile them together.
 
 ### 3. Synthesis
 
-Create one deep Research ticket for the `investigator` with the Synthesis
+Create one deep Research ticket for the `researcher` with the Synthesis
 prompt. It reads every survey ticket, ties them together, finds the gaps and
 closes what it can. Its result is the planning brief.
 
-Every `overflow` line in a survey is a gap, not a result. The investigator
+Every `overflow` line in a survey is a gap, not a result. The researcher
 requests a tighter survey of that area, or records why it is not needed.
 
 If it asks for a targeted survey, run one more `locator` wave for exactly what
 it names, splitting any overflowed area into smaller ones, then add a unit to
-the investigator's ticket through its inbox, or create a new ticket when it
+the researcher's ticket through its inbox, or create a new ticket when it
 has ended. After that second wave, record what is still unknown as an unknown
 instead of surveying again.
 
@@ -216,7 +216,7 @@ before the full plan is amended, using the open `plan-author` ticket.
 
 ### 8. Publish
 
-Create a `fixer` Agent Task with the Publish prompt. Its Objective names the
+Create an `engineer` Agent Task at `junior` with the Publish prompt. Its Objective names the
 plan workspace, the plans location found at bootstrap, and the naming
 convention if any. When the project has no plans location, the plan stays in
 the workspace and the unit only updates the banner and checks links. If the

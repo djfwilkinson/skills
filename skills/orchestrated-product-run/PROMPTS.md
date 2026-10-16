@@ -4,9 +4,8 @@ This file is part of the `orchestrated-product-run` contract. Read it before
 creating or assigning any ticket for this skill. It is not a skill and must not
 be invoked. Never put it on a subagent's Reads.
 
-In an assignment, put the persona brief (from this skill's `PERSONAS.md` for
-`locator`, `product-partner`, `product-designer`, and `prototyper`, otherwise
-from `orchestrated-run`), the shared agent rules and exact type prompt from
+In an assignment, put the persona brief from `orchestrated-run`'s
+`PERSONAS.md`, the shared agent rules and exact type prompt from
 `TICKET-CONTRACTS.md`, and the applicable block below, in that order.
 
 Add this to every prompt:
@@ -56,7 +55,7 @@ Record on the ticket with these headings:
   options cannot be framed yet, and what earlier answer, technical spike, or
   mock will clear the fog.
 - Mocks and concepts needed: which complex changes or multi-option UI/flow
-  decisions need a rough wireframe (`product-designer`) or a production-styled
+  decisions need a rough wireframe (`designer`) or a production-styled
   sign-off mock / interactive prototype (`prototyper`) in `<run-dir>/mocks/`
   before the user is asked to commit.
 - Draft implementation slices: classified under the shared Research rules.
@@ -64,7 +63,7 @@ Record on the ticket with these headings:
 Do not commit product decisions. Do not modify project files.
 ```
 
-## Concept and wireframe mock (`product-designer`, Explore Options)
+## Concept and wireframe mock (`designer`, Explore Options)
 
 Objective names the `<run-dir>/mocks/<name>.html` path(s), the decision or flow
 being explored, and the project UI context from discovery.

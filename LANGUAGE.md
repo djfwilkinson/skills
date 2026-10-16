@@ -401,45 +401,63 @@ Avoid:
 
 ### Persona
 
-A standing role that executes agent tickets of exactly one ticket type, with a work type, a complexity, and a brief copied into its assignment prompt. Its model is chosen from the model choices or model database each time a session starts. A ticket type may have several personas of different complexity, such as `fixer`, `builder`, and `senior-engineer` for Agent Task. At most one ticket per persona is active at a time; parallelism comes from different personas. Human tickets have no persona.
+A standing role for one kind of task. It executes agent tickets of exactly one ticket type, has one work type, and has a brief copied into its assignment prompt. Each ticket gives it a level; the level never changes the brief. Examples: `researcher`, `planner`, `engineer`, `reviewer`. At most one ticket per persona and level is active at a time; parallelism comes from different personas, or one persona at different levels. Human tickets have no persona.
 
 Related:
+- level
+- slot
 - roster
 - persona session
 - work type
-- complexity
 
 Avoid:
-- running two tickets for one persona at once, except `locator` tickets, one per survey area, which orchestrated-plan's and orchestrated-product-run's persona files allow
-- giving one ticket units that need different personas
+- running two tickets for one persona at one level at once, except `locator` tickets, one per survey area, which orchestrated-plan's and orchestrated-product-run's persona files allow
+- giving one ticket units that need different personas or levels
+- defining a persona per level, such as a senior engineer persona; the level is a ticket field
 - naming specific models in persona definitions, other than in its models rule
 
 ### Work type
 
 The kind of work a persona does: `coding`, `research`, `tooling`, `review`, or `visual`. A model is scored per work type.
 
-### Complexity
+### Level
 
-How hard a persona's work is, from `lowest`, `low`, `medium`, `high`, `higher`, and `highest`. Each maps to a target score for the persona's work type, as a percentage of the frontier: 0%, 50%, 65%, 80%, 85%, and 90%. A persona takes the cheapest model it is allowed that is offered and meets its target, or the highest-scoring one when none does. `highest` belongs to the core personas only. A model up to two points below the target counts as meeting it, near target, when it costs at most two-thirds of the cheapest model that meets it.
-
-### Core persona
-
-One of the two personas allowed the most capable models: the `lead-architect`, which writes the run's one upfront core plan, and the `principal-reviewer`, which does the run's one core review, the pre-completion review. They are the only personas at `highest` in `orchestrated-run`; every other persona excludes those models through its models rule.
-
-Related:
-- models rule
-- complexity
-
-Avoid:
-- giving a core persona escalated or module-level work
-- calling any other highest-complexity persona core
-
-### Models rule
-
-A persona's optional `Models` entry in a persona table: `only <model>[, <model>]` considers just those models, `not <model>[, <model>]` considers every other model, and blank allows every model. A name matches the start of a model name, so it covers every effort of that model. A persona uses one form, never both. A pin or `Models` working hint overrides it.
+How capable a model runs a ticket: `junior`, `standard`, `senior`, or `principal`. Each level has a target score, as a percentage of the frontier for the persona's work type, and a ceiling, the most a model may cost per task. A ticket runs at `standard` unless `PERSONAS.md` gives it another level. A persona table lists the levels each persona may use.
 
 Related:
 - persona
+- slot
+- principal
+
+Avoid:
+- **complexity** for this concept
+- **tier** for this concept
+- raising a level because work is `moderately complex or higher` alone
+
+### Slot
+
+A work type at a level, such as `coding/senior`. Personas that share a work type share its slots, and the roster, pins, and the models question choose one model per slot. A persona with a models rule gets its own slot, named for the persona, such as `locator/junior`. A slot takes the cheapest offered model within its ceiling that meets its target, or the highest-scoring one within the ceiling when none does, and goes over the ceiling only when nothing is within it. A model up to two points below the target counts as meeting it, near target, when it costs at most two-thirds of the cheapest model that meets it.
+
+Related:
+- level
+- roster
+- model choices
+
+### Principal
+
+The highest level. It is never required; it is the most a run may use for its main plan, its pre-completion review, or a design review of the whole run's interface, and only when the run's size, risk, or spread calls for it. A short run whose items the user has already accepted can use `senior` or `standard` for those too. Governing skills may name their own principal situations. Each use is logged with its reason.
+
+Avoid:
+- giving principal work to escalations, module reviews, re-reviews, or fixes
+- treating principal as required for the main plan or final review
+
+### Models rule
+
+A persona's optional `Models` entry in a persona table: `only <model>[, <model>]` considers just those models, `not <model>[, <model>]` considers every other model, and blank allows every model. A name matches the start of a model name, so it covers every effort of that model. A persona uses one form, never both. A persona with one gets its own slots. A pin or `Models` working hint overrides it.
+
+Related:
+- persona
+- slot
 - model database
 
 Avoid:
@@ -447,23 +465,24 @@ Avoid:
 
 ### High-risk surface
 
-A schema, persistence layer, public API, protocol, data migration, or security, authentication, or secrets handling. Work touches one when its proposing ticket, change plan, or worker names it. Touching one sends planning to `principal-architect`, implementation to `senior-engineer`, the consequences lens to `principal-critic`, and module review to `senior-reviewer`.
+Persisted user data or its schema, a data migration, an API or protocol with consumers outside the project, or security, authentication, or secrets handling. Local file formats, internal protocols between parts of one project, and docs are not. Work touches one when its proposing ticket, change plan, or worker names it. Touching one raises unplanned implementation, its change plan and first consequences review, and its module review to `senior`; implementation an accepted plan governs stays at `standard`.
 
 ### Escalation
 
-Moving work to a higher-complexity persona on a worker's evidence, recorded on the unit's checkpoint `Escalate` line. An implementer escalates by blocking the unit; a reviewer or critic records its findings and escalates the same scope for a stronger review. Cheaper personas take work first, and work is never moved back down after a worker recorded that it needs more.
+Moving work to the same persona one level higher on a worker's evidence, recorded on the unit's checkpoint `Escalate` line. An implementer escalates by blocking the unit; a reviewer or critic records its findings and escalates the same scope for a stronger review. Work starts at the lowest level that fits and is never moved back down after a worker recorded that it needs more.
 
 Avoid:
 - escalating to save effort rather than on evidence
-- escalating the pre-completion review, which is always `principal-reviewer`'s
-- escalating to `highest`, which only the core personas hold
+- escalating above `senior`; `principal` is only for its own situations
+- escalating to a different persona
 
 ### Model database
 
 The JSON record of raw benchmark results for each model at each measured effort level, whether or not the client offers it now, with its provider, list cost and tokens per task, the frontier those results are scored against, the cost plan, and excluded models. `scripts/model_setup.py` scores each row from it: a score per work type, as a percentage of the frontier, and a dollar cost per task. Results are refreshed only when the user asks. The skill publishes the default model database; the machine model database at `~/.agent-runs/models.json` is copied from it when missing and is what runs use.
 
 Related:
-- complexity
+- level
+- slot
 - model choices
 - models question
 
@@ -474,7 +493,7 @@ Avoid:
 
 ### Model choices
 
-The machine-level file `~/.agent-runs/model-choices.md` with pins and a target. A pin is a model and effort the user chose for one persona; a run uses it when the client offers it and otherwise chooses that persona from the model database. The target is the best setup if the client's efforts could be changed, for reference only. Changed only when the user asks; `Models` working hints override it for one run.
+The machine-level file `~/.agent-runs/model-choices.md` with pins and a target. A pin is a model and effort the user chose for one slot; a run uses it when the client offers it and otherwise chooses that slot from the model database. The target is the best setup if the client's efforts could be changed, for reference only. Changed only when the user asks; `Models` working hints override it for one run.
 
 Related:
 - model database
@@ -486,30 +505,30 @@ Avoid:
 
 ### Roster
 
-The run's record, in `ROSTER.md`, of the model chosen for each persona and the state of each persona session. The orchestrator chooses each model from the machine model choices, then the machine model database, preferring the cheapest that meets the persona's complexity, and the user confirms the roster once through the models question.
+The run's record, in `ROSTER.md`, of the model chosen for each slot and the state of each persona session. The orchestrator chooses each model from the machine model choices, then the machine model database, preferring the cheapest within the slot's ceiling that meets its target, and the user confirms the roster once through the models question.
 
 Avoid:
 - treating the roster as choosing the orchestrator's own model
-- choosing a model rated below the persona's complexity without the user
+- choosing a model rated below the slot's target without the user, when one within its ceiling meets it
 
 ### Models question
 
-The direct yes-or-no question at run start, "Use the machine models?", showing the model each persona would use. It is not a human ticket. `No` opens the model ask.
+The direct yes-or-no question at run start, "Use the machine models?", showing the model each slot would use. It is not a human ticket. `No` opens the model ask.
 
 ### Model ask
 
-A Discuss ticket where the user states model choices for the run, recorded as `Models` working hints. It covers every persona after `No` to the models question, or one persona when nothing it can use is available.
+A Discuss ticket where the user states model choices for the run, recorded as `Models` working hints. It covers every slot after `No` to the models question, or one slot when nothing it can use is available.
 
 ### Fast variant
 
 A mode or model the client marks as fast, or whose name ends in `-fast`, that trades quality for speed. No subagent starts on one unless the user explicitly asks for it; answering `Yes` to the models question is not that request. A small or cheap model that is not a fast variant is allowed.
 
 Avoid:
-- treating a low cost or low complexity as permission to use a fast variant
+- treating a low cost or low level as permission to use a fast variant
 
 ### Persona session
 
-One subagent conversation for one persona, started on the model and effort chosen for it under Choosing a model. It is `running`, `parked` after a checkpoint return, `idle` with no active ticket and available to resume for that persona's next ticket, or `closed`. Resuming a session keeps its context and model, which costs far less than starting a new one.
+One subagent conversation for one persona at one level, named like `engineer/standard`, started on the model and effort chosen for its slot under Choosing a model. It is `running`, `parked` after a checkpoint return, `idle` with no active ticket and available to resume for that persona's next ticket at that level, or `closed`. Resuming a session keeps its context and model, which costs far less than starting a new one.
 
 ### Work unit
 
@@ -556,7 +575,7 @@ The worker's choice of where a fix request lands: `now`, stopping the current st
 
 ### Grouping
 
-The orchestrator's process of putting every ready unit for one persona that shares Reads or run modules onto one ticket, and adding fitting new work to a persona's active ticket through its inbox, so each persona takes few, large tickets.
+The orchestrator's process of putting every ready unit for one persona and level that shares Reads or run modules onto one ticket, and adding fitting new work to that persona's active ticket at that level through its inbox, so each takes few, large tickets.
 
 ### Worker
 
@@ -564,7 +583,7 @@ Adjective for ticket ownership of sections: `execution_result` is worker-owned; 
 
 ### Agent ticket
 
-A ticket executed by a persona session after assignment: Research, Agent Task, Explore Options, Plan, Plan Review, or Adversarial Review. The only way those tickets get done. It names its persona and holds one or more work units.
+A ticket executed by a persona session after assignment: Research, Agent Task, Explore Options, Plan, Plan Review, or Adversarial Review. The only way those tickets get done. It names its persona and level and holds one or more work units.
 
 Related:
 - human ticket
@@ -579,7 +598,7 @@ A ticket the orchestrator handles in its own thread because it needs the user: D
 
 ### Ticket
 
-A bounded piece of work for a run, stored as Markdown with ticket YAML. Its full ID and filename include its globally sequenced ticket number and ticket type suffix, such as `T-001-RES`. It defines Objective, Reads, and Completion, holds work units when it is an agent ticket, and keeps the detailed result. Agent tickets are deliberately large: one persona's grouped work. Follow-ups on a ticket are proposals, not a whitelist.
+A bounded piece of work for a run, stored as Markdown with ticket YAML. Its full ID and filename include its globally sequenced ticket number and ticket type suffix, such as `T-001-RES`. It defines Objective, Reads, and Completion, holds work units when it is an agent ticket, and keeps the detailed result. Agent tickets are deliberately large: one persona's grouped work at one level. Follow-ups on a ticket are proposals, not a whitelist.
 
 - **Objective**: the bounded result this ticket should produce.
 - **Reads**: the list of paths the ticket worker must read.
@@ -595,7 +614,7 @@ Avoid:
 
 ### Ticket YAML
 
-Ticket metadata at the top of a ticket file (full id, title, type, status, execution_result, presentation, owner, and similar). Not skill-file frontmatter.
+Ticket metadata at the top of a ticket file (full id, title, type, persona, level, status, execution_result, presentation, owner, and similar). Not skill-file frontmatter.
 
 Related:
 - frontmatter (loader YAML on a skill file)
@@ -830,7 +849,7 @@ Avoid:
 
 ### Assignment
 
-The act of giving one ready agent ticket to its persona's session before work starts: confirm dependencies, check every unit for conflicts against active tickets, including parked sessions' remaining units, and other tickets in the dispatch wave, fill Reads and Work units, create the ticket inbox, set status `active` and owner, then resume the persona's idle session or start one on the model and effort chosen for it under Choosing a model. Selecting a ready Human and Agent Task permits only tickets that pass the explicit read-only, disjoint concurrency test; allow no concurrent agent ticket when uncertain.
+The act of giving one ready agent ticket to the session for its persona and level before work starts: confirm dependencies, check every unit for conflicts against active tickets, including parked sessions' remaining units, and other tickets in the dispatch wave, fill Reads and Work units, create the ticket inbox, set status `active` and owner, then resume the persona's idle session or start one on the model and effort chosen for it under Choosing a model. Selecting a ready Human and Agent Task permits only tickets that pass the explicit read-only, disjoint concurrency test; allow no concurrent agent ticket when uncertain.
 
 ### Reconciliation
 
@@ -962,7 +981,7 @@ The subagent finishing the ticket record and setting its execution result, or th
 
 ### Owner
 
-Ticket YAML field for who currently executes an active ticket: its persona, or `orchestrator` for a human ticket. Orchestrator-owned. Cleared on reconciliation of a ticket return, not of a checkpoint return.
+Ticket YAML field for who currently executes an active ticket: its persona and level, such as `engineer/standard`, or `orchestrator` for a human ticket. Orchestrator-owned. Cleared on reconciliation of a ticket return, not of a checkpoint return.
 
 ### Follow-up
 
@@ -1110,11 +1129,11 @@ Avoid:
 
 ### Locator
 
-Economy-tier persona defined in orchestrated-plan's persona file, not orchestrated-run's, for Research survey units. Lowest complexity, research work. The only persona that runs in parallel with itself, one ticket and one roster session entry per survey area.
+Persona in orchestrated-run's persona file for Research survey units, always at `junior`, research work. The only persona that runs in parallel with itself at one level, one ticket and one roster session entry per survey area, as orchestrated-plan's and orchestrated-product-run's persona files allow.
 
 ### Planning brief
 
-The investigator's result after tying the surveys together: what the request touches, how it works today, conventions, candidate approaches, a decision tree with options and recommendations, facts settled and unknowns. The input to questioning and to the first pass.
+The researcher's synthesis result after tying the surveys together: what the request touches, how it works today, conventions, candidate approaches, a decision tree with options and recommendations, facts settled and unknowns. The input to questioning and to the first pass.
 
 ### First pass
 
@@ -1122,7 +1141,7 @@ The short draft of the broad ideas, `first-pass.md`, written quickly by the plan
 
 ### Plan author
 
-Persona, defined in orchestrated-plan's persona file, that drafts and amends a plan file, an Agent Task for the highest complexity of coding work. Blocks and names a gap rather than guessing.
+Persona, defined in orchestrated-plan's persona file, that drafts and amends a plan file, an Agent Task of coding work at `senior` or `principal`. Blocks and names a gap rather than guessing.
 
 ### Plan reviewer
 
@@ -1170,15 +1189,15 @@ User-invoked library skill (`orchestrated-product-run`) that runs one orchestrat
 
 ### Product partner
 
-Persona defined in `orchestrated-product-run`'s persona file (`Research`, `research`, `high` complexity) that maps the problem space and adjacent product areas, separates settled facts, known unknowns, cross-space knock-on effects, optional extras, and `fog`, and drafts minimal-complete wholesale product proposals and acceptance criteria.
+Persona in `orchestrated-run`'s persona file (`Research`, `research`, `standard` or `senior`) that maps the problem space and adjacent product areas, separates settled facts, known unknowns, cross-space knock-on effects, optional extras, and `fog`, and drafts minimal-complete wholesale product proposals and acceptance criteria.
 
-### Product designer
+### Designer
 
-Persona defined in `orchestrated-product-run`'s persona file (`Explore Options`, `visual`, `high` complexity) that creates user flows, information hierarchy, interaction states, and fast wireframe or concept HTML mocks under `<run-dir>/mocks/`, working within the project's existing UI setup.
+Persona in `orchestrated-run`'s persona file (`Explore Options`, `visual`, `standard` or `senior`) that creates user flows, information hierarchy, interaction states, and fast wireframe or concept HTML mocks under `<run-dir>/mocks/`, working within the project's existing UI setup.
 
 ### Prototyper
 
-Persona defined in `orchestrated-product-run`'s persona file (`Explore Options`, `coding`, `medium` complexity) that builds interactive HTML/CSS/JS prototypes and production-styled sign-off mocks under `<run-dir>/mocks/` using the project's real production CSS, tokens, and markup.
+Persona in `orchestrated-run`'s persona file (`Explore Options`, `coding`, `standard` or `senior`) that builds interactive HTML/CSS/JS prototypes and production-styled sign-off mocks under `<run-dir>/mocks/` using the project's real production CSS, tokens, and markup.
 
 ### Wholesale product proposal
 

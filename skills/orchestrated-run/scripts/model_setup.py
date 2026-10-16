@@ -11,7 +11,7 @@ Scores every database row per work type as a percentage of the database's
 frontier and prices it under the database's cost plan. Models are chosen per
 slot: a work type at a level, such as coding/senior, shared by every persona of
 that work type that may run at that level. A persona with a Models rule gets
-its own slots, such as ux-reviewer/standard. The persona table in PERSONAS.md,
+its own slots, named persona/level. The persona table in PERSONAS.md,
 and in every --personas file, gives each persona's Work, its Levels and an
 optional Models rule.
 
