@@ -482,7 +482,7 @@ Follow the complete first-presentation and condensed-repeat chat contract in
 Task current asks live in the latest Interaction log entry.
 
 Create human tickets with `presentation: upcoming`. Immediately before first
-presentation, follow the liveness, page, ticket-state, launch, complete
+presentation, follow the liveness, page, ticket-state, register, complete
 chat ask, and later-repeat lifecycle in `HUMAN-ASKS.md`. Set a presented ticket
 `active` with owner `orchestrator`; a link alone is not presentation.
 

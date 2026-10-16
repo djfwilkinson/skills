@@ -226,19 +226,17 @@ Immediately before first presentation:
 3. copy the bundled template only when the page file is missing, then populate
    or replace its `ORCHESTRATOR DATA` object;
 4. set `presentation: presented`, which makes it a live row;
-5. run `scripts/ledger.py register <run-dir>` and best-effort launch
-   `<index URL>r/<key>/asks/<ticket-id>.html`, or the index URL when
-   presenting several asks at once, in the default
-   external browser with `open` on macOS, `Start-Process` on Windows, or
-   `xdg-open` on Linux. If the script fails, launch the absolute
-   `asks/<ticket-id>.html` path instead. Do not use Cursor's file opener for
-   HTML, wait, verify, retry, or treat a script or launch failure as a blocker.
-   Launch again when a withdrawn ask is re-presented. Do not record this
-   external launch as a successful open in the current client. Do not launch
-   again for each Human and Agent Task turn;
-6. send the complete first ask in chat with links to the page and index, using
-   the served URLs when the script succeeded and the absolute page path
-   otherwise.
+5. run `scripts/ledger.py register <run-dir>`; the ledger's notifications tell
+   the user the ask is waiting. Do not open the ask page or index in a browser,
+   wait, verify, retry, or treat a script failure as a blocker;
+6. send the complete first ask in chat with links to the page and the ledger
+   index, using the served URLs when the script succeeded and the absolute page
+   path otherwise.
+
+Every later user-visible message that mentions an open ask, including each
+condensed line and every model text output that reports run progress while an
+ask is open, repeats a clickable link to the ledger index so the user can open
+it when it is not already open.
 
 When a Human and Agent Task produces a new current ask, update its page before
 presenting that ask.
@@ -302,13 +300,12 @@ IDs, or the process reason. The model ask is the only exception. Acceptance is n
 wait for the user's reply.
 
 After that same ask has been presented once, later user-visible messages may
-replace the full repeat only when Presentation records that the orchestrator
-successfully opened the local page or index in the current client. The
-condensed line for each presented ticket contains:
+replace the full repeat. The condensed line for each presented ticket
+contains:
 
 - the action and its object;
 - the ticket path;
-- a working link to the per-ticket page or ask index.
+- a working link to the per-ticket page, and the ledger index link.
 
 A reader who does not open the link must still know what action is requested
 and what it applies to. These are invalid even with an index link:
@@ -322,10 +319,7 @@ and what it applies to. These are invalid even with an index link:
 Present several human tickets together only when their complete first
 presentations remain usable. Otherwise present one and leave the others
 `upcoming`. For several presented tickets, use one condensed line per ticket
-and one index link, or the complete asks when the link check does not permit the
-condensed form.
-
-If that client check is absent or fails, repeat the complete ask in chat.
+and one index link.
 
 Each Human and Agent Task turn has a new ask. Present that current ask under its
 type contract and refresh the page. A later unrelated progress message may use
