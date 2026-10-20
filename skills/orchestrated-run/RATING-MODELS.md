@@ -117,6 +117,28 @@ Only personas recorded in ticket YAML count; it lists the rest by ticket type.
 Persona names from before levels are reported as the persona and level they
 became.
 
+## Usage check
+
+`scripts/usage_check.py EXPORT` reads a Cursor token-usage HTML export and the
+model database. For each database model it prints event counts, dollars, and
+dollar-weighted dollars per million total tokens, for included-in-plan, for
+on-demand, and pooled, beside the plan addend. The rate is total dollars
+divided by total tokens, times one million. Included-in-plan is the export's
+`Included` kind and on-demand is `On-Demand`. Free, errored, and aborted rows
+stay out. A usage name matches a database model when it is that model plus an
+effort, with an optional `-thinking` before the effort and an optional `-fast`
+at the end.
+
+The plan addend is `tokenRatePerMillion` per million tokens, or zero when the
+model name starts with a prefix in `exempt`. The database defaults to
+`~/.agent-runs/models.json`, or `templates/models.json` when that file is
+missing. `--db` selects another file. The command does not write the database
+or the model choices.
+
+A row with no `tokensPerTask` needs `--guess MODEL@EFFORT=COUNT`. The report
+uses that count, says it is a guess, and shows the fee the plan addend
+produces from it.
+
 ## Scoring
 
 Each work type averages these core evaluations, equally weighted:
