@@ -379,17 +379,18 @@ resolution. Recompute the appropriate projection from current run tickets and
 clear `resume_status` when the blocker closes.
 
 `awaiting automated review` means all implementation work for the current
-cycle has reached `done` checkpoints on ended tickets and the dedicated
-automated product check or boundary
-validation is queued.
+cycle has reached `done` checkpoints and the dedicated automated product check,
+boundary validation, deterministic agent acceptance, or another required agent
+review is queued or has returned clean while another of those remains.
 
 `automated reviewing` means the dedicated product check or boundary validation
 is active.
 
-`awaiting user review` means the dedicated product check and boundary
-validation have returned without evidence requiring remediation. An
-inconclusive product check may advance here when it could not safely create
-the required scenario; record and surface that gap.
+`awaiting user review` means the deterministic-check gate requires user
+judgement and the dedicated product check and boundary validation have returned
+without evidence requiring remediation. An inconclusive product check advances
+here only when another agent check cannot safely close the observation gap;
+record and surface that gap.
 
 `surfaced for user review` means the defect's current boundary-inspection
 Discuss ticket has `presentation: presented`. When that ask is withdrawn,
@@ -406,10 +407,12 @@ upcoming or presented inspection.
 
 `done` means the defect has a supported resolution and the orchestrated run has
 the evidence required for that resolution. Fixed defects require completed
-implementation coverage and user acceptance. A duplicate stays `triaged` until
+implementation coverage and either deterministic agent acceptance or user
+acceptance. A duplicate stays `triaged` until
 the canonical defect is done and its goal verification explicitly covers the
 duplicate's reported scenario; for a fixed canonical defect, its automated
-product check and user inspection both name the duplicate ID and scenario.
+product check names the duplicate ID and scenario, and its user inspection does
+too when one is required.
 Other non-fix dispositions require evidence and use Discuss whenever the normal
 product-decision test finds reasonable alternatives. `wont-fix` is a product
 decision unless the user already made it.

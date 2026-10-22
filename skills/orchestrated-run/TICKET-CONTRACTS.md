@@ -351,8 +351,8 @@ An implementation ticket is a streaming ticket. Its Objective says fix
 requests and added units may arrive through its inbox after its last unit, so
 its session parks instead of completing. Its work has finished when every unit
 and placed fix has a `done` or `blocked` checkpoint and every inbox item has a
-response. Send `closing` once every covered ID on it with non-product parts has
-a current `accepted` agent inspection verdict, and its batch's boundary
+response. Send `closing` once every part assigned to agent inspection has a
+current `accepted` verdict, not `accepted pending check`, and its batch's boundary
 validation has returned with every issue routed. When another ticket for the
 same persona and level is `ready` and its units cannot join this one under Grouping in
 `SKILL.md`, send `closing` as soon as no fix request is pending, and place later
@@ -372,9 +372,11 @@ snapshot or a recorded reason for none; the ticket is `ready` once its first
 unit is. Keep it open while any implementation ticket in the run is active or
 `ready`, and send new inspection units to it rather than creating another
 inspection ticket. Send `closing` once no implementation ticket is active or
-`ready` and every covered ID's current verdict is `accepted`. Each
-unit's Objective names the parts of the covered result it judges. Completion
-requires a verdict for each covered ID. Objective and Completion prohibit
+`ready` and every part still assigned to agent inspection has a current
+`accepted` verdict. A part reassigned to human inspection after an inconclusive
+check is final for this agent ticket once its agent verdict is recorded
+superseded. Each unit's Objective names the parts of the covered result it
+judges. Completion requires a final verdict for each covered ID. Objective and Completion prohibit
 changes to project files, external state, and prepared human environments.
 Reads name the covered tickets, the goals and acceptance criteria they serve,
 applicable working hints and confirmed decisions, and any governing change
@@ -571,15 +573,22 @@ For an agent boundary inspection, add this after the Agent Task prompt:
 
 ```text
 This ticket is an agent boundary inspection. It gives the acceptance judgement
-for results the user is not asked to review: code, tests, configuration, and
-docs outside the product.
+for every deterministically checkable result the user is not asked to review.
+That includes code, tests, configuration, docs outside the product, and
+product-facing results whose expected observable follows completely from the
+request, confirmed decisions, or acceptance criteria.
 
 For each unit, judge whether the parts of the covered result named in its
 Objective deliver what the governing goals and acceptance criteria, the user
 request, confirmed decisions, and any accepted change plan require, and
 nothing outside them. When a unit names fixes for a covered ID, judge the
 current result they form together. Treat recorded check outcomes as evidence;
-do not repeat boundary validation.
+do not repeat boundary validation. For exact requested wording, presence,
+absence, placement, generated output, or another deterministic observable,
+compare the result directly and inspect likely knock-on effects. If establishing
+the observable needs a running product or wider command and that evidence is
+not available yet, record `accepted pending check` as defined below rather than
+asking the user or withholding a checkpoint.
 
 Judge the checkpoint as recorded, not the live files, which may already hold
 later work. Read its change with `git diff <previous> <snapshot> -- <changed
@@ -595,13 +604,22 @@ continue instead of stopping.
 Record one verdict for each covered ID in that unit's checkpoint, with its
 evidence:
 - accepted: the result meets that basis and no finding for it remains open;
+- accepted pending check: the snapshot establishes conformance, but acceptance
+  also requires one named validator or scenario-tester observation that has not
+  returned; name the check ticket when it exists, otherwise the exact check
+  kind and success condition;
 - changes needed: name each required change, with a finding ID such as
   `T-006-AGT/F-001`, its location, and whether later work that builds on it
   makes it blocking;
 - decision needed: name the choice for the user, its options, and a
   recommendation.
-Checkpoint each unit when its verdicts are recorded. Set execution_result to
-completed when every unit has a verdict.
+Checkpoint each unit when its verdicts are recorded. An accepted-pending-check
+unit remains open for an inbox decision carrying the check outcome. On
+`passed`, add a checkpoint that records `accepted`; on `failed`, record
+`changes needed`; on `inconclusive`, record that the verdict is superseded so
+the orchestrator can route another agent check or human judgement under the
+deterministic-check gate. Set execution_result to completed when every unit has
+a final verdict.
 ```
 
 For boundary validation, add this after the Agent Task prompt:
@@ -838,18 +856,29 @@ basis, what observations indicate success or required changes, and a request
 to accept it or describe required changes. Do not use a structured questions
 form or multiple-choice prompt for acceptance.
 
-Ask only for judgement a subagent cannot make. The model ask is the only
+Ask only for judgement a subagent cannot make. Product-facing or visible does
+not by itself require a user ask. Exact requested wording, presence, absence,
+placement, generated output, and already-defined scenarios go to the
+inspector, validator, or scenario-tester when their expected result is fully
+specified. A successful deterministic check is acceptance evidence; do not ask
+the user to repeat or accept it. Use Discuss when reasonable people could still
+disagree about meaning, tone, preference, or whether the product outcome was
+met, when an agent check is inconclusive and no further agent check can close
+the gap, when an unconfirmed choice meets the product-decision test, or when
+the user asked to review the result. The model ask is the only
 Discuss ticket whose subject is process: it asks for preferences no subagent
 can supply. Never ask the user to perform or
 confirm a check a subagent can run, such as tests, builds, lint, searches, or
 doc checks, under any label, including inspection method or expected result;
 report it as a recorded outcome from its ticket instead. Asking the user to run
-a product workflow and judge whether it still behaves as expected is inspection,
-not such a check. Point the user at a file, page, or preview only when the
-judgement needs eyes on it, and give a command only as optional reproduction.
+a product workflow and judge whether it still behaves as expected is inspection
+only when the deterministic-check gate requires human judgement; otherwise a
+scenario-tester runs it. Point the user at a file, page, or preview only when
+the judgement needs eyes on it, and give a command only as optional reproduction.
 
-Review and acceptance asks present only product-facing results, as defined
-under Reconciliation in SKILL.md; an agent boundary inspection accepts the rest.
+Review and acceptance asks present only results that need user judgement, as
+defined under Reconciliation in SKILL.md. An agent boundary inspection accepts
+deterministically checkable parts, including product-facing ones.
 
 One Discuss may inspect or accept several named implementation tickets when
 their results form one usable review. Group each result with its recorded

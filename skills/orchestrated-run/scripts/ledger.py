@@ -3,7 +3,7 @@
 
   python3 ledger.py                          start the ledger and print its URL
   python3 ledger.py register <run-dir> [name]  list a run, then start the ledger
-  python3 ledger.py complete <run-dir>       stop listing a run
+  python3 ledger.py complete <run-dir>       archive a completed run
   python3 ledger.py serve                    run the server in the foreground
 
 Starting creates the ledger directory, replaces its index when the template's
@@ -13,14 +13,16 @@ server derives each run's asks from ticket YAML and ask pages under run.dir,
 returns them at /runs, serves files under run.dir (including asks/, tickets/,
 and mocks/) at /r/<key>/<path>, and serves read-only target-project files at
 /r/<key>/project/<path> so run-local mocks in mocks/ can load production CSS
-and assets. It skips runs whose directory is gone and flags looksComplete when
-every goal in GOALS.md is achieved or abandoned and no ask is open. POST
-/r/<key>/complete with header X-Action-Ledger: complete removes such a run's
-registration; the custom header keeps other sites from sending it. For each
+and assets. It keeps registrations whose run directory is unavailable and
+flags looksComplete when every goal in GOALS.md is achieved or abandoned and no ask is open. POST
+/r/<key>/complete with header X-Action-Ledger: complete archives such a run's
+registration so its tickets and ask pages remain served; the custom header
+keeps other sites from sending it. For each
 presented ask, the server also reports as checks the tickets named in its
 may_withdraw_on that are not resolved or cancelled (status null when unreadable).
 """
-import json, mimetypes, os, re, shutil, signal, socket, subprocess, sys, time, urllib.request
+import json, mimetypes, os, re, shutil, signal, socket, subprocess, sys, tempfile, time, urllib.request
+from contextlib import contextmanager
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -29,23 +31,68 @@ from urllib.parse import unquote, urlsplit
 HOME = Path(os.environ.get("ACTION_LEDGER_HOME") or Path.home() / ".agent-runs" / "action-ledger")
 RUNS, PORT_FILE, PID_FILE, INDEX = HOME / "runs", HOME / "port", HOME / "pid", HOME / "index.html"
 TEMPLATE = Path(__file__).resolve().parent.parent / "templates" / "ask-index.html"
-FIRST_PORT, PORT_TRIES, VERSION = 47391, 20, 6
+FIRST_PORT, PORT_TRIES, VERSION = 47391, 20, 11
 NAME = f"action-ledger/{VERSION}"
 UNSETTLED = ("proposed", "ready", "active", "blocked")
+ARCHIVE_CACHE = {}
 
 
 def read_json(path):
     try:
         return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
+    except (OSError, UnicodeError, ValueError):
         return None
+
+
+def read_json_with_bytes(path):
+    try:
+        raw = path.read_bytes()
+        return raw, json.loads(raw.decode("utf-8"))
+    except (OSError, UnicodeError, ValueError):
+        return None, None
+
+
+def write_json(path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    handle, temporary = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        with os.fdopen(handle, "w", encoding="utf-8") as file:
+            json.dump(data, file)
+        os.replace(temporary, path)
+    finally:
+        Path(temporary).unlink(missing_ok=True)
+
+
+@contextmanager
+def registration_lock(path):
+    lock = path.with_suffix(f"{path.suffix}.lock")
+    descriptor = None
+    for _ in range(100):
+        try:
+            descriptor = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
+            break
+        except FileExistsError:
+            try:
+                if time.time() - lock.stat().st_mtime > 30:
+                    lock.unlink()
+                    continue
+            except OSError:
+                continue
+            time.sleep(0.05)
+    if descriptor is None:
+        raise TimeoutError(f"registration lock unavailable: {path.name}")
+    try:
+        yield
+    finally:
+        os.close(descriptor)
+        lock.unlink(missing_ok=True)
 
 
 def ticket_yaml(path):
     try:
         with path.open(encoding="utf-8") as file:
             head = file.read(2000).split("---", 2)
-    except OSError:
+    except (OSError, UnicodeError):
         return {}
     if len(head) < 3 or head[0].strip():
         return {}
@@ -63,8 +110,20 @@ def page_value(page, key):
 def goal_statuses(base):
     try:
         return re.findall(r"(?m)^### Status[ \t]*\n+[ \t]*(\w+)", (base / "GOALS.md").read_text(encoding="utf-8"))
-    except OSError:
+    except (OSError, UnicodeError):
         return []
+
+
+def archive_stamp(base):
+    paths = [base / "GOALS.md", *(base / "tickets").glob("*.md"), *(base / "asks").glob("*.html")]
+    stamp = []
+    for path in paths:
+        try:
+            stat = path.stat()
+        except OSError:
+            continue
+        stamp.append((str(path), stat.st_mtime_ns, stat.st_size))
+    return tuple(stamp)
 
 
 def link_ids(raw):
@@ -94,9 +153,15 @@ def checks(ask_id, raw, metas):
 
 def run_view(key, data):
     run = dict(data.get("run") or {}) if isinstance(data, dict) else {}
-    base, asks, updated, metas = Path(run.get("dir") or "/nonexistent"), [], 0, {}
+    base, asks, history, updated, metas = Path(run.get("dir") or "/nonexistent"), [], [], 0, {}
     if not base.is_dir():
-        return None
+        run["dirMissing"] = True
+        run["looksComplete"] = False
+        return {"key": key, "run": run, "asks": [], "history": []}
+    cache_key = (key, run.get("archivedAt"), archive_stamp(base))
+    if run.get("archivedAt") and cache_key in ARCHIVE_CACHE:
+        return ARCHIVE_CACHE[cache_key]
+    cacheable = True
     for path in sorted((base / "tickets").glob("*.md")):
         try:
             updated = max(updated, path.stat().st_mtime)
@@ -104,21 +169,36 @@ def run_view(key, data):
             continue
         metas[path.stem] = ticket_yaml(path)
     for stem, meta in metas.items():
-        if meta.get("presentation") not in ("presented", "upcoming") or meta.get("status") in ("resolved", "cancelled"):
+        presentation = meta.get("presentation")
+        if presentation in (None, "", "null"):
+            continue
+        current = presentation in ("presented", "upcoming") and meta.get("status") not in ("resolved", "cancelled")
+        historical = presentation in ("answered", "withdrawn")
+        if not current and not historical and not run.get("archivedAt"):
             continue
         try:
             page = (base / "asks" / f"{stem}.html").read_text(encoding="utf-8")
-        except OSError:
+        except (OSError, UnicodeError):
             page = ""
-        asks.append({"id": stem, "type": meta.get("type"), "presentation": meta["presentation"],
-                     "action": page_value(page, "summary") or meta.get("title"),
-                     "reason": page_value(page, "why"), "presentedAt": page_value(page, "presentedAt"),
-                     "checks": checks(stem, meta.get("may_withdraw_on"), metas) if meta["presentation"] == "presented" else []})
+            cacheable = False
+        item = {"id": stem, "type": meta.get("type"), "presentation": presentation,
+                "action": page_value(page, "summary") or meta.get("title"),
+                "reason": page_value(page, "why"), "presentedAt": page_value(page, "presentedAt"),
+                "hasPage": bool(page)}
+        if run.get("archivedAt") or historical:
+            history.append(item)
+        if current:
+            asks.append({**item, "checks": checks(stem, meta.get("may_withdraw_on"), metas) if presentation == "presented" else []})
     if updated:
         run["updatedAt"] = datetime.fromtimestamp(updated).astimezone().isoformat()
     statuses = goal_statuses(base)
     run["looksComplete"] = bool(statuses) and not asks and set(statuses) <= {"achieved", "abandoned"}
-    return {"key": key, "run": run, "asks": asks}
+    view = {"key": key, "run": run, "asks": asks, "history": history}
+    if run.get("archivedAt") and cacheable:
+        for old in [entry for entry in ARCHIVE_CACHE if entry[0] == key]:
+            ARCHIVE_CACHE.pop(old, None)
+        ARCHIVE_CACHE[cache_key] = view
+    return view
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -132,10 +212,24 @@ class Handler(BaseHTTPRequestHandler):
         if not self.local() or self.headers.get("X-Action-Ledger") != "complete" or len(parts) != 4 or parts[1::2] != ["r", "complete"]:
             return self.send_error(403)
         path = RUNS / f"{parts[2]}.json"
-        view = run_view(parts[2], read_json(path))
-        if not (view and view["run"]["looksComplete"]):
-            return self.send_error(409, "Run does not look complete")
-        path.unlink(missing_ok=True)
+        try:
+            with registration_lock(path):
+                raw, data = read_json_with_bytes(path)
+                if not isinstance(data, dict) or not isinstance(data.get("run"), dict) or not data["run"].get("dir"):
+                    return self.send_error(409, "Run registration is unreadable")
+                view = run_view(parts[2], data)
+                if not (view and (view["run"]["looksComplete"] or view["run"].get("dirMissing"))):
+                    return self.send_error(409, "Run does not look complete")
+                run = dict(data.get("run") or {})
+                run["archivedAt"] = datetime.now().astimezone().isoformat()
+                try:
+                    if path.read_bytes() != raw:
+                        return self.send_error(409, "Run registration changed")
+                except OSError:
+                    return self.send_error(409, "Run registration changed")
+                write_json(path, {"run": run})
+        except TimeoutError:
+            return self.send_error(409, "Run registration is busy")
         self.send(b"{}", "application/json")
 
     def do_GET(self):
@@ -236,24 +330,38 @@ def page_version(path):
     return int(found[1]) if found else 0
 
 
-def start():
+def install_index():
+    if page_version(TEMPLATE) <= page_version(INDEX):
+        return
+    handle, temporary = tempfile.mkstemp(prefix=".index.html.", dir=HOME)
+    os.close(handle)
+    try:
+        shutil.copyfile(TEMPLATE, temporary)
+        os.replace(temporary, INDEX)
+    finally:
+        Path(temporary).unlink(missing_ok=True)
+
+
+def start(show_url=True):
     RUNS.mkdir(parents=True, exist_ok=True)
-    if page_version(TEMPLATE) > page_version(INDEX):
-        shutil.copyfile(TEMPLATE, INDEX)
     running = running_version()
     if running is not None and running < VERSION:
         try:
             os.kill(int(PID_FILE.read_text()), signal.SIGTERM)
         except (OSError, ValueError):
             pass
-        running = None if wait_for(lambda: running_version() is None) else running
+        if not wait_for(lambda: running_version() is None):
+            sys.exit(f"{NAME}: older ledger server is still running")
+        running = None
+    install_index()
     if running is None:
         flags = getattr(subprocess, "DETACHED_PROCESS", 0) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
         subprocess.Popen([sys.executable, __file__, "serve"], start_new_session=True, creationflags=flags,
                          stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if not wait_for(lambda: running_version() is not None):
             sys.exit(f"{NAME}: server did not start")
-    print(f"http://127.0.0.1:{saved_port()}/")
+    if show_url:
+        print(f"http://127.0.0.1:{saved_port()}/")
 
 
 def run_file(run_dir):
@@ -264,14 +372,37 @@ def run_file(run_dir):
 
 def register(run_dir, name=None):
     run_dir, project, path = run_file(run_dir)
-    RUNS.mkdir(parents=True, exist_ok=True)
-    run = {"id": run_dir.name, "name": run_dir.name, "project": project, **((read_json(path) or {}).get("run") or {})}
-    path.write_text(json.dumps({"run": {**run, **({"name": name} if name else {}), "dir": str(run_dir)}}), encoding="utf-8")
-    start()
+    start(show_url=False)
+    try:
+        with registration_lock(path):
+            run = {"id": run_dir.name, "name": run_dir.name, "project": project, **((read_json(path) or {}).get("run") or {})}
+            run.pop("archivedAt", None)
+            write_json(path, {"run": {**run, **({"name": name} if name else {}), "dir": str(run_dir)}})
+    except TimeoutError as error:
+        sys.exit(f"{NAME}: {error}")
+    print(f"http://127.0.0.1:{saved_port()}/")
 
 
 def complete(run_dir):
-    run_file(run_dir)[2].unlink(missing_ok=True)
+    run_dir, project, path = run_file(run_dir)
+    start(show_url=False)
+    try:
+        with registration_lock(path):
+            raw, data = read_json_with_bytes(path)
+            run = {"id": run_dir.name, "name": run_dir.name, "project": project,
+                   **((data or {}).get("run") or {}), "dir": str(run_dir)}
+            run["archivedAt"] = datetime.now().astimezone().isoformat()
+            if raw is not None:
+                try:
+                    if path.read_bytes() != raw:
+                        sys.exit(f"{NAME}: run registration changed while archiving")
+                except OSError:
+                    sys.exit(f"{NAME}: run registration changed while archiving")
+            elif path.exists():
+                sys.exit(f"{NAME}: run registration changed while archiving")
+            write_json(path, {"run": run})
+    except TimeoutError as error:
+        sys.exit(f"{NAME}: {error}")
 
 
 if __name__ == "__main__":

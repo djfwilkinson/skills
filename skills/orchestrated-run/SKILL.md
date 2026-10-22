@@ -465,8 +465,10 @@ Use `Human Task` when the user needs to perform an external action.
 
 Use `Human and Agent Task` only for the repeated, branching interaction defined by its contract.
 
-Human acceptance used for goal verification must be a Discuss/Gather Inputs
-ticket. The human inspection Discuss may also be the acceptance ticket when its
+When goal verification requires human acceptance, it must be a
+Discuss/Gather Inputs ticket. Product-facing does not itself require human
+acceptance. First apply the deterministic-check gate under Reconciliation.
+The human inspection Discuss may also be the acceptance ticket when its
 acceptance basis is that same result. Open another Discuss only when acceptance
 is a different judgement.
 
@@ -597,28 +599,52 @@ human boundary inspection, and a resolved boundary validation ticket covering
 its ticket. The inspections must not be superseded, and validation Evidence
 must meet its success conditions. A human boundary inspection answered
 provisionally gives no coverage until its Evidence records `provisional
-cleared`; apply the fallback under Goal verification first. Below, a covered ID is such a unit, fix, or
+cleared`; apply the fallback under Goal verification first. An `accepted
+pending check` verdict gives no coverage until its named check passes and the
+inspection records `accepted`. Below, a covered ID is such a unit, fix, or
 Human and Agent Task.
 
-A boundary inspection is human or agent. A human boundary inspection is a
-Discuss covering product-facing results: user-observable behaviour, interaction,
-or delivered content, including docs that are part of the product. A workflow
-the user runs to confirm it still behaves as expected qualifies only when the
-ticket changes how that workflow runs and the ask names the scenario and the
-expected observation. Code, contracts, and tests are not product-facing because
-a workflow later uses them. An agent boundary inspection, the Agent Task defined
-in `TICKET-CONTRACTS.md`, covers everything else: code, tests, configuration,
-and docs outside the product, such as contributor docs, canonical specs, change
-plans, and agent-facing files. Never ask the user to review or accept those
-unless the user asked to; record that request, with the results it covers, as a
-working hint.
+### Deterministic-check gate
 
-Name a covered ID on the human inspection when its result has product-facing
-parts, on the agent inspection when it has other parts, and on both when it has
-both. Each inspection unit's Objective names the parts it covers for each ID,
-so every part has exactly one current inspection. Choose from the unit's
-Objective and changed paths, and correct the assignment before an inspection
-starts when Evidence shows otherwise.
+A boundary inspection is human or agent. Choose by whether acceptance needs the
+user's judgement, not by visibility alone.
+
+Use an agent boundary inspection, the Agent Task defined in
+`TICKET-CONTRACTS.md`, when the expected result follows completely from the
+request, confirmed decisions, or acceptance criteria and an inspector,
+validator, or scenario-tester can establish it reproducibly. This includes
+product-facing results such as exact requested wording, presence or absence,
+placement, generated output, or an already-defined product scenario when no
+unresolved meaning, tone, preference, or trade-off remains. The inspector
+judges conformance and likely knock-on effects; boundary validation or a
+scenario-tester runs any check needed to establish the observable. Do not ask
+the user to repeat or accept a successful deterministic check.
+
+Use a human boundary inspection, a Discuss, only when the result needs
+judgement a subagent cannot supply: the acceptance basis is subjective or
+underspecified, an agent check is inconclusive and no further agent check can
+close the gap, the result embodies a choice that meets the product-decision
+test and was not confirmed, or the user asked to review it. It may cover
+user-observable behaviour, interaction, or delivered content, including docs
+that are part of the product. A workflow the user runs qualifies only when this
+gate requires human judgement, the ticket changes how that workflow runs, and
+the ask names the scenario and
+expected observation. Code, contracts, and tests are not product-facing because
+a workflow later uses them. Never ask the user to review or accept internal
+results unless the user asked to; record that request, with the results it
+covers, as a working hint.
+
+Name each covered part on exactly one current boundary inspection. Put
+deterministically checkable parts on the agent inspection and parts that need
+user judgement on the human inspection; one covered ID may appear on both when
+it has both kinds. Each inspection unit's Objective names the parts it covers.
+Choose from the unit's Objective, acceptance basis, and changed paths, and
+correct the assignment before an inspection starts when Evidence shows
+otherwise. When uncertain, create an agent inspection or check first. If a
+required deterministic check returns `inconclusive` and another agent check
+cannot close the gap, supersede the agent verdict for that product-facing part
+and put it on a human inspection. A `failed` check routes remediation and
+re-inspection instead.
 
 Agent boundary inspection streams. Each `done` checkpoint gets an inspection
 unit under Checkpoints while its implementer continues, and its findings reach
@@ -627,13 +653,25 @@ implementation ticket is active or `ready`. Implementation tickets stream too:
 each stays parked after its last unit until its inspection accepts it, under
 the implementation-ticket rule in `TICKET-CONTRACTS.md`.
 
+An inspector may record `accepted pending check: <ticket or check kind>` when
+the snapshot establishes conformance but the acceptance basis also requires a
+validator or scenario-tester observation that is not available yet. This is
+not a current `accepted` verdict and gives no coverage until that check records
+`passed`; dispatch the named check as soon as the covered implementation has
+`done` checkpoints, without waiting for its ticket to end. Send every check
+outcome to the inspection ticket's inbox as a decision. On `passed`, the
+inspector records `accepted` and the implementation ticket may continue
+closing. On `failed`, it records `changes needed` and the orchestrator routes
+remediation. On `inconclusive`, it records the agent verdict superseded and the
+orchestrator applies the reassignment rule above.
+
 Human boundary inspection and boundary validation wait for the batch. A batch
 is, by default, the implementation tickets of one run module, or several that
 finish together for one user amendment set. It holds the tickets that exist
 when its first becomes active and any created for it before their work
 finishes; do not wait for unknown future work. When the first ticket of a
-batch becomes active, create its human inspection, when it has product-facing
-parts, and its boundary validation, record covered tickets in their
+batch becomes active, create its human inspection only for parts already known
+to need user judgement, and create its boundary validation. Record covered tickets in their
 Objectives, and keep them `blocked` until those tickets' work has finished,
 not until the tickets resolve. Present one grouped human
 inspection once the batch's work has finished. Split only when results cannot
@@ -648,8 +686,8 @@ it checked. It is stale when a later `done` checkpoint changes a path its
 checks cover; stale validation gives no coverage until a new validation unit
 checks the later tree.
 
-Run the human inspection and boundary validation in parallel; neither depends
-on the other. A grouped human ask maps results to covered IDs, says what each
+When a human inspection is required, run it and boundary validation in
+parallel; neither depends on the other. A grouped human ask maps results to covered IDs, says what each
 result now does for the user, reports each check a subagent already ran as a
 recorded outcome with its source ticket, and asks for one reply accepting all
 or naming IDs needing changes; use the same Discuss for acceptance. Take those
@@ -683,18 +721,21 @@ create or ready a new boundary validation ticket, set the existing inspection
 `ready` with presentation `upcoming`, and present a new complete ask under the
 normal parallel rule.
 
-An agent boundary inspection records `accepted`, `changes needed`, or
-`decision needed` for each covered ID in each unit's checkpoint. An ID's latest
-non-superseded verdict is the current one; an `accepted` current verdict is
-the orchestrator's acceptance of those parts. For `changes needed`, route the
-fixes its findings support under Checkpoints; for `decision needed`, open a
-Discuss and route its decision. When the fix reaches a `done` checkpoint, add
+An agent boundary inspection records `accepted`, `accepted pending check`,
+`changes needed`, or `decision needed` for each covered ID in each unit's
+checkpoint. An ID's latest non-superseded verdict is the current one; an
+`accepted` current verdict is the orchestrator's acceptance of those parts.
+For `accepted pending check`, dispatch the named check without waiting for the
+implementation ticket to end. Send its outcome to the inspection ticket's
+inbox as a decision; the inspector records the final verdict. For `changes
+needed`, route the fixes its findings support under Checkpoints; for `decision
+needed`, open a Discuss and route its decision. When the fix reaches a `done` checkpoint, add
 a re-inspection unit naming the original ID and the fix. It judges the current
 result they form together, and rechecks an accepted ID only when remediation
 touches its result or shared dependencies. When an issue invalidates a verdict,
 record in `LOG.md` that it applies to the superseded result and add a
 re-inspection unit after the fixes. Resolve an inspection ticket when every
-unit has a verdict and every finding is routed.
+unit has a final verdict and every finding is routed.
 
 If invalidation arrives after inspection was answered or resolved, mark that
 inspection and any acceptance evidence superseded, move any affected goal out
@@ -950,8 +991,9 @@ The run is complete when:
 
 An empty ticket queue does not mean the run is complete.
 
-When the run is complete, remove its ledger registration under `HUMAN-ASKS.md`,
-then return to the user with a message that opens with the bold line
+When the run is complete, archive its ledger registration under
+`HUMAN-ASKS.md`. A ledger failure does not block run completion; report it and
+leave the run files unchanged. Then return to the user with a message that opens with the bold line
 `**This orchestrated run is complete.**` and a concise summary under it. Use
 only what is already in the run files:
 

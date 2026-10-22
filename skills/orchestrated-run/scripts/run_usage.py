@@ -47,7 +47,17 @@ FIX = re.compile(r"\bF-?\d+\b|\bfix(es)?\b|remediation", re.I)
 def run_dirs(paths):
     if not paths:
         ledger = AGENT_RUNS / "action-ledger" / "runs"
-        return [Path(json.loads(f.read_text())["run"]["dir"]) for f in sorted(ledger.glob("*.json"))]
+        found = []
+        for file in sorted(ledger.glob("*.json")):
+            try:
+                data = json.loads(file.read_text())
+                run = data.get("run") if isinstance(data, dict) else None
+                directory = run.get("dir") if isinstance(run, dict) else None
+            except (OSError, UnicodeError, ValueError):
+                directory = None
+            if directory:
+                found.append(Path(directory))
+        return found
     found = []
     for p in map(Path, paths):
         p = p.expanduser()

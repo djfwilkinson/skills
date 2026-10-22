@@ -16,7 +16,7 @@ the source of truth.
 
 ## Layout and ownership
 
-Store ask pages under the run. Each open run is registered in the device-level
+Store ask pages under the run. Each run is registered in the device-level
 action ledger:
 
 ```text
@@ -26,7 +26,7 @@ action ledger:
 ~/.agent-runs/action-ledger/
   index.html          ask index, copied from templates/ask-index.html
   port, pid           the ledger server's last port and process
-  runs/<key>.json     one registration per open run
+  runs/<key>.json     one active or archived registration per run
 ```
 
 `<key>` is `<project folder name>--<run folder name>`.
@@ -45,8 +45,9 @@ The ask index is shared by every run on the device. Use this skill's
 
 - `python3 <skill>/scripts/ledger.py register <run-dir>` registers the run,
   then starts the ledger and prints the index URL. It is safe to repeat.
-- `python3 <skill>/scripts/ledger.py complete <run-dir>` removes the
-  registration.
+- `python3 <skill>/scripts/ledger.py complete <run-dir>` archives the
+  registration. The run leaves the active list, but its ticket and ask-page
+  links remain available under Archived runs.
 
 Starting the ledger creates its directory and index when missing, replaces the
 index when the template's `ledger-version` is higher than the installed one,
@@ -79,12 +80,14 @@ seconds and on Refresh. It:
   `resolved` or `cancelled`;
 - lists `upcoming` tickets separately by summary, or title before a page
   exists, without presenting their full ask;
-- omits every other ticket;
+- lists answered and withdrawn asks under a collapsed Previous asks section,
+  and all recorded asks under Archived runs after completion;
 - derives counts, the oldest-ask age, and links to `asks/<id>.html` and
   `tickets/<id>.md`;
-- skips a registered run whose directory no longer exists;
+- keeps a registered run whose directory no longer exists and marks its files
+  unavailable, so the archive record does not silently disappear;
 - marks a run as looking complete when every `GOALS.md` status is `achieved` or
-  `abandoned` and no ask is open, and offers the user a button that removes its
+  `abandoned` and no ask is open, and offers the user a button that archives its
   registration, as `complete` does. That is the user's choice, not run
   completion; a run still in progress registers again at its next ask;
 - shows "May change" with a count on a live row while any ticket in its
@@ -182,12 +185,17 @@ evidence file or a change plan. When a document, report, design, or prepared env
 itself the deliverable, ask about what it gives the user: say what it holds, why
 it exists, and when it will matter.
 
-Put a result to the user only when it is product-facing, as defined under
-Reconciliation in SKILL.md. Do not present code, tests, configuration, or docs
-outside the product as items to review or judge, and do not offer a diff as an
-inspection method; an agent boundary inspection accepts them. When a batch has
-no product-facing result, it has no human ask. `Nothing visible changes, so the
-judgement is on the code and docs` fails for that reason.
+Put a result to the user only when it needs judgement a subagent cannot make,
+under the deterministic-check gate in Reconciliation in SKILL.md. Being
+product-facing or visible is not enough. Do not ask the user to confirm exact
+requested wording, presence, absence, placement, generated output, or another
+fully specified observable that an inspector, validator, or scenario-tester
+can establish. Do not present code, tests, configuration, or docs outside the
+product as items to review or judge, and do not offer a diff as an inspection
+method. An agent boundary inspection accepts deterministically checkable parts,
+including product-facing ones. When a batch has no result needing user
+judgement, it has no human ask. `The text is visible, so please confirm it` and
+`Nothing visible changes, so the judgement is on the code and docs` both fail.
 
 A Human and Agent Task turn after the first is the current observation or step,
 what to look at, and the expected reply. It does not restate the task.
@@ -278,7 +286,9 @@ is no longer actionable. The cause-specific process also sets ticket status,
 owner, and dependencies before new work starts.
 
 Keep the run registered while it is open, even when it has no live rows. Run
-`scripts/ledger.py complete <run-dir>` when the run completes.
+`scripts/ledger.py complete <run-dir>` when the run completes. Completion
+archives the registration; it never deletes tickets, inboxes, ask pages, or
+other run files. Registering the same run again restores it to the active list.
 
 ## Unsettled asks
 
@@ -377,14 +387,15 @@ below; each list is the extra payload that type carries, not a substitute:
 - Acceptance: exact result or path, inspection method, successful and
   change-needed observations, acceptance basis, request to accept or describe
   changes, and ticket path.
-- Grouped acceptance: group each product-facing result and its recorded
-  evidence under its covered ticket or unit IDs, then request one reply
+- Grouped acceptance: group each result that needs user judgement with its
+  recorded evidence under its covered ticket or unit IDs, then request one reply
   accepting all or naming IDs needing changes.
 - Grouped decisions: number each decision, give each its own options,
   observable behaviour, knock-on effects, and recommendation, then request one
   reply answering each by number. Do not list checks a subagent can run for the
   user to perform; a product workflow the user runs to judge behaviour is the
-  inspection method, not such a check.
+  inspection method only when the deterministic-check gate requires human
+  judgement, not a substitute for a scenario-tester check.
 - Human and Agent Task: only the current ask from its latest Interaction log
   entry under that type's contract.
 

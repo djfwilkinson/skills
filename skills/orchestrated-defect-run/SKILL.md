@@ -1,6 +1,6 @@
 ---
 name: orchestrated-defect-run
-description: Resolve a defect list through orchestrated triage, implementation, automated product checks, and user review. Use only when explicitly invoked by the user.
+description: Resolve a defect list through orchestrated triage, implementation, automated product checks, and user review when judgement remains. Use only when explicitly invoked by the user.
 disable-model-invocation: true
 argument-hint: "<defect-list-path>"
 ---
@@ -59,7 +59,7 @@ Record these user-confirmed working hints:
 - a defect moves to `in progress` only when an implementation unit covering it
   starts;
 - a dedicated automated product check must run against the actual product or
-  prepared artifact before the defect is presented for user review;
+  prepared artifact before deterministic acceptance or user review;
 - the product check does not replace boundary validation, Adversarial Review,
   Plan Review, or any other orchestrated-run requirement;
 - when a product scenario cannot be created with safe test data, the check may
@@ -67,8 +67,8 @@ Record these user-confirmed working hints:
 - capture may add defects to the list while the run is active, and dispatch
   acknowledgement is permitted defect-capture process work.
 
-This run sequences human inspection more strictly than orchestrated-run's
-default parallel presentation. For defect-run human boundary inspections, this
+When human inspection is required, this run sequences it more strictly than
+orchestrated-run's default parallel presentation. For defect-run human boundary inspections, this
 working hint overrides only the base sentences that boundary inspection and
 boundary validation run in parallel and that presentation never waits for
 validation. When implementation completes, create or attach its coverage
@@ -193,8 +193,8 @@ relationship. The source moves to `triaged` when its unit's Completion is met.
 A supported duplicate records `duplicate_of` and the canonical inverse but
 stays `triaged` until the canonical defect is done and its goal verification
 explicitly covers the duplicate's reported scenario. For a fixed canonical
-defect, its automated product check and user inspection both name every
-duplicate ID and scenario they cover.
+defect, its automated product check names every duplicate ID and scenario it
+covers, and its user inspection does too when one is required.
 
 A supported `not-a-defect` or `cannot-reproduce` disposition may move directly
 to `done` when evidence settles it without a product decision. Apply the normal
@@ -248,7 +248,7 @@ defect done.
 ### Automated product check
 
 After all current-cycle implementation for a defect or coherent group reaches
-`done` checkpoints on ended tickets, create a dedicated Agent Task unit for
+`done` checkpoints, create a dedicated Agent Task unit for
 the `scenario-tester`, on its active ticket through the inbox when it has one.
 Create it in addition to normal implementation coverage and review work. Move covered defects to
 `awaiting automated review` while the check or boundary validation is
@@ -328,16 +328,23 @@ material finding that invalidates a defect's result moves it to
 
 ## User review
 
-Once the product check is `passed` or `inconclusive` and boundary validation
-has no issue requiring remediation, set the defect to
-`awaiting user review`. Keep its boundary-inspection Discuss ticket
-`presentation: upcoming` until that point.
+Once the product check and boundary validation have no issue requiring
+remediation, apply orchestrated-run's deterministic-check gate. A `passed`
+check against a confirmed outcome under `DEFECT-TICKETS.md` is agent acceptance
+evidence; do not ask the user to repeat or accept it. Use it to finalize any
+`accepted pending check` inspection verdict. Keep the defect at `awaiting
+automated review` while any other required automated coverage or review remains,
+then move it directly to `done` when the normal completion rules are met.
 
-A fixed defect's reported scenario is product-facing, so its implementation
-always has a human boundary inspection for that scenario. The ask presents the
-scenario and its observable result, never code or docs outside the product;
-other parts of the implementation follow orchestrated-run's agent boundary
-inspection rule.
+Set the defect to `awaiting user review` only when the product check is
+`inconclusive` and another agent check cannot close the gap, the expected
+result still needs subjective judgement, or the user asked to review it.
+Create its boundary-inspection Discuss at that point when one does not already
+exist, superseding any accepted-pending-check agent verdict for the same
+product-facing part; otherwise keep its existing Discuss `presentation:
+upcoming`. The ask presents the scenario and its observable result, never code
+or docs outside the product. Other parts of the implementation follow
+orchestrated-run's agent boundary inspection rule.
 
 Apply orchestrated-run's prepared-human-environment gate before the inspection
 becomes ready. The implementation or automated product-check Agent Task may
@@ -380,8 +387,9 @@ inspection or give any covered implementation unit inspection coverage.
 Record the accepted IDs as evidence, move them back to
 `awaiting user review`, remediate the rejected IDs, rebuild the grouped result,
 and present one current non-superseded inspection again. Move fixed defects to
-`done` with `resolution: fixed` only after that inspection resolves and their
-implementation coverage and goal evidence satisfy orchestrated-run.
+`done` with `resolution: fixed` when their implementation coverage and goal
+evidence satisfy orchestrated-run: after the human inspection resolves when one
+was required, or after successful deterministic acceptance when none was.
 When a canonical defect reaches done, move each linked duplicate whose named
 scenario was covered and accepted to `done` with `resolution: duplicate`.
 

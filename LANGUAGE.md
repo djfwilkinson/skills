@@ -563,7 +563,7 @@ Avoid:
 
 ### Streaming ticket
 
-An agent ticket whose Objective says further units will arrive through its inbox, such as an agent boundary inspection following implementation checkpoints, an Adversarial Review following module boundaries, or an implementation ticket awaiting fix requests for its units. Its session parks with an empty queue instead of completing, and completes only after a `closing` item. An inspection gets `closing` once no implementation ticket is active or ready and every covered ID's current verdict is `accepted`. An implementation ticket gets it once its inspection has accepted its units and its batch's boundary validation has returned, or earlier when a ready ticket for the same persona cannot join it. Its work has finished, for batches and module boundaries, when every unit and placed fix has a `done` or `blocked` checkpoint.
+An agent ticket whose Objective says further units will arrive through its inbox, such as an agent boundary inspection following implementation checkpoints, an Adversarial Review following module boundaries, or an implementation ticket awaiting fix requests for its units. Its session parks with an empty queue instead of completing, and completes only after a `closing` item. An inspection gets `closing` once no implementation ticket is active or ready and every part still assigned to it has a final accepted verdict; a part reassigned to human inspection is final for that agent ticket once its verdict is recorded superseded. An implementation ticket gets it once its inspection has accepted its units, with no `accepted pending check` verdict, and its batch's boundary validation has returned, or earlier when a ready ticket for the same persona cannot join it. Its work has finished, for batches and module boundaries, when every unit and placed fix has a `done` or `blocked` checkpoint.
 
 ### Fix request
 
@@ -725,7 +725,7 @@ When the completed work is UI, the ticket may put the ux-ui-reviewer skill file 
 
 ### Discuss/Gather Inputs
 
-Ticket type for information, preference, product decision, review, judgement, or acceptance from the user. Orchestrator-handled. A check a subagent can run belongs on an Agent Task, not in the ask. Review or acceptance covers only product-facing results; an agent boundary inspection accepts the rest. **Discuss** is the shorthand. Its current ask lives in Objective. An acceptance request is returned directly in chat with the result, inspection path and acceptance basis, not presented through a structured questions form.
+Ticket type for information, preference, product decision, review, judgement, or acceptance from the user. Orchestrator-handled. A check a subagent can run belongs on an Agent Task, not in the ask. Review or acceptance covers only results that need user judgement; an agent boundary inspection accepts deterministically checkable parts, including product-facing ones. **Discuss** is the shorthand. Its current ask lives in Objective. An acceptance request is returned directly in chat with the result, inspection path and acceptance basis, not presented through a structured questions form.
 
 Related:
 - Human Task
@@ -857,18 +857,19 @@ What the orchestrator does when a ticket returns or a Human and Agent Task ends.
 
 ### Boundary inspection
 
-The acceptance inspection of one coherent batch of results produced by one or more named implementation tickets. It is a human boundary inspection or an agent boundary inspection. Each part of a covered ticket's result has exactly one current boundary inspection, so a ticket with both product-facing and other parts is named by both kinds.
+The acceptance inspection of one coherent batch of results produced by one or more named implementation tickets. It is a human boundary inspection or an agent boundary inspection. Each part of a covered ticket's result has exactly one current boundary inspection, so a ticket with both deterministically checkable parts and parts needing user judgement may be named by both kinds.
 
 ### Human boundary inspection
 
-A Discuss/Gather Inputs boundary inspection through which the user inspects the product-facing results of its covered tickets. It groups each result with the evidence already recorded for it, asks only for judgement a subagent cannot make, and may also be the human-acceptance ticket when acceptance concerns that same batch.
+A Discuss/Gather Inputs boundary inspection through which the user inspects a result that needs their judgement. Product-facing does not by itself make a result human-inspected. Use this only when the acceptance basis is not fully deterministic, an agent check is inconclusive and no further agent check can close the gap, an unconfirmed choice meets the product-decision test, or the user asked to review the result. It groups each result with the evidence already recorded for it, asks only for judgement a subagent cannot make, and may also be the human-acceptance ticket when acceptance concerns that same batch.
 
 Avoid:
 - presenting code, tests, configuration, or docs outside the product for the user to review
+- asking the user to confirm exact requested text, presence, absence, placement, or another observable that an inspector, validator, or scenario-tester can check
 
 ### Agent boundary inspection
 
-An Agent Task boundary inspection, run by the `inspector`, that judges whether the parts of each covered result that are not product-facing deliver what their goals, acceptance criteria, user request, confirmed decisions, and accepted change plan require. It streams: each `done` implementation checkpoint gets an inspection unit while the implementer continues, judged through snapshots. It records `accepted`, `changes needed`, or `decision needed` per covered ID, changes nothing, and does not repeat boundary validation. An ID's latest non-superseded verdict is current; a current `accepted` verdict is the orchestrator's acceptance of those parts.
+An Agent Task boundary inspection, run by the `inspector`, that judges whether deterministically checkable parts of each covered result deliver what their goals, acceptance criteria, user request, confirmed decisions, and accepted change plan require. This includes product-facing results whose acceptance basis is exact enough to check without user judgement. It streams: each `done` implementation checkpoint gets an inspection unit while the implementer continues, judged through snapshots. It records `accepted`, `accepted pending check`, `changes needed`, or `decision needed` per covered ID, changes nothing, and does not repeat boundary validation. An `accepted pending check` verdict names the validator or scenario-tester evidence still required and gives no coverage until the inspector records `accepted`. An ID's latest non-superseded verdict is current; a current `accepted` verdict is the orchestrator's acceptance of those parts.
 
 Related:
 - boundary validation ticket (runs the goal-level checks; a separate ticket)
@@ -876,12 +877,27 @@ Related:
 
 ### Product-facing result
 
-User-observable behaviour, interaction, or delivered content, including docs that are part of the product. A workflow the user runs to confirm it still behaves as expected counts only when the ticket changes how that workflow runs and the ask names the scenario and expected observation. Only product-facing results are put to the user for inspection or acceptance, unless the user asked to review something else.
+User-observable behaviour, interaction, or delivered content, including docs that are part of the product. A workflow the user runs to confirm it still behaves as expected counts only when the ticket changes how that workflow runs and the ask names the scenario and expected observation. A product-facing result is eligible for user inspection, but goes to the user only when it needs judgement rather than a deterministic acceptance check, unless the user asked to review it.
 
 Avoid:
 - treating contributor docs, canonical specs, change plans, evidence files, or other agent-facing files as product docs
 - calling code or a diff a product-facing result
 - treating code, contracts, or tests as product-facing because a workflow later uses them
+- treating product-facing as automatically requiring human inspection
+
+### Deterministic acceptance check
+
+An acceptance check whose expected result follows completely from the request, confirmed decisions, or acceptance criteria and can be established reproducibly by an inspector, validator, or scenario-tester. Exact requested wording, presence or absence, placement, generated output, and an already-defined product scenario are deterministic when no unresolved meaning, tone, preference, or trade-off remains. The agent records the result as evidence; the user is not asked to repeat or accept the check.
+
+Related:
+- agent boundary inspection
+- boundary validation ticket
+- human boundary inspection
+
+Avoid:
+- treating a visible result as subjective only because the user can see it
+- using human acceptance as a second pass over a successful deterministic acceptance check
+- calling a check deterministic when reasonable people could disagree about whether the requested product outcome was met
 
 ### Boundary validation ticket
 
@@ -1029,18 +1045,22 @@ An orchestrator-written, self-contained HTML copy of one current return-to-user 
 
 ### Ask index
 
-The device-level action ledger page shared by every orchestrated run on the machine. The bundled ledger script copies it from the index template into the action ledger directory when it is missing or its `ledger-version` is older, and serves it from a local ledger server. It polls the ledger server, which derives each registered run's asks from its ticket YAML and ask pages, lists each run in its own section and, when the user opts in, sends a browser notification for each new presented ask found while it is in the background, and one more when an unsettled ask clears. A presented row whose ask is unsettled carries a "May change" tag and a check count. Each live row names the requested action and why it exists and links the ticket and ask page. It is a derived artifact, not a run file, presentation state or a source for compaction recovery. Withdrawn, answered and upcoming asks are not live rows; upcoming involvement may appear separately without presenting its ask.
+The device-level action ledger page shared by every orchestrated run on the machine. The bundled ledger script copies it from the index template into the action ledger directory when it is missing or its `ledger-version` is older, and serves it from a local ledger server. It polls the ledger server, which derives each registered run's asks from its ticket YAML and ask pages, lists each run in its own section and, when the user opts in, sends a browser notification for each new presented ask found while it is in the background, and one more when an unsettled ask clears. A presented row whose ask is unsettled carries a "May change" tag and a check count. Each live row names the requested action and why it exists and links the ticket and ask page. It is a derived artifact, not a run file, presentation state or a source for compaction recovery. Withdrawn, answered and upcoming asks are not live rows; upcoming involvement appears separately without presenting its ask, while withdrawn and answered asks remain available under Previous asks.
+
+Completed runs move to an Archived runs section. Their registrations, tickets,
+and ask pages remain available for reference; archiving removes them only from
+the active list.
 
 ### Ledger registration
 
-One open run's JSON file in the action ledger directory, named from the project and run folder names and pointing at the run directory. The ledger script's `register` command writes it when the run starts or resumes and its `complete` command removes it when the run completes. It holds no ask state; the ledger server reads that from the run's tickets and ask pages.
+One run's JSON file in the action ledger directory, named from the project and run folder names and pointing at the run directory. The ledger script's `register` command writes it when the run starts or resumes and clears any archived marker. Its `complete` command marks it archived when the run completes. It holds no ask state; the ledger server reads that from the run's tickets and ask pages.
 
 Avoid:
 - **ledger file** or **ledger record** for per-ask state the orchestrator maintains; that copy no longer exists
 
 ### Ledger server
 
-The local web server the bundled ledger script starts in the background to serve the ask index, the asks it derives for each registered run, and that run's ask pages and tickets. It listens on the loopback address only, keeps the port it last used, and moves to another free port in its range when that port is taken by another program. It derives each presented ask's open links from `may_withdraw_on`. Starting the ledger replaces an older server version. It skips a registered run whose directory is gone and marks one as looking complete when every goal is achieved or abandoned and no ask is open. For such a run only, the index offers the user a button that asks the server to remove its registration.
+The local web server the bundled ledger script starts in the background to serve the ask index, the asks it derives for each registered run, and that run's ask pages and tickets. It listens on the loopback address only, keeps the port it last used, and moves to another free port in its range when that port is taken by another program. It derives each presented ask's open links from `may_withdraw_on`. Starting or completing through the ledger replaces an older server version and stops rather than continuing when that replacement fails. It keeps a registration whose run directory is gone, marks its files unavailable, and marks a run as looking complete when every goal is achieved or abandoned and no ask is open. For such a run only, the index offers the user a button that asks the server to archive its registration while preserving served links.
 
 Avoid:
 - treating the ledger server as a prepared human environment
@@ -1363,7 +1383,8 @@ fallback.
 The supported disposition recorded when a defect reaches `done`:
 `fixed | duplicate | not-a-defect | cannot-reproduce | wont-fix`.
 
-Fixed requires implementation coverage and user acceptance. A duplicate stays
+Fixed requires implementation coverage and either deterministic agent
+acceptance or user acceptance. A duplicate stays
 triaged until its canonical defect is done and canonical verification
 explicitly covers the duplicate's reported scenario. Other non-fix resolutions
 require evidence and use Discuss when they meet the normal product-decision

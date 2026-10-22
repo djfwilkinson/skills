@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <meta name="ledger-version" content="7">
+  <meta name="ledger-version" content="10">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; base-uri 'none'; form-action 'none'">
   <title>Action ledger</title>
   <!--
@@ -14,7 +14,7 @@
     ticket YAML and ask pages:
     [{ "key": "project--run",
        "run": { "id": "run", "name": "Run name", "project": "project", "dir": "/run", "updatedAt": "<ISO>",
-                "looksComplete": false },
+                "looksComplete": false, "archivedAt": "<ISO or absent>" },
        "asks": [{ "id": "T-014-DIS", "type": "Discuss/Gather Inputs", "presentation": "presented",
                   "action": "<ask page summary, or ticket title>", "reason": "<ask page why>",
                   "presentedAt": "<ISO>",
@@ -56,6 +56,10 @@
     .ghost:hover { background: var(--accent-soft); color: var(--accent); }
     .ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; color: var(--accent); }
     .run { margin-top: 32px; }
+    details.archive { margin-top: 40px; border-top: 1px solid var(--line); padding-top: 20px; }
+    details.archive > summary { cursor: pointer; color: var(--muted); font-weight: 650; }
+    details.previous { margin-top: 18px; }
+    details.previous > summary { cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 650; }
     .run-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 12px; }
     .run-head h2 { margin: 0; font-size: 18px; }
     h3 { margin: 20px 0 10px; font-size: 13px; }
@@ -80,6 +84,7 @@
     </section>
     <p class="error" id="error" hidden>The ledger server is not answering. Asks are still complete in chat and in each run's ticket files.</p>
     <div id="runs"></div>
+    <div id="archives"></div>
     <p class="empty" id="no-runs" hidden>No orchestrated runs are open on this device.</p>
     <p class="muted">Tickets remain the source of truth. This index shows derived presentation data only.</p>
   </main>
@@ -129,7 +134,15 @@
         node("strong", text(ask.action, "Upcoming involvement")),
         `${text(ask.type, "Human involvement")} · ${text(ask.id)}`
       ], { className: "item" });
-      const section = ({ run, current, upcoming }) => node("section", [
+      const archiveItem = (ask) => node("article", [
+        node("strong", text(ask.action, "Recorded ask")),
+        node("span", [
+          node("a", text(ask.id, "Ticket"), { href: `${href(ask, "tickets")}.md` }),
+          ` · ${text(ask.presentation, "recorded")}`,
+          ...(ask.hasPage ? [" · ", node("a", "Open ask", { href: `${href(ask, "asks")}.html` })] : [])
+        ])
+      ], { className: "item" });
+      const section = ({ run, current, upcoming, history, previousOpen }) => node("section", [
         node("div", [
           node("h2", runLabel({ run, key: run.key })),
           node("small", `${text(run.id)} · ${current.length} now · ${upcoming.length} later${run.updatedAt ? ` · Updated ${date(run.updatedAt)}` : ""}`)
@@ -137,24 +150,56 @@
         node("div", current.length ? node("table", [
           node("thead", node("tr", ["Action", "Why it is needed", "Ticket", "Presented", ""].map((h) => node("th", h)))),
           node("tbody", current.map(row))
-        ]) : run.looksComplete ? node("div", [
+        ]) : run.dirMissing ? node("div", [
+          node("span", "The run directory is unavailable. Its registration has been kept for reference."),
+          node("button", "Archive record", { type: "button", className: "ghost", onclick: () => completeRun(run) })
+        ], { className: "done" }) : run.looksComplete ? node("div", [
           node("span", [node("strong", "Looks complete"), "Every goal is achieved or abandoned."]),
-          node("button", "Remove from ledger", { type: "button", className: "ghost", onclick: () => completeRun(run) })
+          node("button", "Archive run", { type: "button", className: "ghost", onclick: () => completeRun(run) })
         ], { className: "done" }) : node("div", "No asks need a response right now.", { className: "empty" }), { className: "panel" }),
-        upcoming.length ? node("div", [node("h3", "Upcoming involvement"), node("div", upcoming.map(item), { className: "grid" })]) : ""
+        upcoming.length ? node("div", [node("h3", "Upcoming involvement"), node("div", upcoming.map(item), { className: "grid" })]) : "",
+        history.length ? node("details", [
+          node("summary", `Previous asks (${history.length})`),
+          node("div", history.map(archiveItem), { className: "grid" })
+        ], { className: "previous", id: `previous-${run.key}`, open: previousOpen }) : ""
+      ], { className: "run" });
+      const archivedRun = ({ run, history }) => node("section", [
+        node("div", [
+          node("h2", runLabel({ run, key: run.key })),
+          node("small", `Archived ${date(run.archivedAt)}${run.updatedAt ? ` · Last updated ${date(run.updatedAt)}` : ""}`)
+        ], { className: "run-head" }),
+        run.dirMissing
+          ? node("div", "The run directory is unavailable. Historical links cannot be opened until it is restored or the run is registered from its new location.", { className: "empty panel" })
+          : history.length
+          ? node("div", history.map(archiveItem), { className: "grid" })
+          : node("div", "No ask pages were recorded for this run.", { className: "empty panel" })
       ], { className: "run" });
 
       const render = (runs) => {
         const groups = runs.map((r) => {
           const run = { ...(r.run || {}), key: r.key };
           const asks = (Array.isArray(r.asks) ? r.asks : []).map((a) => ({ ...a, key: r.key, run }));
+          const history = (Array.isArray(r.history) ? r.history : []).map((a) => ({ ...a, key: r.key, run }));
           const current = asks.filter((a) => a.presentation === "presented").sort((a, b) => text(a.presentedAt).localeCompare(text(b.presentedAt)));
-          return { run, current, upcoming: asks.filter((a) => a.presentation === "upcoming") };
-        }).sort((a, b) => (b.current.length > 0) - (a.current.length > 0) || (a.run.looksComplete === true) - (b.run.looksComplete === true) || text(a.current[0]?.presentedAt).localeCompare(text(b.current[0]?.presentedAt)));
-        const current = groups.flatMap((g) => g.current);
-        const upcoming = groups.flatMap((g) => g.upcoming);
-        $("runs").replaceChildren(...groups.map(section));
-        $("no-runs").hidden = groups.length > 0;
+          return { run, current, upcoming: asks.filter((a) => a.presentation === "upcoming"), history };
+        });
+        const active = groups.filter((g) => !g.run.archivedAt)
+          .sort((a, b) => (b.current.length > 0) - (a.current.length > 0) || (a.run.looksComplete === true) - (b.run.looksComplete === true) || text(a.current[0]?.presentedAt).localeCompare(text(b.current[0]?.presentedAt)));
+        const archived = groups.filter((g) => g.run.archivedAt)
+          .sort((a, b) => text(b.run.archivedAt).localeCompare(text(a.run.archivedAt)));
+        const current = active.flatMap((g) => g.current);
+        const upcoming = active.flatMap((g) => g.upcoming);
+        const archiveOpen = $("archives").querySelector("details.archive")?.open ?? false;
+        const previousOpen = new Set(Array.from($("runs").querySelectorAll("details.previous[open]"), (entry) => entry.id));
+        active.forEach((group) => { group.previousOpen = previousOpen.has(`previous-${group.run.key}`); });
+        $("runs").replaceChildren(...active.map(section));
+        $("archives").replaceChildren(archived.length
+          ? node("details", [
+              node("summary", `Archived runs (${archived.length})`),
+              ...archived.map(archivedRun)
+            ], { className: "archive", open: archiveOpen })
+          : "");
+        $("no-runs").hidden = active.length > 0 || archived.length > 0;
         $("current-count").textContent = current.length;
         $("upcoming-count").textContent = upcoming.length;
         $("oldest-age").textContent = age(current);
@@ -230,9 +275,9 @@
         }
       };
       const completeRun = async (run) => {
-        if (!confirm(`Remove ${runLabel({ run, key: run.key })} from the ledger? Its run files stay as they are.`)) return;
+        if (!confirm(`Archive ${runLabel({ run, key: run.key })}? Its tickets and ask pages will remain available under Archived runs.`)) return;
         const reply = await fetch(`/r/${encodeURIComponent(run.key)}/complete`, { method: "POST", headers: { "X-Action-Ledger": "complete" } });
-        if (!reply.ok) alert(`The ledger kept this run: ${reply.status === 409 ? "it no longer looks complete" : reply.statusText}.`);
+        if (!reply.ok) alert(`The ledger did not archive this run: ${reply.statusText || `HTTP ${reply.status}`}.`);
         load();
       };
       $("refresh").addEventListener("click", load);

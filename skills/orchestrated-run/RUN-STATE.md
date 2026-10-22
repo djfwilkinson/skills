@@ -124,8 +124,10 @@ script; a defined scenario; artifact inspection; a metric; comparison with a
 baseline; an external system; agent review; Adversarial Review; human
 acceptance; or `not required`.
 
-Use human acceptance only for product-facing results, as defined under
-Reconciliation in SKILL.md; other results use agent review.
+Use human acceptance only when the result needs judgement a subagent cannot
+make, under the deterministic-check gate in Reconciliation in SKILL.md.
+Product-facing does not itself require human acceptance. Fully specified
+observables use agent review, validation, or scenario testing.
 
 Use `not required` only when the user or a ticket said completion itself proves
 the outcome. Do not waive verification because the work looks done.

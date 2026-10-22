@@ -1,6 +1,6 @@
 ---
 name: orchestrated-product-run
-description: Drive a product problem from discovery, mocks, and wholesale product proposals through minimal implementation and Product Owner acceptance. Use only when explicitly invoked by the user.
+description: Drive a product problem from discovery, mocks, and wholesale product proposals through minimal implementation and outcome acceptance, using Product Owner review only when judgement is required. Use only when explicitly invoked by the user.
 disable-model-invocation: true
 argument-hint: "<product problem or outcome>"
 ---
@@ -37,7 +37,7 @@ If one cannot be read, report the blocker rather than proceeding from memory.
 
 The user is the Product Owner. They supply a problem at any altitude, judge
 product direction, trade-offs, cross-space knock-on effects, and mocks or
-concepts, and accept the finished product behaviour.
+concepts, and accept finished product behaviour that needs their judgement.
 
 They are never asked to write or review technical change plans, code diffs, test
 suites, or non-product docs, and they are not interrupted for internal
@@ -235,9 +235,10 @@ run is in full-delivery mode:
    `Reads` for every `Plan`, `Plan Review`, implementation `Agent Task`,
    `inspector`, `scenario-tester`, `ux-reviewer`, and `Adversarial Review`
    unit, and include the Implementation and review extension from `PROMPTS.md`.
-4. **Run automated coverage before human review:**
+4. **Run automated coverage before any human review:**
    - Stream `inspector` (`agent boundary inspection`) across implementation
-     checkpoints for code, tests, configuration, and non-product docs.
+     checkpoints for code, tests, configuration, non-product docs, and
+     deterministically checkable product-facing parts.
    - Run `validator` (`boundary validation`) on a stable tree for tests, build,
      lint, and typecheck.
    - When the batch changes user-observable product behaviour or UI, run a
@@ -246,16 +247,26 @@ run is in full-delivery mode:
      preview, checking both the goal's acceptance criteria and any accepted
      mock's `Binding` obligations. When UI changed substantially, also include
      `ux-ui-reviewer` on the module's `Adversarial Review` Reads.
-   - Hold the human boundary inspection `upcoming` until implementation,
-     `validator`, and `scenario-tester` return with no material issue requiring
-     remediation. `may_withdraw_on` never shortens this hold. List only tickets
-     still open after it, and handle provisional acceptance under
-     orchestrated-run.
+   - Apply orchestrated-run's deterministic-check gate before creating or
+     presenting a human boundary inspection. Exact requested copy, presence,
+     absence, placement, and other fully specified product observables are
+     accepted from `inspector`, `validator`, and `scenario-tester` evidence.
+     Do not ask the Product Owner to repeat or accept a successful deterministic
+     check.
+   - When a result needs Product Owner judgement, hold its human boundary
+     inspection `upcoming` until implementation, `validator`, and
+     `scenario-tester` return with no material issue requiring remediation.
+     `may_withdraw_on` never shortens this hold. List only tickets still open
+     after it, and handle provisional acceptance under orchestrated-run.
 
-### 5. Product Owner acceptance
+### 5. Product outcome acceptance
 
-Present one grouped human boundary inspection (`Discuss/Gather Inputs`) for the
-completed batch:
+Use recorded agent evidence to accept every fully specified outcome. Present
+one grouped human boundary inspection (`Discuss/Gather Inputs`) only for
+outcomes whose acceptance basis remains subjective or underspecified, whose
+automated product check is inconclusive and no further agent check can close
+the gap, which embody an unconfirmed choice meeting the product-decision test,
+or which the Product Owner asked to review:
 
 - Open with what the product now does for the user in plain, concise words.
 - Link the prepared live product or preview environment (and any accepted mock
@@ -263,13 +274,19 @@ completed batch:
 - Report the recorded `scenario-tester` product-check outcome (`passed` or
   `inconclusive` with the exact observation gap) and `validator` check summary
   from their tickets.
-- State the observable acceptance basis and ask the user to accept the result or
+- State the judgement-based acceptance basis and ask the user to accept the result or
   describe what product behaviour needs to change. Never ask the user to inspect
   code diffs, tests, or internal files.
 
+If no result meets that gate, create no acceptance ask. Use the successful
+deterministic checks to finalize any `accepted pending check` inspection
+verdicts; implementation coverage remains the accepted inspection plus boundary
+validation under orchestrated-run.
+
 If the user requests product changes, route them as fix requests or new units
 through the normal `orchestrated-run` steering and invalidation rules, re-run
-the automated checks, and present the updated result for acceptance.
+the automated checks, and apply the deterministic-check gate again before
+deciding whether to present the updated result for acceptance.
 
 ### 6. Complete
 
