@@ -130,7 +130,7 @@ effort, with an optional `-thinking` before the effort and an optional `-fast`
 at the end.
 
 The plan addend is `tokenRatePerMillion` per million tokens, or zero when the
-model name starts with a prefix in `exempt`. The database defaults to
+model name starts with an entry in `exempt`. The database defaults to
 `~/.agent-runs/models.json`, or `templates/models.json` when that file is
 missing. `--db` selects another file. The command does not write the database
 or the model choices.
@@ -217,10 +217,15 @@ Adjust cost for the plan the user's client bills under, in the database's
 `plan`:
 
 - Cursor Teams and Enterprise add a token rate to every input, output, and
-  cached token on third-party models; Cursor's own models, Grok and Composer,
-  are exempt. Set `tokenRatePerMillion` and the `exempt` model prefixes;
-  `model_setup.py` adds the rate using each row's tokens per task. Check the
-  rate and the exempt models on Cursor's team pricing page first.
+  cached token on third-party models. Grok, Composer, and Auto are exempt.
+  From 2026-10-20, so are Claude Haiku 5.5, Gemini 2.5 Flash, Gemini 3 Flash,
+  Gemini 3.1 Flash Lite, Gemini 3.5 Flash Lite, Gemini 3.7 Flash, Gemini 3.8
+  Flash, GLM 5.3 Flash, GPT-4.1 Nano, GPT-4o Mini, GPT-5 Mini, GPT-5.1 Codex
+  Mini, GPT-5.4 Mini, GPT-5.4 Nano, and GPT-5.6 Luna. The list can grow; check
+  Cursor's Models and Pricing page before a refresh. Set `tokenRatePerMillion`
+  and `exempt`. Each entry matches the start of a model id, so `grok-` covers
+  every Grok and `claude-haiku-5-5` covers that model. `model_setup.py` adds
+  the rate using each row's tokens per task.
 - A contract discount the user states, such as included Cursor model usage on
   an Enterprise plan, goes in `discounts` as a model prefix and the fraction
   taken off. Never guess a discount that is not published or stated by the

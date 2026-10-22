@@ -3,11 +3,26 @@
   "rated": "2026-10-14",
   "source": "Artificial Analysis leaderboard, under RATING-MODELS.md",
   "plan": {
-    "description": "Cursor Teams and Enterprise: $0.25 per 1M tokens on third-party models, Grok and Composer exempt; no discounts",
+    "description": "Cursor Teams and Enterprise from 2026-10-20: $0.25 per 1M tokens on third-party models, except Grok, Composer, and the smaller models in exempt; no discounts",
     "tokenRatePerMillion": 0.25,
     "exempt": [
       "grok-",
-      "composer-"
+      "composer-",
+      "claude-haiku-5-5",
+      "gemini-2.5-flash",
+      "gemini-3-flash",
+      "gemini-3.1-flash-lite",
+      "gemini-3.5-flash-lite",
+      "gemini-3.7-flash",
+      "gemini-3.8-flash",
+      "glm-5.3-flash",
+      "gpt-4.1-nano",
+      "gpt-4o-mini",
+      "gpt-5-mini",
+      "gpt-5.1-codex-mini",
+      "gpt-5.4-mini",
+      "gpt-5.4-nano",
+      "gpt-5.6-luna"
     ],
     "discounts": {}
   },

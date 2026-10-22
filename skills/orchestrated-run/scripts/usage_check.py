@@ -13,7 +13,8 @@ On-Demand. Free, errored, and aborted rows stay out.
 A usage name matches a database model when it is that model plus an effort,
 with an optional -thinking before the effort and an optional -fast at the end.
 The plan addend is tokenRatePerMillion, or zero when the model name starts
-with a prefix in exempt.
+with an entry in exempt. Entries are prefixes: grok- and composer-, or a whole
+model id such as claude-haiku-5-5.
 
 A database row with no tokensPerTask needs --guess. The report uses that
 count, says it is a guess, and shows the fee the plan addend produces. The
