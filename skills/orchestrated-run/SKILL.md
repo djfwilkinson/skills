@@ -263,7 +263,8 @@ solution that solves the problem cleanly. Keep optional extras out of baseline
 work and surface them separately as opt-in choices for the user. A large
 unrequested refactor is a product decision: never default to one without
 recording why a minimal change fails and settling it through Discuss/Gather
-Inputs.
+Inputs. When reviewing, and when responding to a review, be careful of scope
+creep, and do not be afraid to push back.
 
 For ticketed alternatives, use existing options and recommendations as Discuss
 evidence; do not investigate again. The orchestrator selects and logs process

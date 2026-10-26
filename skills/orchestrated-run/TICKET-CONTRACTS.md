@@ -462,6 +462,10 @@ Blockers / follow-ups. Never default to a large unrequested refactor: if a
 minimal change would be a hack, record why and propose the refactor as a
 product decision.
 
+When you review, be careful of scope creep, and do not be afraid to push back
+on work that goes past its goal. When you respond to a review, be careful of
+scope creep, and do not be afraid to push back.
+
 When Reads include an accepted mock contract, honor its Binding obligations at
 its stated Fidelity (`wireframe` binds flow, layout structure, hierarchy, copy,
 and states while using the project's real components and styling; `sign-off`
