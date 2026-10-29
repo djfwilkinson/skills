@@ -248,11 +248,8 @@ run is in full-delivery mode:
      mock's `Binding` obligations. When UI changed substantially, also include
      `ux-ui-reviewer` on the module's `Adversarial Review` Reads.
    - Apply orchestrated-run's deterministic-check gate before creating or
-     presenting a human boundary inspection. Exact requested copy, presence,
-     absence, placement, and other fully specified product observables are
-     accepted from `inspector`, `validator`, and `scenario-tester` evidence.
-     Do not ask the Product Owner to repeat or accept a successful deterministic
-     check.
+     presenting a human boundary inspection. Do not ask the Product Owner to
+     repeat or accept a successful deterministic check.
    - When a result needs Product Owner judgement, hold its human boundary
      inspection `upcoming` until implementation, `validator`, and
      `scenario-tester` return with no material issue requiring remediation.

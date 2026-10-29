@@ -44,6 +44,10 @@ One exception to the repository-file rule: the user's part of an
 in the project. `public-docs` does not apply to that part, and this skill does
 not apply to the rest of the file.
 
+One exception to the engine-ticket rule: the ask of an orchestrated-run human
+ticket, in its Objective or latest Interaction log entry and on its ask page,
+follows this skill. The rest of the ticket is engine text.
+
 ## Shape chat replies
 
 Apply these rules to chat replies and progress updates:

@@ -65,6 +65,10 @@ report the blocker rather than proceeding from memory. Never put them on a
 subagent's Reads; copy its persona brief from `PERSONAS.md` and its shared
 rules and type prompt from `TICKET-CONTRACTS.md`.
 
+Read the `user-response` skill file before the first user-visible message and
+follow it for every ask and progress update. If it is not installed, say so
+once and apply Writing the ask in `HUMAN-ASKS.md` alone.
+
 Read [RATING-MODELS.md](RATING-MODELS.md) only when the user asks to rate
 models, re-rate the model database, find which models and efforts to offer, or
 report which personas and models past runs used; runs never need it.
@@ -189,7 +193,8 @@ The condition must name its artifact; an open unknown alone does not qualify.
 Do not offer for research-only runs. If the user or a governing specialization
 skill (such as `orchestrated-product-run`) stated a preference, record it in
 `WORKINGHINTS.md` and `LOG.md` without asking. Otherwise ask the user one direct question, with the
-client's structured question tool when it has one, or in chat. It is not a human
+client's structured question tool when it has one, or in chat, worded under
+Writing the ask in `HUMAN-ASKS.md`. It is not a human
 ticket: it has no ticket, ask page, or ledger entry. The question covers what
 `smart` and `reviewed planning` change about how the run reaches the user's result, the
 recorded conditions this run met, the cost as the planning and review work they
@@ -263,8 +268,7 @@ solution that solves the problem cleanly. Keep optional extras out of baseline
 work and surface them separately as opt-in choices for the user. A large
 unrequested refactor is a product decision: never default to one without
 recording why a minimal change fails and settling it through Discuss/Gather
-Inputs. When reviewing, and when responding to a review, be careful of scope
-creep, and do not be afraid to push back.
+Inputs. When reviewing or responding to a review, push back on scope creep.
 
 For ticketed alternatives, use existing options and recommendations as Discuss
 evidence; do not investigate again. The orchestrator selects and logs process
@@ -392,18 +396,18 @@ ticket that ran concurrently for invalidation of recorded Interaction log
 evidence, and record the result in `LOG.md`.
 
 Apart from progress updates, return to the user only when a human ticket needs
-a response, or when the run is complete. If sessions are also active, still
-reconcile them when they return.
+a response, when the unattended runtime limit is reached, or when the run is
+complete. If sessions are also active, still reconcile them when they return.
 
-Unless the user has authorised a longer limit (recorded in `WORKINGHINTS.md`)
-or has been in the loop, neither the orchestrator nor any individual subagent
-session may run longer than 4 hours of wall-clock time. Note your start time
-(ISO timestamp) at run start and reset it on each user turn. Check elapsed time
-before each dispatch or long step; if you are within ~15 minutes of the 4-hour
-unattended limit, stop gracefully: send `stop` to running sessions, reconcile
-returns, update run files, and return to the user with a concise summary of
-what is done, what is mid-flight, and what is untouched. Do not exceed 4 hours
-without user interaction or authorisation.
+The run may go at most 4 hours of wall-clock time without a user turn, unless
+the user authorised a longer limit, recorded in `WORKINGHINTS.md`. Log the
+clock's start time in `LOG.md` at run start and at each user turn. Check it
+before each dispatch or long step. Within about 15 minutes of the limit, send
+`stop` to running sessions, reconcile their returns without dispatching new
+work, update run files, and return to the user with what is done, what is
+mid-flight, and what is untouched. Each dispatch and resume prompt states any
+longer limit the user authorised, because workers cannot read
+`WORKINGHINTS.md` unless it is on their Reads.
 
 ## Checkpoints
 
@@ -436,7 +440,8 @@ this order:
 5. For a `blocked` unit, create the Discuss, Research, or Explore Options
    ticket that settles it, or move the unit to a ticket at the level its
    worker named. Send the result through the inbox as a decision or added unit
-   when it lands.
+   when it lands. A unit blocked with `runtime limit` in Checks has no gap to
+   settle: resume its session, unless the run's own limit is near.
 6. For a checkpoint with an `Escalate` line, follow Escalation in
    `PERSONAS.md`.
 
@@ -550,13 +555,14 @@ conflicting assignment until the conflicting session reaches a checkpoint.
 Record the steering, inbox items, and tickets created in `LOG.md`.
 
 If the prompt responds to a presented Discuss or Human Task, treat it as that
-ticket's return, except when the user asks for `detail <item>` (or asks a
-follow-up question about an item in a presented Discuss ask before deciding).
-On a `detail <item>` reply, do not resolve the Discuss ticket: record any
-answers the reply also gave in Evidence, expand the requested item from the
-ticket and run-file record (or withdraw the ask and run a quick Research ticket
-if project facts are missing), update the Discuss ask and ask page with the
-expanded detail and the remaining unanswered items, and re-present. A response to a withdrawn ask is steering or new evidence,
+ticket's return, except when the user replies `detail` or `detail <item>`,
+picks the ask's `Tell me more first` option, or asks a follow-up question about
+the ask before deciding. A Human Task reply that returns the requested result
+is still its return; answer any question with it. Otherwise, do not resolve the ticket: record any
+answers the reply also gave in Evidence, expand the whole ask or the requested
+item from the ticket and run-file record (or withdraw the ask and run a quick
+Research ticket if project facts are missing), update the ask and ask page
+with the expanded detail and the remaining unanswered items, and re-present. A response to a withdrawn ask is steering or new evidence,
 not ticket completion. A response to an unsettled ask follows reply intake under
 Unsettled asks in `HUMAN-ASKS.md`. If it answers the current presented ask on an active
 Human and Agent Task, follow the presented-to-upcoming transition under Human
@@ -736,9 +742,7 @@ An agent boundary inspection records `accepted`, `accepted pending check`,
 `changes needed`, or `decision needed` for each covered ID in each unit's
 checkpoint. An ID's latest non-superseded verdict is the current one; an
 `accepted` current verdict is the orchestrator's acceptance of those parts.
-For `accepted pending check`, dispatch the named check without waiting for the
-implementation ticket to end. Send its outcome to the inspection ticket's
-inbox as a decision; the inspector records the final verdict. For `changes
+Handle `accepted pending check` as above. For `changes
 needed`, route the fixes its findings support under Checkpoints; for `decision
 needed`, open a Discuss and route its decision. When the fix reaches a `done` checkpoint, add
 a re-inspection unit naming the original ID and the fix. It judges the current
@@ -913,7 +917,8 @@ After compaction, rebuild context from:
 3. `TICKET-SOURCES.md` and the active `ticket-sources/<source>.md`;
 4. `RUN-STATE.md`;
 5. `PERSONAS.md`;
-6. `HUMAN-ASKS.md` when any human ticket is presented;
+6. `HUMAN-ASKS.md` when any human ticket is presented, and the `user-response`
+   skill file before the next user-visible message;
 7. `ROSTER.md`;
 8. `GOALS.md`;
 9. `NONGOALS.md`;

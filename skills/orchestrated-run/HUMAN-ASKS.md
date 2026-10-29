@@ -154,6 +154,15 @@ observable terms what it now does for the user, and state what is being decided
 or done, without needing the ticket, the module, chat history, or the run.
 Restating a name or label as its own purpose describes nothing.
 
+Word every ask, wherever it appears, under the `user-response` skill. Worker
+results reach the orchestrator as engine text; rewrite them in the user's
+words, keeping every recorded fact, option, and recommendation. Leave persona
+names, levels, ticket types, snapshot hashes, run-file names, and contract
+terms such as checkpoint or boundary inspection out of the prose, except in
+the models question and model ask. IDs the user replies with, such as covered
+IDs in a grouped acceptance or defect IDs, stay as labels beside a plain
+description.
+
 When the ask needs judgement, state exactly what to inspect or compare and
 which observable results distinguish the possible replies. Explain every
 proposal, option, and consequence in as few plain words as possible while
@@ -176,6 +185,16 @@ product, then give the detail under it. Technical terms belong in an ask whose
 product or judgement is technical; say what one means for the product when that
 is not already plain.
 
+From the recorded evidence, say why the ask comes now, what is already settled
+or checked, the recommendation and its reason when one exists, and what each
+reply leads to. A simple yes-or-no or short pick stays short: the question, a
+sentence of context, the recommendation, and the reply. Every ask offers
+`detail`, or `detail <item>` for one part, before answering; list them in the
+ask page's `expectedReply` examples, and add a `Tell me more first` option when
+using a structured question tool. For a direct question with no ticket, such
+as the models question, answer the request and ask the same question again;
+nothing is recorded until the user picks one of its options.
+
 Do not ask the user to judge an aggregate from its name. `Accept module 04 is
 complete` fails because it says nothing about what that module was meant to
 deliver. Name the aggregate when it helps, then state each result being judged.
@@ -185,17 +204,13 @@ evidence file or a change plan. When a document, report, design, or prepared env
 itself the deliverable, ask about what it gives the user: say what it holds, why
 it exists, and when it will matter.
 
-Put a result to the user only when it needs judgement a subagent cannot make,
-under the deterministic-check gate in Reconciliation in SKILL.md. Being
-product-facing or visible is not enough. Do not ask the user to confirm exact
-requested wording, presence, absence, placement, generated output, or another
-fully specified observable that an inspector, validator, or scenario-tester
-can establish. Do not present code, tests, configuration, or docs outside the
-product as items to review or judge, and do not offer a diff as an inspection
-method. An agent boundary inspection accepts deterministically checkable parts,
-including product-facing ones. When a batch has no result needing user
-judgement, it has no human ask. `The text is visible, so please confirm it` and
-`Nothing visible changes, so the judgement is on the code and docs` both fail.
+Put a result to the user only when the deterministic-check gate in
+Reconciliation in SKILL.md says it needs their judgement; being visible is not
+enough. Do not present code, tests, configuration, or docs outside the product
+as items to review or judge, and do not offer a diff as an inspection method.
+When a batch has no result needing user judgement, it has no human ask.
+`The text is visible, so please confirm it` and `Nothing visible changes, so
+the judgement is on the code and docs` both fail.
 
 A Human and Agent Task turn after the first is the current observation or step,
 what to look at, and the expected reply. It does not restate the task.
@@ -379,7 +394,8 @@ below; each list is the extra payload that type carries, not a substitute:
   option's observable behavior, known knock-on effects and deferral point or
   reason it must be decided now, any linked mock URL with its `Fidelity` and
   `Binding` versus `Context only` boundary, expected reply (including `accept`
-  / `recs` and `detail <item>` where applicable), and ticket path.
+  / `recs` where applicable, and `detail` and `detail <item>`), and ticket
+  path.
 - Model ask: the payload under The model ask in `PERSONAS.md`, with the
   slots as one ordered section, one complete reply example each for `lean`,
   `quality`, naming a model and effort for a slot, and excluding a model,

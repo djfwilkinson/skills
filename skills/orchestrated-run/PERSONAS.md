@@ -286,7 +286,8 @@ The orchestrator's own model is the one the user is already running.
 ## The models question
 
 After dispatching bootstrap, ask the user one direct question, with the
-client's structured question tool when it has one, or in chat. It is not a human
+client's structured question tool when it has one, or in chat, worded under
+Writing the ask in `HUMAN-ASKS.md`. It is not a human
 ticket: it has no ticket, ask page, or ledger entry. Skip it when the client
 cannot choose models per subagent or `Models` working hints already name a
 model for every slot. Ask it once per run; a resumed run with a confirmed

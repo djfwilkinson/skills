@@ -176,7 +176,7 @@ Record in Evidence and the unit's checkpoint:
 - outcome: `passed` (every scenario and Binding mock obligation worked as
   specified), `failed` (an observable requirement or Binding mock obligation
   was absent or wrong), or `inconclusive` (a scenario could not be exercised
-  safely, stating the exact observation gap left for the Product Owner);
+  safely, stating the exact observation that could not be made);
 - for each checked scenario: what you did and what you observed;
 - if this ticket also prepares the environment for Product Owner acceptance,
   the URL or path, persistent process or session, expected state, and restart

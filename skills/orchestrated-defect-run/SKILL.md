@@ -286,8 +286,8 @@ Record exactly one outcome for each covered defect:
   could not establish the result.
 
 An inconclusive outcome meets this ticket's Completion when it records the
-missing capability, attempts made, and the exact observation the user must
-make, but only when Completion explicitly allows an inconclusive outcome,
+missing capability, attempts made, and the exact observation still missing,
+but only when Completion explicitly allows an inconclusive outcome,
 including a scenario found unsafe at runtime. Otherwise set execution_result
 to blocked. It is not a passed check.
 
@@ -317,9 +317,8 @@ not start a new cycle. Route the bounded fix under orchestrated-run's
 Checkpoints, project the defect to `in progress` only when the work carrying
 that fix starts, and run the automated gate again afterward.
 
-`passed` or `inconclusive` may proceed after boundary validation returns
-without an issue requiring remediation. Include every inconclusive gap in the
-user inspection ask.
+`passed` or `inconclusive` continues under User review once boundary
+validation returns without an issue requiring remediation.
 
 The dedicated product check does not satisfy an Adversarial Review. Schedule
 Adversarial Review under the normal module and pre-completion rules. A later
@@ -362,8 +361,8 @@ ask:
 - opens each defect's result with its ID and Report / Summary as the original
   report;
 - maps each result and recorded automated outcome to its defect ID;
-- names each duplicate separately and asks the user to inspect its reported
-  scenario even when one canonical implementation covers it;
+- names separately each duplicate whose reported scenario needs user
+  judgement, even when one canonical implementation covers it;
 - links the prepared product or artifact and explains how to inspect it;
 - discloses every inconclusive automated scenario;
 - asks the user to accept all results or name the defect IDs needing changes.

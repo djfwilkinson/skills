@@ -263,7 +263,7 @@ Avoid:
 
 Auto-invoked library skill that shapes **chat replies** and **response-only artifacts** while they are being composed. It is not a separate rewrite or audit step. Chat replies and response-only artifacts are human-facing copy, not public copy.
 
-It also governs the user part of an orchestrated-plan plan file, which is stored in the project, and grill-to-done rounds. It requires that no concept, label or term is named before it is explained.
+It also governs the user part of an orchestrated-plan plan file, which is stored in the project, grill-to-done rounds, and every return-to-user ask, including the ask text stored on a human ticket. It requires that no concept, label or term is named before it is explained.
 
 Avoid:
 - using it to restyle public copy
@@ -347,7 +347,7 @@ Existing prose in the project that is not a style rule unless the project identi
 
 ### Engine text
 
-Text written for agents, not for people outside the workflow: orchestrated-run tickets, run files, internal plans, prompts, skill files, AGENTS.md, `.cursor/rules`. Neither writing skill applies.
+Text written for agents, not for people outside the workflow: orchestrated-run tickets, run files, internal plans, prompts, skill files, AGENTS.md, `.cursor/rules`. Neither writing skill applies, except that the ask on a human ticket is a return-to-user ask and follows user-response.
 
 Related:
 - work-tracker item (human-facing; public-docs does apply)
@@ -656,7 +656,7 @@ Avoid:
 
 ### Smart planning depth
 
-The planning depth (`smart`) under which the orchestrator decides upfront for each qualifying change set whether to create a Plan ticket and whether to route that plan to zero, one (`consequences` or `product`), or both Plan Review lenses, logging the choice and reason in `LOG.md`. Any change set touching a high-risk surface or proposing a user-approved large refactor must use a Plan and at least `principal-critic`.
+The planning depth (`smart`) under which the orchestrator decides upfront for each qualifying change set whether to create a Plan ticket and whether to route that plan to zero, one (`consequences` or `product`), or both Plan Review lenses, logging the choice and reason in `LOG.md`. Any change set touching a high-risk surface or proposing a user-approved large refactor must use a Plan and at least the `consequences` lens.
 
 ### Reviewed planning
 
@@ -1017,11 +1017,11 @@ The globally incremented numeric part of a ticket ID. Every ticket type shares o
 
 ### Human involvement
 
-The orchestrator's user-facing handling of Discuss, Human Task, and Human and Agent Task. Each type has its own return-to-user ask contract. Required environment preparation is completed before readiness. The first presentation is complete in chat and copied to an ask page. Later messages repeat the complete ask or, only after a successful local-page open recorded for the current client, give an actionable line and ask-index link; reminder-only text is never enough. Ordinary human involvement does not pause independent agent tickets. Human and Agent Task allows only agent tickets that pass the explicit read-only, disjoint concurrency test and never another presented human ticket.
+The orchestrator's user-facing handling of Discuss, Human Task, and Human and Agent Task. Each type has its own return-to-user ask contract. Required environment preparation is completed before readiness. The first presentation is complete in chat and copied to an ask page. After that, later messages may give one actionable line with the ask-page and ask-index links; reminder-only text is never enough. Ordinary human involvement does not pause independent agent tickets. Human and Agent Task allows only agent tickets that pass the explicit read-only, disjoint concurrency test and never another presented human ticket.
 
 ### Return-to-user ask
 
-The current action, decision, review or acceptance requested from the user. Every ask stands alone for a reader who has only that ask: it opens with one sentence naming what is being decided and what the thing now does for the user, then gives the detail. An artifact that exists only for agents is not put to the user for acceptance, and neither are code, tests, configuration, or docs outside the product. A Human Task includes the applicable procedure, commands, URLs, paths, expected result and evidence to return. Discuss includes the question, essential context, options and expected reply. Acceptance includes the exact result or path, inspection method, acceptance basis and request to accept or describe changes. Human and Agent Task uses only its latest Interaction log ask. Include evidence-backed hints and known recovery steps only when they apply. Every first presentation includes the ticket path, has a derived ask page, and never includes secret values.
+The current action, decision, review or acceptance requested from the user. The orchestrator writes it in the user's words under user-response and Writing the ask in `HUMAN-ASKS.md`, rewriting worker results rather than relaying them, and every ask offers a way to get more detail before answering. Every ask stands alone for a reader who has only that ask: it opens with one sentence naming what is being decided and what the thing now does for the user, then gives the detail. An artifact that exists only for agents is not put to the user for acceptance, and neither are code, tests, configuration, or docs outside the product. A Human Task includes the applicable procedure, commands, URLs, paths, expected result and evidence to return. Discuss includes the question, essential context, options and expected reply. Acceptance includes the exact result or path, inspection method, acceptance basis and request to accept or describe changes. Human and Agent Task uses only its latest Interaction log ask. Include evidence-backed hints and known recovery steps only when they apply. Every first presentation includes the ticket path, has a derived ask page, and never includes secret values.
 
 ### Prepared human environment
 
@@ -1029,7 +1029,7 @@ The files, artifacts, pages, previews, services and state needed for a return-to
 
 ### Presented human ticket
 
-A human ticket with `presentation: presented`. Its ask source, ask page and current environment are recorded in Presentation. Only a presented ticket can be described as waiting for the user. After a complete first presentation and a successful local-page open recorded for the current client, later messages may use one actionable line plus the ticket path and ask-index link; otherwise repeat the complete ask. Reminder-only text is invalid. If its environment becomes unusable, the ask is withdrawn and cannot complete the ticket; after preparation, it becomes upcoming and is presented again.
+A human ticket with `presentation: presented`. Its ask source, ask page and current environment are recorded in Presentation. Only a presented ticket can be described as waiting for the user. After a complete first presentation, later messages may use one actionable line plus the ticket path, ask-page link and ask-index link. Reminder-only text is invalid. If its environment becomes unusable, the ask is withdrawn and cannot complete the ticket; after preparation, it becomes upcoming and is presented again.
 
 ### Human acceptance
 

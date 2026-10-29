@@ -448,14 +448,13 @@ persistent ticket status. The orchestrator owns status, owner, and Work units.
 Your return message is one line: the ticket ID, what you just checkpointed,
 its outcome, and whether work remains. Everything else belongs on the ticket.
 
-Runtime limit. Unless Reads or an inbox item records that the user authorised a
-longer limit or has been in the loop since you started, never run longer than 4
-hours of wall-clock time in this session. Note your start time (ISO timestamp)
-when the session starts, and check elapsed time before each unit and long step.
-If you are within ~15 minutes of the 4-hour mark, stop gracefully: finish or
-safely abandon the current step, record what is done, what is mid-flight, and
-what is untouched on the ticket, checkpoint the current unit blocked (or set
-execution_result to blocked between units), and return. Do not exceed 4 hours.
+Runtime limit. Run at most 4 hours of wall-clock time from this dispatch or
+resume, unless your prompt states a longer limit the user authorised. Note the
+start time and check it before each unit and long step. Within about 15
+minutes of the limit, finish or safely abandon the current step, record what
+is done, mid-flight, and untouched, checkpoint the current unit, or the next
+one when none is in progress, blocked with `runtime limit` in Checks and
+`Escalate: none`, and return.
 
 Do not edit run-level files (GOALS.md, NONGOALS.md, UNKNOWNS.md,
 WORKINGHINTS.md, LOG.md, PILLARS.md, MODULES.md, ROSTER.md, inbox/, or asks/).
@@ -471,9 +470,8 @@ Blockers / follow-ups. Never default to a large unrequested refactor: if a
 minimal change would be a hack, record why and propose the refactor as a
 product decision.
 
-When you review, be careful of scope creep, and do not be afraid to push back
-on work that goes past its goal. When you respond to a review, be careful of
-scope creep, and do not be afraid to push back.
+When you review or respond to a review, push back on scope creep: work or
+requested changes that go past the goal.
 
 When Reads include an accepted mock contract, honor its Binding obligations at
 its stated Fidelity (`wireframe` binds flow, layout structure, hierarchy, copy,
@@ -626,9 +624,10 @@ evidence:
   makes it blocking;
 - decision needed: name the choice for the user, its options, and a
   recommendation.
-Checkpoint each unit when its verdicts are recorded. An accepted-pending-check
-unit remains open for an inbox decision carrying the check outcome. On
-`passed`, add a checkpoint that records `accepted`; on `failed`, record
+Checkpoint each unit done when its verdicts are recorded, including
+`accepted pending check`. When an inbox decision carries that check's outcome,
+add a checkpoint labelled `Check I-NNN` with that item's ID. On
+`passed`, it records `accepted`; on `failed`, record
 `changes needed`; on `inconclusive`, record that the verdict is superseded so
 the orchestrator can route another agent check or human judgement under the
 deterministic-check gate. Set execution_result to completed when every unit has
@@ -854,7 +853,7 @@ Ask only for information, a decision, review, or acceptance required by the
 ticket. Write it under Writing the ask in `HUMAN-ASKS.md`, from evidence
 already on tickets or run files: the
 question and any options, recommendation, or draft that exist. Do not invent
-them. If a product decision needs prepared options and they are missing, the
+them. Rewrite them in the user's words rather than copying the worker's. If a product decision needs prepared options and they are missing, the
 ticket is not `ready`: open Research or Explore Options first.
 
 For each decision option, explain the behavior the user would observe, known
@@ -869,16 +868,9 @@ basis, what observations indicate success or required changes, and a request
 to accept it or describe required changes. Do not use a structured questions
 form or multiple-choice prompt for acceptance.
 
-Ask only for judgement a subagent cannot make. Product-facing or visible does
-not by itself require a user ask. Exact requested wording, presence, absence,
-placement, generated output, and already-defined scenarios go to the
-inspector, validator, or scenario-tester when their expected result is fully
-specified. A successful deterministic check is acceptance evidence; do not ask
-the user to repeat or accept it. Use Discuss when reasonable people could still
-disagree about meaning, tone, preference, or whether the product outcome was
-met, when an agent check is inconclusive and no further agent check can close
-the gap, when an unconfirmed choice meets the product-decision test, or when
-the user asked to review the result. The model ask is the only
+Ask only for judgement a subagent cannot make, under the deterministic-check
+gate in Reconciliation in SKILL.md. A successful deterministic check is
+acceptance evidence; do not ask the user to repeat or accept it. The model ask is the only
 Discuss ticket whose subject is process: it asks for preferences no subagent
 can supply. Never ask the user to perform or
 confirm a check a subagent can run, such as tests, builds, lint, searches, or
@@ -888,10 +880,6 @@ a product workflow and judge whether it still behaves as expected is inspection
 only when the deterministic-check gate requires human judgement; otherwise a
 scenario-tester runs it. Point the user at a file, page, or preview only when
 the judgement needs eyes on it, and give a command only as optional reproduction.
-
-Review and acceptance asks present only results that need user judgement, as
-defined under Reconciliation in SKILL.md. An agent boundary inspection accepts
-deterministically checkable parts, including product-facing ones.
 
 One Discuss may inspect or accept several named implementation tickets when
 their results form one usable review. Group each result with its recorded
