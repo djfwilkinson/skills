@@ -448,6 +448,15 @@ persistent ticket status. The orchestrator owns status, owner, and Work units.
 Your return message is one line: the ticket ID, what you just checkpointed,
 its outcome, and whether work remains. Everything else belongs on the ticket.
 
+Runtime limit. Unless Reads or an inbox item records that the user authorised a
+longer limit or has been in the loop since you started, never run longer than 4
+hours of wall-clock time in this session. Note your start time (ISO timestamp)
+when the session starts, and check elapsed time before each unit and long step.
+If you are within ~15 minutes of the 4-hour mark, stop gracefully: finish or
+safely abandon the current step, record what is done, what is mid-flight, and
+what is untouched on the ticket, checkpoint the current unit blocked (or set
+execution_result to blocked between units), and return. Do not exceed 4 hours.
+
 Do not edit run-level files (GOALS.md, NONGOALS.md, UNKNOWNS.md,
 WORKINGHINTS.md, LOG.md, PILLARS.md, MODULES.md, ROSTER.md, inbox/, or asks/).
 Do not create tickets. Do not plan the run. Record follow-ups on this ticket.

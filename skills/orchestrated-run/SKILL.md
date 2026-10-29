@@ -395,6 +395,16 @@ Apart from progress updates, return to the user only when a human ticket needs
 a response, or when the run is complete. If sessions are also active, still
 reconcile them when they return.
 
+Unless the user has authorised a longer limit (recorded in `WORKINGHINTS.md`)
+or has been in the loop, neither the orchestrator nor any individual subagent
+session may run longer than 4 hours of wall-clock time. Note your start time
+(ISO timestamp) at run start and reset it on each user turn. Check elapsed time
+before each dispatch or long step; if you are within ~15 minutes of the 4-hour
+unattended limit, stop gracefully: send `stop` to running sessions, reconcile
+returns, update run files, and return to the user with a concise summary of
+what is done, what is mid-flight, and what is untouched. Do not exceed 4 hours
+without user interaction or authorisation.
+
 ## Checkpoints
 
 A return with a new checkpoint and `execution_result: null` is a checkpoint
