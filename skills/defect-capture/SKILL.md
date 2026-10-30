@@ -9,7 +9,8 @@ argument-hint: "[optional list name or existing defect-list path]"
 
 This skill is user-invoked. Start it only when the user explicitly invokes
 `defect-capture`. An affirmative response to the `ux-ui-reviewer` defect
-capture offer is an explicit invocation.
+capture offer is an explicit invocation. So is `orchestrated-defect-run`
+starting capture.
 
 Read [DEFECT-TICKETS.md](DEFECT-TICKETS.md) before creating, assigning,
 updating, or recovering a defect ticket. It owns the schema, field ownership,

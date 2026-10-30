@@ -1,8 +1,8 @@
 ---
 name: orchestrated-defect-run
-description: Resolve a defect list through orchestrated triage, implementation, automated product checks, and user review when judgement remains. Use only when explicitly invoked by the user.
+description: Capture defects or pick up open ones, then resolve them through orchestrated triage, implementation, automated product checks, and user review when judgement remains. Use only when explicitly invoked by the user.
 disable-model-invocation: true
-argument-hint: "<defect-list-path>"
+argument-hint: "[optional defect-list path]"
 ---
 
 # Orchestrated defect run
@@ -10,16 +10,18 @@ argument-hint: "<defect-list-path>"
 This skill is user-invoked. Start it only when the user explicitly invokes
 `orchestrated-defect-run`. A request to start it from an active
 `defect-capture`, including one started from the `ux-ui-reviewer` handoff, is
-an explicit invocation.
+an explicit invocation. So is a yes to the `orchestrated-product-run`
+defect-run offer.
 
-It requires `/orchestrated-run` and the defect-ticket contract bundled with
-`defect-capture`. Start one orchestrated run and apply this skill as its
+It requires `/orchestrated-run` and `defect-capture`, with the defect-ticket
+contract bundled with it. Start one orchestrated run and apply this skill as its
 defect-specific process. The orchestrated-run skill and its required references
 remain authoritative for ticket types, personas, the roster, grouping, work
 units, ticket inboxes, ticket status, assignment, ownership,
 planning depth, reconciliation, implementation coverage, review, human asks,
 and run completion, except for the confirmed-outcome specialization named
-below.
+below. The startup choice is a direct question before any run exists, not a
+human ticket.
 
 Read
 [DEFECT-TICKETS.md](../defect-capture/DEFECT-TICKETS.md) before changing a
@@ -29,15 +31,62 @@ rather than proceeding from memory.
 
 ## Start
 
-Resolve the defect-list path from the invocation or the active capture
-session. If neither identifies one and several lists exist, use
-Discuss/Gather Inputs to ask which list to run.
+Pick a list before any run exists.
+
+- A defect is open when it has `capture_state: ready` and is not `done`.
+- A run is incomplete when its directory exists and a goal in its `GOALS.md` is
+  not `achieved` or `abandoned`.
+
+Use the first case that applies:
+
+1. **Product run named, no list.** Go to Capture first on a new list named for
+   that run.
+2. **List identified.** Use the named list, else the active capture session's
+   list. With an open defect, go to Start or resume the run; capture continues
+   alongside. Without one, go to Capture first on that list.
+3. **Open defects elsewhere.** Scan `<project>/.agent-runs/defect-lists/`. If
+   any list has an open defect, ask the startup choice.
+4. **Nothing open.** Go to Capture first on a new list.
+
+### Startup choice
+
+Ask one direct question. Use the client's structured question tool when it has
+one. Word it under `user-response`.
+
+For each list with open defects, show its path, any incomplete run claiming it,
+and its open defects by ID and Summary. Over about ten defects, show counts by
+status and the latest few Summaries. Name the list in each option when there
+are several:
+
+- Work on these now: go to Start or resume the run.
+- Capture more into this list first: go to Capture first on it.
+- Capture into a new list: go to Capture first on a new list.
+
+Go straight to the chosen step.
+
+### Capture first
+
+Follow the `defect-capture` skill file on the chosen list. This invocation
+counts as invoking it. When a product run is named, add its directory to each
+submission.
+
+1. Unless the user already said they have finished, ask them to describe each
+   defect, with screenshots when useful, and to say when they have finished.
+2. When they finish or ask to start fixing, reconcile every non-null
+   `capture_owner` under `defect-capture`. Wait for running writers.
+3. If a defect is open, go to Start or resume the run. Otherwise say why and
+   keep capturing on the same list.
+
+Before the run starts, recover under `defect-capture`'s rules. If nothing is
+recoverable, apply Start again.
+
+### Start or resume the run
 
 Inspect `orchestrated_run` on the list's defect tickets. If it points to one
-incomplete run, resume that run. If different incomplete runs claim the list
-or its defects, report the conflict and do not start another. Otherwise start
-a new `/orchestrated-run` whose request is to implement each ready defect's
-confirmed outcome. Treat those outcomes, including confirmed amendment
+incomplete run, resume that run. Open defects it does not include enter through
+steering. If different incomplete runs claim the list or its defects, report
+the conflict and do not start another. Otherwise start a new `/orchestrated-run`
+whose request is to implement each open defect's confirmed outcome. Treat those outcomes, including confirmed amendment
 outcomes, as part of the user's invocation. Use Research when no outcome is
 confirmed. Consider a non-fix disposition only when later evidence shows
 implementation is inappropriate. Do not copy the defect files into the
@@ -47,6 +96,12 @@ Put the source list path, this skill-file path, and the
 `DEFECT-TICKETS.md` path in `WORKINGHINTS.md` as required recovery references.
 The hint states that a recovering orchestrator must read both referenced
 contract files before acting after compaction.
+
+When the invocation or a defect's report names a delivered product run, record
+its directory in `WORKINGHINTS.md`. Put its `GOALS.md`, `NONGOALS.md`,
+`WORKINGHINTS.md`, and accepted mocks on bootstrap and triage Reads. They are
+read-only; do not resume that run.
+
 When a ready defect enters the run, set its `orchestrated_run` to the relative
 run path and record that link in History.
 
@@ -440,6 +495,11 @@ orchestrated-run ticket immediately under the base contract.
 Before dispatching a run ticket, or sending a unit, whose Reads include source
 defect files, conflict-check every non-null `capture_owner`. Do not dispatch or
 send against a file being captured or amended.
+
+Capture a defect the user describes during the run under `defect-capture` on
+this list; this overrides ordinary steering. Added information on an existing
+defect is an amendment. If the message also answers a presented ask, handle
+that return too.
 
 When capture adds a ready defect to this list during the run, treat it as
 steering:

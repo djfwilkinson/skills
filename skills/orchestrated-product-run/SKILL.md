@@ -1,6 +1,6 @@
 ---
 name: orchestrated-product-run
-description: Drive a product problem from discovery, mocks, and wholesale product proposals through minimal implementation and outcome acceptance, using Product Owner review only when judgement is required. Use only when explicitly invoked by the user.
+description: Drive a product problem from discovery, mocks, and wholesale product proposals through a minimal build accepted on automated checks, then offer a defect run. Use only when explicitly invoked by the user.
 disable-model-invocation: true
 argument-hint: "<product problem or outcome>"
 ---
@@ -35,9 +35,11 @@ If one cannot be read, report the blocker rather than proceeding from memory.
 
 ## Role of the user
 
-The user is the Product Owner. They supply a problem at any altitude, judge
+The user is the Product Owner. They supply a problem at any altitude and judge
 product direction, trade-offs, cross-space knock-on effects, and mocks or
-concepts, and accept finished product behaviour that needs their judgement.
+concepts. They do not approve finished work. The run completes on agent
+evidence; they then report defects through the defect run offered at
+completion.
 
 They are never asked to write or review technical change plans, code diffs, test
 suites, or non-product docs, and they are not interrupted for internal
@@ -69,6 +71,18 @@ confirms them.
   surface them separately in wholesale proposals for the user to opt into.
   Never default to a large refactor; if a minimal change fails, record why and
   put the choice to the user in `Discuss/Gather Inputs`.
+- **No approval wait.** Agent evidence accepts delivered results. This
+  overrides orchestrated-run's deterministic-check gate and its human
+  acceptance requirement for goal verification and run completion.
+  - Never create a human boundary inspection or acceptance `Discuss` for a
+    delivered result.
+  - The inspector judges subjective parts too. Copy the Agent boundary
+    inspection extension from `PROMPTS.md` into its assignment.
+  - Still use `Discuss` for product decisions during the build, unfixed
+    significant adversarial findings, and abandoning a goal.
+  - Exception: a result the Product Owner asks to review. Record it as a
+    working hint. It gets a human boundary inspection and has no coverage
+    until that inspection resolves.
 - **First-party mocks and scoped mock contracts.** Use `designer` (for
   fast wireframes and flow concepts) or `prototyper` (for interactive mocks
   that pull in production CSS and tokens for exact sign-off) under
@@ -238,7 +252,7 @@ run is in full-delivery mode:
 4. **Run automated coverage before any human review:**
    - Stream `inspector` (`agent boundary inspection`) across implementation
      checkpoints for code, tests, configuration, non-product docs, and
-     deterministically checkable product-facing parts.
+     product-facing parts, subjective ones included.
    - Run `validator` (`boundary validation`) on a stable tree for tests, build,
      lint, and typecheck.
    - When the batch changes user-observable product behaviour or UI, run a
@@ -247,23 +261,21 @@ run is in full-delivery mode:
      preview, checking both the goal's acceptance criteria and any accepted
      mock's `Binding` obligations. When UI changed substantially, also include
      `ux-ui-reviewer` on the module's `Adversarial Review` Reads.
-   - Apply orchestrated-run's deterministic-check gate before creating or
-     presenting a human boundary inspection. Do not ask the Product Owner to
-     repeat or accept a successful deterministic check.
-   - When a result needs Product Owner judgement, hold its human boundary
-     inspection `upcoming` until implementation, `validator`, and
-     `scenario-tester` return with no material issue requiring remediation.
-     `may_withdraw_on` never shortens this hold. List only tickets still open
+   - For a result the Product Owner asked to review, hold its human boundary
+     inspection `upcoming` until implementation, `validator`, and any
+     `scenario-tester` check it needs return with no material issue requiring
+     remediation. `may_withdraw_on` never shortens this hold. List only tickets still open
      after it, and handle provisional acceptance under orchestrated-run.
 
-### 5. Product outcome acceptance
+### 5. Outcome acceptance on agent evidence
 
-Use recorded agent evidence to accept every fully specified outcome. Present
-one grouped human boundary inspection (`Discuss/Gather Inputs`) only for
-outcomes whose acceptance basis remains subjective or underspecified, whose
-automated product check is inconclusive and no further agent check can close
-the gap, which embody an unconfirmed choice meeting the product-decision test,
-or which the Product Owner asked to review:
+Accept results under the No approval wait setting. Coverage is the accepted
+agent inspection plus boundary validation. Log each subjective part accepted on
+agent judgement and each `inconclusive` gap in `LOG.md` for the completion
+message.
+
+For results the Product Owner asked to review, present one grouped human
+boundary inspection (`Discuss/Gather Inputs`):
 
 - Open with what the product now does for the user in plain, concise words.
 - Link the prepared live product or preview environment (and any accepted mock
@@ -275,21 +287,34 @@ or which the Product Owner asked to review:
   describe what product behaviour needs to change. Never ask the user to inspect
   code diffs, tests, or internal files.
 
-If no result meets that gate, create no acceptance ask. Use the successful
-deterministic checks to finalize any `accepted pending check` inspection
-verdicts; implementation coverage remains the accepted inspection plus boundary
-validation under orchestrated-run.
-
-If the user requests product changes, route them as fix requests or new units
-through the normal `orchestrated-run` steering and invalidation rules, re-run
-the automated checks, and apply the deterministic-check gate again before
-deciding whether to present the updated result for acceptance.
+Route product changes the user requests during the run through
+orchestrated-run steering and invalidation. Re-run the automated checks and
+accept on agent evidence again.
 
 ### 6. Complete
 
-Complete the run under `orchestrated-run`'s completion rules (and project final
-ticket statuses to the active ticket source under `TICKET-SOURCES.md`). Open the
-completion message with `**This orchestrated run is complete.**` followed by a
-concise summary of the product outcomes delivered (or tickets shaped, in
-shape-only mode), the key Product Owner decisions and accepted mocks, and any
-optional extras left parked for future runs.
+Complete under orchestrated-run's completion rules, as adjusted by No approval
+wait. Project final ticket statuses to the active ticket source under
+`TICKET-SOURCES.md`. Full delivery means `WORKINGHINTS.md` records no
+`Stop mode: shape and ticket only`.
+
+Open the completion message with `**This orchestrated run is complete.**`.
+Then summarize:
+
+- outcomes delivered, or tickets shaped under stop mode;
+- key Product Owner decisions and accepted mocks;
+- full delivery only: how to open or start the product, from
+  prepared-environment Evidence;
+- full delivery only: subjective parts accepted on agent judgement and
+  `inconclusive` gaps from `LOG.md`, as the first things to try;
+- optional extras parked for future runs.
+
+### 7. Offer a defect run
+
+In full delivery, end the completion message with one defect-run offer: the
+Product Owner reports what is wrong, triage groups the reports by cause, and
+the defect run fixes and checks them. Give the reply that starts it. Offer
+once. Do not wait on it; the run is complete.
+
+A yes explicitly invokes `/orchestrated-defect-run` in this conversation,
+naming this run's directory as the delivered product run.

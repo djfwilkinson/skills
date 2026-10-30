@@ -157,10 +157,26 @@ Accepted mock contract (when Reads include a mock from `<run-dir>/mocks/`):
   `Context only` details.
 ```
 
+## Agent boundary inspection extension (`inspector`)
+
+Copy this block into every agent boundary inspection assignment, after the
+Implementation and review extension. It overrides the base inspection prompt
+where they conflict:
+
+```text
+Also judge parts with a subjective acceptance basis, except results Objective
+reserves for the Product Owner. Judge them against the accepted proposal, the
+covered goals, and the Binding of any accepted mock on Reads. Record
+`accepted` or `changes needed`. Record `decision needed` only for a product
+choice the proposal leaves open.
+
+On an `inconclusive` check outcome, record `accepted` and the exact
+observation gap. Do not record the verdict superseded.
+```
+
 ## Automated product check (`scenario-tester`, Agent Task)
 
-Use this prompt for the pre-acceptance product check before presenting a human
-boundary inspection:
+Use this prompt for the automated product check:
 
 ```text
 This unit is the automated product check for the completed product slice. Do
@@ -178,7 +194,7 @@ Record in Evidence and the unit's checkpoint:
   was absent or wrong), or `inconclusive` (a scenario could not be exercised
   safely, stating the exact observation that could not be made);
 - for each checked scenario: what you did and what you observed;
-- if this ticket also prepares the environment for Product Owner acceptance,
-  the URL or path, persistent process or session, expected state, and restart
-  procedure.
+- the product URL or path and how to start it again; when this ticket also
+  prepares a review the Product Owner asked for, the persistent process or
+  session and expected state.
 ```

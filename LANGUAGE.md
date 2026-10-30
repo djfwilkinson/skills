@@ -1205,7 +1205,33 @@ A question is asked only if a different answer would change what gets built, dec
 
 ### Orchestrated product run
 
-User-invoked library skill (`orchestrated-product-run`) that runs one orchestrated run with the user as Product Owner. It discovers the problem space and adjacent spaces, tracks known unknowns and `fog`, builds run-local wireframes or production-styled mocks under `<run-dir>/mocks/`, presents wholesale product proposals with cross-space knock-ons and separated optional extras, builds the simplest non-hacky solution under `smart` planning depth, runs automated product checks, and asks the user only to judge product behaviour (or stops after shaping tickets when requested).
+User-invoked library skill (`orchestrated-product-run`) that runs one orchestrated run with the user as Product Owner. It discovers the problem space and adjacent spaces, tracks known unknowns and `fog`, builds run-local wireframes or production-styled mocks under `<run-dir>/mocks/`, presents wholesale product proposals with cross-space knock-ons and separated optional extras, builds the simplest non-hacky solution under `smart` planning depth, and accepts delivered results on agent evidence without user approval (or stops after shaping tickets when requested). On completion it makes the defect-run offer.
+
+### Full delivery
+
+The default scope of an orchestrated product run, in force unless `Stop mode: shape and ticket only` is recorded. The run completes once every result is delivered. A result is **delivered** when agent evidence satisfies its implementation coverage, any required automated product check, and required Adversarial Review. User testing is not part of delivery; it follows completion through the defect-run offer.
+
+Related:
+- shape and ticket only
+- defect-run offer
+- human boundary inspection
+
+Avoid:
+- treating delivered as accepted by the user
+- holding completion for user testing
+- unqualified **delivery** for a deployment or release
+
+### Shape and ticket only
+
+The run scope, recorded as `Stop mode: shape and ticket only`, under which an orchestrated product run completes once the proposal is accepted and the shaped tickets are written to the ticket source. Nothing is built, so it makes no defect-run offer.
+
+### Defect-run offer
+
+The one offer, at the end of a full-delivery product run's completion message, to start an orchestrated defect run on what was delivered. It is not waited on; the run is already complete. Accepting it invokes `orchestrated-defect-run`, which captures into a new list, then groups and fixes the defects. It covers defects in delivered work; new product work is a new product run.
+
+Avoid:
+- **debug run** for the orchestrated defect run
+- treating the offer as a human ticket or an acceptance ask
 
 ### Product partner
 
@@ -1316,6 +1342,21 @@ list and adds defect-specific triage, implementation, automated product check,
 source reconciliation, and user-review rules. It uses the same orchestrator
 thread and does not create a nested orchestrator.
 
+It captures by default. With no list identified, it captures into a new list,
+or asks the startup choice when open defects exist. Defects the user describes
+during the run go through capture.
+
+### Open defect
+
+A defect with `capture_state: ready` whose defect status is not `done`.
+
+### Startup choice
+
+The direct question an orchestrated defect run asks before its run starts, when
+no list is identified and some list has open defects: work on them now,
+capture more into that list first, or capture into a new list. Not a human
+ticket.
+
 Related:
 - orchestrated-run
 - defect list
@@ -1350,7 +1391,8 @@ A defect-run Agent Task that exercises the actual product or prepared artifact
 against the captured user-visible scenario after implementation. Its outcome
 is `passed`, `failed`, or `inconclusive`. `inconclusive` means the scenario
 could not be created or observed safely and the exact gap must be surfaced in
-user review.
+user review. In an orchestrated product run, an `inconclusive` gap is
+accepted and reported at completion instead.
 
 It does not replace boundary validation, Plan Review, Adversarial Review, or
 human acceptance. It is check-producing work, not an implementation ticket,
