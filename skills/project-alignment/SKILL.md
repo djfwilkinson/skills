@@ -85,7 +85,7 @@ For a large project, split research by domain or concern, as units of one Resear
 Research tickets should separate:
 
 - observed facts;
-- terminology candidates;
+- terminology candidates, each classified as a domain term or a delivery process, scope or engineering term (only domain terms are language candidates);
 - inconsistencies;
 - unresolved decisions;
 - possible alignment changes.
@@ -113,6 +113,10 @@ Follow an existing project convention when it already provides the same function
 - links to domain language files.
 
 Create domain files only where a domain has enough distinct language to justify one.
+
+The language holds domain terms: the people, things, steps, states and records in the product's domain whose meaning is specific to this project. It does not define scope, phases, readiness or release gates, requirement or gap IDs, delivery process, or general engineering terms.
+
+If another canonical document already defines a domain term authoritatively (rather than simply using it), move that definition into the shared language files and update the previous canonical document's reference.
 
 A language entry should define the concept, not its current implementation.
 
@@ -333,7 +337,7 @@ Do not turn this section into a list of every possible improvement.
 
 Before completing the alignment run, use `Adversarial Review` tickets to check:
 
-1. the shared language for contradictions, duplicate concepts and unnecessary domain-specific synonyms;
+1. the shared language for contradictions, duplicate concepts, unnecessary domain-specific synonyms, and entries that are not domain terms or that duplicate requirements or guidance documents;
 2. project guidance for stale or duplicated terminology;
 3. when a plan was written, the plan for changes that do not serve the stated alignment goals;
 4. each recommended change for a clear benefit, change-size assessment and verification method;
